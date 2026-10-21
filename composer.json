@@ -69,7 +69,8 @@
     "extra": {
         "contenir": {
             "handle": "seo",
-            "extension": "Contenir\\Extension\\Seo\\SeoExtension"
+            "extension": "Contenir\\Extension\\Seo\\SeoExtension",
+            "name": "SEO"
         },
         "branch-alias": {
             "dev-main": "0.1.x-dev"
