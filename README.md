@@ -64,9 +64,9 @@ without anyone saving anything, and production never drops out by accident. A hi
 
 The environment is the CMS's `APPLICATION_ENV`. A CMS that names none is taken to be production.
 
-**On public pages**, sites read the settings through contenir/seo's adapters. On Laminas MVC that is
-[contenir/seo-laminas-mvc](https://github.com/contenir/contenir-seo-laminas-mvc): `/sitemap.xml`, `/robots.txt`,
-`$this->seo()->head()` and `X-Robots-Tag`. [contenir/seo](https://github.com/contenir/contenir-seo) describes the
+**On public pages**, sites read the settings through contenir/contenir-seo's adapters. On Laminas MVC that is
+[contenir/contenir-seo-laminas-mvc](https://github.com/contenir/contenir-seo-laminas-mvc): `/sitemap.xml`, `/robots.txt`,
+`$this->seo()->head()` and `X-Robots-Tag`. [contenir/contenir-seo](https://github.com/contenir/contenir-seo) describes the
 title template, head tags, JSON-LD, robots.txt and sitemap.
 
 **Per-record titles and descriptions** stay in each site's own `meta_title` and `meta_description` columns (SEO-1).
