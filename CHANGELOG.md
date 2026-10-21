@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] - 2026-10-21
 
+### Changed
+
+- Allows contenir/extension-api 0.6, whose changes (services add-ons provide, and their context in settings
+  operations) are additions the add-on doesn't use, so the CMS can install it beside the Cloudflare add-on. The lock
+  moves to 0.6.0.
+
 ### Added
 
 - Search Appearance (Site Settings > SEO, section `seo`): the site name, separator, where the site name goes in titles
