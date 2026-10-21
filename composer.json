@@ -18,7 +18,7 @@
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "contenir/extension-api": "^0.5 || ^0.6",
-        "contenir/seo": "0.1.x-dev"
+        "contenir/contenir-seo": "^0.1"
     },
     "require-dev": {
         "contenir/contenir-qa-tools": "0.1.x-dev",

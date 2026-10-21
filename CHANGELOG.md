@@ -11,6 +11,9 @@ adheres to [Semantic Versioning](https://semver.org/).
 - Allows contenir/extension-api 0.6, whose changes (services add-ons provide, and their context in settings
   operations) are additions the add-on doesn't use, so the CMS can install it beside the Cloudflare add-on. The lock
   moves to 0.6.0.
+- Requires the library as contenir/contenir-seo `^0.1`, its new name, where it required contenir/seo `0.1.x-dev`. The
+  library was renamed after its repository and its v0.1.0 recut, so the old name no longer installs. It comes through
+  a `vcs` repository entry until it is on Packagist.
 
 ### Added
 

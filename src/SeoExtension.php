@@ -23,7 +23,7 @@ use Override;
  * The SEO add-on: three settings sections (Search Appearance, Site
  * Verification and Sitemap), field types that check verification tokens,
  * workflow names and robots.txt rules as they are saved, and two checks.
- * Public sites read the settings through contenir/seo's adapters.
+ * Public sites read the settings through contenir/contenir-seo's adapters.
  *
  * @api
  */

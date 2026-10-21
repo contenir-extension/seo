@@ -16,7 +16,7 @@ use function array_replace_recursive;
 use function explode;
 
 /**
- * The site's SEO as contenir/seo reads it: the site's own settings files,
+ * The site's SEO as contenir/contenir-seo reads it: the site's own settings files,
  * with the add-on's three sections, as the CMS saves them, over them.
  *
  * @api

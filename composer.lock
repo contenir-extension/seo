@@ -4,8 +4,98 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97026858d0a98b33236cd26336e0e05a",
+    "content-hash": "5597cdc5a9bd6223da37c6f27e9a6def",
     "packages": [
+        {
+            "name": "contenir/contenir-seo",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:contenir/contenir-seo.git",
+                "reference": "17cdeb0c076ae71a2692a5a58e89712410403a54"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/contenir/contenir-seo/zipball/17cdeb0c076ae71a2692a5a58e89712410403a54",
+                "reference": "17cdeb0c076ae71a2692a5a58e89712410403a54",
+                "shasum": ""
+            },
+            "require": {
+                "ext-xmlwriter": "*",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
+            },
+            "require-dev": {
+                "contenir/contenir-qa-tools": "0.1.x-dev",
+                "infection/infection": "^0.34.1",
+                "phpunit/phpunit": "^11.5.42"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Contenir\\Seo\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Contenir\\Seo\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "check": [
+                    "@cs-check",
+                    "@static-analysis",
+                    "@test",
+                    "@test-integration",
+                    "@mutation-test"
+                ],
+                "cs-check": [
+                    "mago format --check",
+                    "mago lint"
+                ],
+                "cs-fix": [
+                    "mago format",
+                    "mago lint --fix"
+                ],
+                "static-analysis": [
+                    "mago analyze"
+                ],
+                "test": [
+                    "phpunit --colors=always --testsuite unit"
+                ],
+                "test-integration": [
+                    "phpunit --colors=always --testsuite integration"
+                ],
+                "test-coverage": [
+                    "phpunit --colors=always --coverage-clover clover.xml"
+                ],
+                "mutation-test": [
+                    "infection"
+                ]
+            },
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Framework-free SEO for Contenir: title templates, robots directives and robots.txt, site verification, JSON-LD Organization and WebSite, and an XML sitemap writer with images and an index past 50,000 URLs.",
+            "homepage": "https://contenir.com.au",
+            "keywords": [
+                "contenir",
+                "json-ld",
+                "open-graph",
+                "robots",
+                "seo",
+                "sitemap"
+            ],
+            "support": {
+                "issues": "https://github.com/contenir/contenir-seo/issues",
+                "source": "https://github.com/contenir/contenir-seo"
+            },
+            "time": "2026-10-21T00:40:21+00:00"
+        },
         {
             "name": "contenir/extension-api",
             "version": "v0.6.0",
@@ -72,97 +162,6 @@
                 "source": "https://github.com/contenir/contenir-extension-api"
             },
             "time": "2026-10-21T00:00:32+00:00"
-        },
-        {
-            "name": "contenir/seo",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:contenir/contenir-seo.git",
-                "reference": "2e8d521d489008209654449b4a5f5ecca698791b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/contenir/contenir-seo/zipball/2e8d521d489008209654449b4a5f5ecca698791b",
-                "reference": "2e8d521d489008209654449b4a5f5ecca698791b",
-                "shasum": ""
-            },
-            "require": {
-                "ext-xmlwriter": "*",
-                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
-            },
-            "require-dev": {
-                "contenir/contenir-qa-tools": "0.1.x-dev",
-                "infection/infection": "^0.34.1",
-                "phpunit/phpunit": "^11.5.42"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "0.1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Contenir\\Seo\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Contenir\\Seo\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "check": [
-                    "@cs-check",
-                    "@static-analysis",
-                    "@test",
-                    "@test-integration",
-                    "@mutation-test"
-                ],
-                "cs-check": [
-                    "mago format --check",
-                    "mago lint"
-                ],
-                "cs-fix": [
-                    "mago format",
-                    "mago lint --fix"
-                ],
-                "static-analysis": [
-                    "mago analyze"
-                ],
-                "test": [
-                    "phpunit --colors=always --testsuite unit"
-                ],
-                "test-integration": [
-                    "phpunit --colors=always --testsuite integration"
-                ],
-                "test-coverage": [
-                    "phpunit --colors=always --coverage-clover clover.xml"
-                ],
-                "mutation-test": [
-                    "infection"
-                ]
-            },
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "description": "Framework-free SEO for Contenir: title templates, robots directives and robots.txt, site verification, JSON-LD Organization and WebSite, and an XML sitemap writer with images and an index past 50,000 URLs.",
-            "homepage": "https://contenir.com.au",
-            "keywords": [
-                "contenir",
-                "json-ld",
-                "open-graph",
-                "robots",
-                "seo",
-                "sitemap"
-            ],
-            "support": {
-                "issues": "https://github.com/contenir/contenir-seo/issues",
-                "source": "https://github.com/contenir/contenir-seo"
-            },
-            "time": "2026-10-20T23:21:57+00:00"
         },
         {
             "name": "psr/clock",
@@ -4689,7 +4688,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "contenir/seo": 20,
         "contenir/contenir-qa-tools": 20
     },
     "prefer-stable": true,
