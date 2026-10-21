@@ -4,14 +4,14 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5597cdc5a9bd6223da37c6f27e9a6def",
+    "content-hash": "cc9023ba766f77cf0dbd91aa1079b9b9",
     "packages": [
         {
             "name": "contenir/contenir-seo",
             "version": "v0.1.0",
             "source": {
                 "type": "git",
-                "url": "git@github.com:contenir/contenir-seo.git",
+                "url": "https://github.com/contenir/contenir-seo.git",
                 "reference": "17cdeb0c076ae71a2692a5a58e89712410403a54"
             },
             "dist": {
