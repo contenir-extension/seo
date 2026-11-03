@@ -6,8 +6,10 @@ on:
 
 jobs:
   qa:
-    uses: contenir/contenir-qa-tools/.github/workflows/continuous-integration.yml@feature/boot-cms
-    secrets: inherit
+    uses: contenir/contenir-qa-tools/.github/workflows/continuous-integration.yml@0.1.x
+    # By name: secrets: inherit doesn't cross from contenir-extension to contenir.
+    secrets:
+      AUTODEV_APP_PRIVATE_KEY: ${{ secrets.AUTODEV_APP_PRIVATE_KEY }}
     with:
       mago-version: "1.57.0"
       php-versions: '["8.3", "8.4", "8.5"]'
