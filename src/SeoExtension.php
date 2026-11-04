@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo;
 
+use Contenir\Extension\Api\Event\Record\RecordPreSave;
 use Contenir\Extension\Api\ExtensionInterface;
+use Contenir\Extension\Api\Listener\Scope;
 use Contenir\Extension\Api\Registry;
+use Contenir\Extension\Seo\Check\SectionsCheck;
 use Contenir\Extension\Seo\Check\SiteUrlCheck;
 use Contenir\Extension\Seo\Check\VisibilityCheck;
 use Contenir\Extension\Seo\Field\BingTokenField;
@@ -14,7 +17,9 @@ use Contenir\Extension\Seo\Field\MetaTokenField;
 use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
+use Contenir\Extension\Seo\Listener\CheckMeta;
 use Contenir\Extension\Seo\Section\AppearanceSection;
+use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\Section\SitemapSection;
 use Contenir\Extension\Seo\Section\VerificationSection;
 use Override;
@@ -43,7 +48,11 @@ final class SeoExtension implements ExtensionInterface
         $registry->settingsSection(VerificationSection::define($registry->handle()));
         $registry->settingsSection(SitemapSection::define($registry->handle()));
 
+        $registry->sectionBlock(SeoSectionBlock::class);
+        $registry->listen(CheckMeta::NAME, RecordPreSave::class, CheckMeta::class, Scope::all());
+
         $registry->diagnostic('visibility', VisibilityCheck::class);
         $registry->diagnostic('site-url', SiteUrlCheck::class);
+        $registry->diagnostic('sections', SectionsCheck::class);
     }
 }

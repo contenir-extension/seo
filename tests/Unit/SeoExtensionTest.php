@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Tests\Unit;
 
 use Contenir\Extension\Api\Diagnostic\DiagnosticDeclaration;
+use Contenir\Extension\Api\Event\Record\RecordPreSave;
 use Contenir\Extension\Api\Field\FieldTypeDeclaration;
+use Contenir\Extension\Api\Listener\ListenerDeclaration;
 use Contenir\Extension\Api\Registration;
 use Contenir\Extension\Api\Registry;
+use Contenir\Extension\Seo\Check\SectionsCheck;
 use Contenir\Extension\Seo\Check\SiteUrlCheck;
 use Contenir\Extension\Seo\Check\VisibilityCheck;
 use Contenir\Extension\Seo\Field\BingTokenField;
@@ -16,6 +19,8 @@ use Contenir\Extension\Seo\Field\MetaTokenField;
 use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
+use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoExtension;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -55,7 +60,11 @@ final class SeoExtensionTest extends TestCase
     public function declaresItsChecks(): void
     {
         static::assertSame(
-            ['visibility' => VisibilityCheck::class, 'site-url' => SiteUrlCheck::class],
+            [
+                'visibility' => VisibilityCheck::class,
+                'site-url'   => SiteUrlCheck::class,
+                'sections'   => SectionsCheck::class,
+            ],
             array_map(
                 static fn(DiagnosticDeclaration $check): string => $check->class,
                 self::registration()->diagnostics,
@@ -73,14 +82,13 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
-    public function needsNoListenersHandlersTablesScriptsOrOtherAddOns(): void
+    public function needsNoHandlersTablesScriptsOrOtherAddOns(): void
     {
         $registration = self::registration();
 
         static::assertSame(
-            [[], [], [], [], [], [], [], [], null],
+            [[], [], [], [], [], [], [], null],
             [
-                $registration->listeners,
                 $registration->handlers,
                 $registration->webhooks,
                 $registration->migrations,
@@ -89,6 +97,33 @@ final class SeoExtensionTest extends TestCase
                 $registration->dependencies,
                 $registration->scripts,
                 $registration->icons,
+            ],
+        );
+    }
+
+    #[Test]
+    public function readsSectionBlocksAndChecksTheRecordsTheyDeclareAsTheySave(): void
+    {
+        $registration = self::registration();
+
+        static::assertSame(
+            [
+                SeoSectionBlock::class,
+                [
+                    [CheckMeta::NAME, RecordPreSave::class, CheckMeta::class, null],
+                ],
+            ],
+            [
+                $registration->sectionBlock,
+                array_map(
+                    static fn(ListenerDeclaration $listener): array => [
+                        $listener->name,
+                        $listener->event,
+                        $listener->listener,
+                        $listener->scope->fields,
+                    ],
+                    $registration->listeners,
+                ),
             ],
         );
     }
