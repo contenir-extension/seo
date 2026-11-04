@@ -78,7 +78,10 @@ final readonly class SettingsContext implements ExtensionContextInterface
         throw new LogicException('Not offered');
     }
 
-    #[Override]
+    /**
+     * The API's 0.8 context method, written without #[Override] so this
+     * test context still loads against 0.7, the lowest API the add-on accepts.
+     */
     public function sections(): SectionsInterface
     {
         throw new LogicException('Not offered');
