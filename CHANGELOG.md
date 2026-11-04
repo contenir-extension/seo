@@ -17,8 +17,18 @@ adheres to [Semantic Versioning](https://semver.org/).
   Appearance's template adds the site name (60 characters), a description under 70 or over 160 characters, and a
   title another record of the section already has. Each is a warning, unless the block marks the role `required`,
   when a missing value holds the save. It reads the values being saved, so a save never waits on the site.
+- "Search and social" (panel `search`), beside a saved record of a section with an `<seo>` block: its title and
+  description as search results show them, with their lengths, whether its Discoverable switch hides it, what to
+  fix, and once published, links to the page and to Google's Rich Results Test. A site binds it per section with
+  `<panels><panel extension="seo" name="search"/></panels>`.
 - The `sections` check reports a block without a type, on a section without pages of its own, or naming a column the
   section has no field for.
+
+### Fixed
+
+- A Mezzio site's shared settings are read from the top level of settings.global.php, where the site keeps them, as
+  the CMS reads them since 2.0's settings fix. The add-on read only a `settings` key there, so on Studio Esteta it saw
+  no site title or URL.
 
 ### Changed
 
