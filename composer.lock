@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a321a9c72b289a11765e984dc0be1334",
+    "content-hash": "37cda86d0367df44c6009af63e48f594",
     "packages": [
         {
             "name": "contenir/contenir-extension-api",
-            "version": "v0.6.1",
+            "version": "v0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/contenir/contenir-extension-api.git",
-                "reference": "33c8cf460ffdec41c57cd2360ab342f193baa224"
+                "reference": "5e85dd64c0a6b250fb208056d2b04a672b5c7033"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contenir/contenir-extension-api/zipball/33c8cf460ffdec41c57cd2360ab342f193baa224",
-                "reference": "33c8cf460ffdec41c57cd2360ab342f193baa224",
+                "url": "https://api.github.com/repos/contenir/contenir-extension-api/zipball/5e85dd64c0a6b250fb208056d2b04a672b5c7033",
+                "reference": "5e85dd64c0a6b250fb208056d2b04a672b5c7033",
                 "shasum": ""
             },
             "require": {
@@ -35,11 +35,13 @@
             },
             "require-dev": {
                 "contenir/contenir-qa-tools": "0.1.x-dev",
+                "contenir/contenir-storage": "^2.2",
                 "infection/infection": "^0.34.1",
                 "nyholm/psr7": "^1.8.2",
                 "phpunit/phpunit": "^11.5.42"
             },
             "suggest": {
+                "contenir/contenir-storage": "Lets a test lend an add-on storage with the private profile (Testing\\MemoryStorage), as a host lends its own",
                 "nyholm/psr7": "A PSR-7 and PSR-17 implementation for the in-memory host (Testing\\InMemoryHost), or use any other",
                 "phpunit/phpunit": "Runs the conformance suite (Conformance\\Abstract*ConformanceTestCase) against a host"
             },
@@ -49,7 +51,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.8.x-dev"
                 }
             },
             "autoload": {
@@ -74,7 +76,7 @@
                 "issues": "https://github.com/contenir/contenir-extension-api/issues",
                 "source": "https://github.com/contenir/contenir-extension-api"
             },
-            "time": "2026-10-21T01:09:27+00:00"
+            "time": "2026-11-04T10:23:48+00:00"
         },
         {
             "name": "contenir/contenir-seo",
