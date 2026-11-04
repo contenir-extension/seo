@@ -40,6 +40,25 @@ final class CheckMetaTest extends TestCase
     private InMemoryHost $host;
 
     /**
+     * @return array<string, array{string, array<string, string>, array<string, list<string>>}>
+     */
+    public static function requiredProvider(): array
+    {
+        return [
+            'a title'  => [
+                '<seo type="project"><title required="true">meta_title, title</title></seo>',
+                ['description' => self::DESCRIPTION],
+                ['meta_title' => ['Add a title for search results.']],
+            ],
+            'an image' => [
+                '<seo type="project"><image required="true">image_lg</image></seo>',
+                ['title' => 'House', 'description' => self::DESCRIPTION],
+                ['image_lg' => ['Add an image for shared links.']],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, array{array<string, string>, array<string, list<string>>}>
      */
     public static function warningProvider(): array
@@ -83,6 +102,19 @@ final class CheckMetaTest extends TestCase
             ['image_lg' => ['Add an image for shared links.']],
             $this->host->save(self::SECTION, null, ['title' => 'House', 'description' => self::DESCRIPTION])->warnings,
         );
+    }
+
+    /**
+     * @param array<string, string> $values
+     * @param array<string, list<string>> $errors
+     */
+    #[Test]
+    #[DataProvider('requiredProvider')]
+    public function anyRequiredRoleLeftEmptyHoldsTheSave(string $block, array $values, array $errors): void
+    {
+        $this->host->block('library.news.article', $block, self::FIELDS);
+
+        static::assertSame($errors, $this->host->save('library.news.article', 1, $values)->errors);
     }
 
     #[Test]

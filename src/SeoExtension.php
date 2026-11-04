@@ -18,6 +18,7 @@ use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\Section\SitemapSection;
@@ -50,6 +51,8 @@ final class SeoExtension implements ExtensionInterface
 
         $registry->sectionBlock(SeoSectionBlock::class);
         $registry->listen(CheckMeta::NAME, RecordPreSave::class, CheckMeta::class, Scope::all());
+
+        $registry->panel(SearchPanel::NAME, SearchPanel::class);
 
         $registry->diagnostic('visibility', VisibilityCheck::class);
         $registry->diagnostic('site-url', SiteUrlCheck::class);

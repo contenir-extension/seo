@@ -44,14 +44,17 @@ final readonly class CheckMeta implements ListenerInterface
             return;
         }
 
-        $seo     = SeoDeclaration::read($block->element);
-        $values  = new MetaValues($block, $event->values());
-        $notes   = new Notes($event, $seo);
+        $seo    = SeoDeclaration::read($block->element);
+        $values = new MetaValues($block, $event->values());
+        $notes  = new Notes($event, $seo);
+        foreach ((new MetaIssues($seo, SiteTitle::template($context)))->of($values) as $issue) {
+            $issue->missing
+                ? $notes->missing($issue->role, $issue->field, $issue->message)
+                : $notes->warn($issue->field, $issue->message);
+        }
+
         $columns = $seo->roles['title'] ?? [];
         $title   = $values->text($columns);
-        null === $title
-            ? $notes->missing('title', $values->field($columns), 'Add a title for search results.')
-            : $notes->warn($values->field($columns), MetaLengths::title(SiteTitle::template($context)->format($title)));
         if (null !== $title) {
             $notes->warn(
                 $values->field($columns),
@@ -62,21 +65,6 @@ final readonly class CheckMeta implements ListenerInterface
                     $event->id,
                 ),
             );
-        }
-
-        $columns     = $seo->roles['description'] ?? [];
-        $description = $values->text($columns);
-        null === $description
-            ? $notes->missing(
-                'description',
-                $values->field($columns),
-                'Add a description for search results and shared links.',
-            )
-            : $notes->warn($values->field($columns), MetaLengths::description($description));
-
-        $columns = $seo->roles['image'] ?? [];
-        if ([] !== $columns && null === $values->text($columns)) {
-            $notes->missing('image', $values->field($columns), 'Add an image for shared links.');
         }
     }
 }
