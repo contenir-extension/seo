@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Tests\TestAsset\Settings;
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Handle;
+use Contenir\Extension\Api\Section\SectionsInterface;
 use Contenir\Extension\Api\Settings\SettingsInterface;
 use Contenir\Extension\Api\Url\UrlResolverInterface;
 use Contenir\Extension\Seo\Section\AppearanceSection;
@@ -73,6 +74,12 @@ final readonly class SettingsContext implements ExtensionContextInterface
 
     #[Override]
     public function logger(): LoggerInterface
+    {
+        throw new LogicException('Not offered');
+    }
+
+    #[Override]
+    public function sections(): SectionsInterface
     {
         throw new LogicException('Not offered');
     }
