@@ -14,8 +14,8 @@ use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Listener\MetaIssues;
 use Contenir\Extension\Seo\Listener\MetaLengths;
 use Contenir\Extension\Seo\Listener\MetaValues;
-use Contenir\Extension\Seo\Listener\SiteTitle;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
+use Contenir\Extension\Seo\SeoSettings;
 use Contenir\Seo\Sections\SeoBlock;
 use Override;
 
@@ -79,7 +79,7 @@ final readonly class SearchPanel implements RecordPanelInterface
 
         $seo         = SeoDeclaration::read($block->element);
         $values      = new MetaValues($block, $record->values);
-        $template    = SiteTitle::template($context);
+        $template    = (new SeoSettings())->config($context)->title;
         $title       = $values->text($seo->roles['title'] ?? []);
         $description = $values->text($seo->roles['description'] ?? []);
         $shown       = null === $title ? null : $template->format($title);

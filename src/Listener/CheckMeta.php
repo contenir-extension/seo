@@ -12,6 +12,7 @@ use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Listener\ListenerInterface;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
+use Contenir\Extension\Seo\SeoSettings;
 use Override;
 
 /**
@@ -47,7 +48,7 @@ final readonly class CheckMeta implements ListenerInterface
         $seo    = SeoDeclaration::read($block->element);
         $values = new MetaValues($block, $event->values());
         $notes  = new Notes($event, $seo);
-        foreach ((new MetaIssues($seo, SiteTitle::template($context)))->of($values) as $issue) {
+        foreach ((new MetaIssues($seo, (new SeoSettings())->config($context)->title))->of($values) as $issue) {
             $issue->missing
                 ? $notes->missing($issue->role, $issue->field, $issue->message)
                 : $notes->warn($issue->field, $issue->message);

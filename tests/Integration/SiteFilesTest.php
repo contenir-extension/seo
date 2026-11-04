@@ -96,6 +96,24 @@ final class SiteFilesTest extends TestCase
     }
 
     #[Test]
+    public function readsAMezzioSitesSharedSettingsFromTheTopOfItsFile(): void
+    {
+        $this->writeConfig('config/autoload/settings.global.php', ['site' => [
+            'url'   => 'https://a.example',
+            'title' => 'A',
+        ]]);
+        $this->writeConfig('config/autoload/settings.local.php', [
+            'site'     => ['title' => 'Not under settings, so not read'],
+            'settings' => ['site' => ['url' => 'https://b.example']],
+        ]);
+
+        static::assertSame(
+            ['site' => ['url' => 'https://b.example', 'title' => 'A']],
+            (new SiteSettingsFiles())->read($this->directory),
+        );
+    }
+
+    #[Test]
     public function readsLocalSettingsOverGlobal(): void
     {
         $this->writeConfig('config/autoload/settings.global.php', [
