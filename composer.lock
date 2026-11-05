@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "867737fa910ad29eff446a501cfb4c9d",
+    "content-hash": "da42fa607447bdcbb2622b5b01a5b288",
     "packages": [
         {
             "name": "contenir/contenir-contact",
@@ -98,16 +98,16 @@
         },
         {
             "name": "contenir/contenir-extension-api",
-            "version": "v0.8.0",
+            "version": "v0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/contenir/contenir-extension-api.git",
-                "reference": "5e85dd64c0a6b250fb208056d2b04a672b5c7033"
+                "reference": "da3d44e416365f45ab5f91ad8998f4c714260baf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contenir/contenir-extension-api/zipball/5e85dd64c0a6b250fb208056d2b04a672b5c7033",
-                "reference": "5e85dd64c0a6b250fb208056d2b04a672b5c7033",
+                "url": "https://api.github.com/repos/contenir/contenir-extension-api/zipball/da3d44e416365f45ab5f91ad8998f4c714260baf",
+                "reference": "da3d44e416365f45ab5f91ad8998f4c714260baf",
                 "shasum": ""
             },
             "require": {
@@ -166,7 +166,7 @@
                 "issues": "https://github.com/contenir/contenir-extension-api/issues",
                 "source": "https://github.com/contenir/contenir-extension-api"
             },
-            "time": "2026-11-04T10:23:48+00:00"
+            "time": "2026-11-05T01:01:47+00:00"
         },
         {
             "name": "contenir/contenir-seo",
