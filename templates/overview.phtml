@@ -8,6 +8,7 @@
  *     roles: array<string, string>,
  *     checks: list<array{label: string, status: string, message: string}>,
  *     settings: array<string, string>,
+ *     records: bool,
  * } $values
  * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
  */
@@ -18,7 +19,10 @@
                 <section class="card">
                     <div class="card__header">
                         <h2 class="card__title">Sections</h2>
-                        <p class="card__description">Going by what the site renders for each record it has been asked about, and otherwise by the record's own columns, which miss anything the site builds in its code. The site is asked in the background.</p>
+                        <p class="card__description">Each number is how many records in that section have something to fix. Select a number to see those records, then open one to fix it. Counts go by what the site renders for each record it has been asked about, and otherwise by the record's own columns, which miss anything the site builds in its code. The site is asked in the background.</p>
+<?php if (! $values['records']): ?>
+                        <p class="card__description">What records say about themselves is switched off, so none of it reaches the site yet. Turn it on in <a href="<?= $view->escape((string) array_key_first($values['settings'])) ?>">Search Appearance</a>, under This environment, once these counts are clear.</p>
+<?php endif ?>
                         <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
                             <?= $view->token() ?>
                             <button type="submit" class="btn btn--outline btn--sm"><?= $view->icon('refresh') ?><span>Check with the site now</span></button>

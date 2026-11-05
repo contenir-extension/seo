@@ -24,6 +24,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function array_map;
 use function http_build_query;
+use function implode;
 use function iterator_to_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
@@ -294,7 +295,7 @@ final class SeoModuleTest extends TestCase
         $this->host->seed(self::PROJECTS, 1, ['title' => '=HYPERLINK("x")', 'description' => 'Short.']);
 
         static::assertStringContainsString(
-            "Project,\"'=HYPERLINK(\"\"x\"\")\",Description",
+            "Projects,\"'=HYPERLINK(\"\"x\"\")\",Description",
             (string) $this->get('records-export')->getBody(),
         );
     }
@@ -308,7 +309,7 @@ final class SeoModuleTest extends TestCase
         static::assertSame(
             [
                 'text/csv',
-                "Section,Record,Area,Issue\nProject,Hut,Hidden,\"Hidden from search: its Discoverable switch is off.\"\n",
+                "Section,Record,Area,Issue\nProjects,Hut,Hidden,\"Hidden from search: its Discoverable switch is off.\"\n",
             ],
             [$response->getHeaderLine('Content-Type'), (string) $response->getBody()],
         );
@@ -334,13 +335,36 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             [
-                ['Project',      '3', '0', '2', '1', '1', '1'],
-                ['News article', '1', '0', '0', '1', '0', '0'],
+                ['Projects',      '3', '0', '2', '1', '1', '1'],
+                ['News articles', '1', '0', '0', '1', '0', '0'],
             ],
             [
                 $this->texts($xpath, '//tbody/tr[1]/td'),
                 $this->texts($xpath, '//tbody/tr[2]/td'),
             ],
+        );
+    }
+
+    #[Test]
+    public function theOverviewExplainsWhatToDoWithTheCounts(): void
+    {
+        static::assertStringContainsString(
+            'Select a number to see those records',
+            implode(' ', $this->texts($this->page('overview'), '//p[@class="card__description"]')),
+        );
+    }
+
+    #[Test]
+    public function theOverviewLeavesOutTheDefaultsOfASiteWithNoSeoBlocks(): void
+    {
+        $this->host->context('seo')->settings('seo-sitemap')->set(['sitemap' => false]);
+
+        static::assertSame(
+            [
+                'Check The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
+                    . ' Settings, under Sitemap.',
+            ],
+            $this->texts($this->page('overview'), '//dd'),
         );
     }
 
@@ -370,8 +394,26 @@ final class SeoModuleTest extends TestCase
     }
 
     #[Test]
+    public function theOverviewSaysNothingOnceRecordsReachTheSite(): void
+    {
+        $this->host->context('seo')->settings('seo')->set(['site_name' => 'Site', 'records' => true]);
+
+        static::assertSame([], $this->texts($this->page('overview'), '//p[contains(., "switched off")]'));
+    }
+
+    #[Test]
+    public function theOverviewSaysWhenRecordsDoNotYetReachTheSite(): void
+    {
+        static::assertSame(
+            ['/admin/settings/common/view/category/seo/section/seo'],
+            $this->texts($this->page('overview'), '//p[contains(., "switched off")]/a/@href'),
+        );
+    }
+
+    #[Test]
     public function theOverviewShowsHowTheSitesDefaultsStand(): void
     {
+        $this->seedRecords();
         $this->host->context('seo')->settings('seo-sitemap')->set(['sitemap' => false]);
 
         static::assertSame(

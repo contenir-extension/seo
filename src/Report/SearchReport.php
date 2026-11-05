@@ -77,7 +77,7 @@ final readonly class SearchReport
     }
 
     /**
-     * What the site calls each linkable section, by its key.
+     * What the report calls each linkable section (the site's name for a record, as a plural), by its key.
      *
      * @return array<string, string>
      *
@@ -87,7 +87,7 @@ final readonly class SearchReport
     {
         $titles = [];
         foreach ($this->context->services()->get(RecordsInterface::class)->sections() as $section) {
-            $titles[$section->section] = $section->title;
+            $titles[$section->section] = SectionNames::plural($section->title);
         }
 
         return $titles;

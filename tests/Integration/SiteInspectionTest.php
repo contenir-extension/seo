@@ -125,7 +125,7 @@ final class SiteInspectionTest extends TestCase
         $this->host->seed(self::SECTION, 1, ['title' => 'New title']);
 
         static::assertSame(
-            ['Project', '1', '0', '0', '1', '0', '0'],
+            ['Projects', '1', '0', '0', '1', '0', '0'],
             $this->texts($this->page('overview'), '//tbody/tr[1]/td'),
         );
     }
@@ -603,8 +603,8 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             [
-                ['Project', '1', '0', '0', '1', '0', '0'],
-                ['Project', '1', '1', '0', '0', '0', '0'],
+                ['Projects', '1', '0', '0', '1', '0', '0'],
+                ['Projects', '1', '1', '0', '0', '0', '0'],
             ],
             [$before, $this->texts($this->page('overview'), '//tbody/tr[1]/td')],
         );

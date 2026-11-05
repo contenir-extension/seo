@@ -84,6 +84,12 @@ final class AppearanceSectionTest extends TestCase
                     'Saved for this environment only. Automatic hides every copy of the site that isn\'t at the site'
                         . ' URL, such as staging, so it never appears in search results.',
                 ],
+                'records'           => [
+                    'Use each record\'s search settings',
+                    'Saved for this environment only. When on, sections that declare search settings give their'
+                        . ' records\' titles, descriptions, images and structured data to the site\'s pages, sitemap'
+                        . ' and breadcrumbs. Turn it on once the Overview has no records to fix.',
+                ],
             ],
             self::byName(static fn(Field $field): array => [$field->label, $field->description]),
         );
@@ -97,7 +103,7 @@ final class AppearanceSectionTest extends TestCase
                 ['titles', 'Titles', [['site_name'], ['title_separator', 'title_position'], ['home_title']]],
                 ['defaults', 'Defaults', [['description'], ['share_image'], ['share_image_alt'], ['robots']]],
                 ['organisation', 'Organisation', [['organisation_name'], ['organisation_type'], ['organisation_logo']]],
-                ['environment', 'This environment', [['visibility']]],
+                ['environment', 'This environment', [['visibility'], ['records']]],
             ],
             array_map(
                 static fn(Group $group): array => [$group->id, $group->legend, $group->rows],
@@ -128,7 +134,7 @@ final class AppearanceSectionTest extends TestCase
     public function keepsTheEnvironmentsChoiceLocal(): void
     {
         static::assertSame(
-            ['visibility'],
+            ['visibility', 'records'],
             array_keys(array_filter(self::byName(static fn(Field $field): bool => $field->local))),
         );
     }
@@ -161,6 +167,14 @@ final class AppearanceSectionTest extends TestCase
             AppearanceSection::KEYS,
             self::byName(static fn(Field $field): ?string => $field->setting),
         );
+    }
+
+    #[Test]
+    public function theRecordsSwitchIsACheckboxThatStartsOff(): void
+    {
+        $field = self::byName(static fn(Field $field): array => [$field->type, $field->default])['records'];
+
+        static::assertSame(['checkbox', false], $field);
     }
 
     #[Test]

@@ -21,7 +21,8 @@ use function sprintf;
  * Whether the site has what its pages fall back on when they have none of
  * their own: a description, a share image and a logo for its organisation.
  * Images need the site's address, so without one this waits on the site URL
- * check.
+ * check. A site whose sections declare no `<seo>` block has no pages that fall
+ * back on them, so the check is skipped.
  */
 final readonly class DefaultsCheck implements CheckInterface
 {
@@ -31,6 +32,12 @@ final readonly class DefaultsCheck implements CheckInterface
     #[Override]
     public function check(ExtensionContextInterface $context): CheckResult
     {
+        if ([] === $context->sections()->blocks()) {
+            return CheckResult::skipped(
+                'No section declares an <seo> block in admin.xml, so no page falls back on these.',
+            );
+        }
+
         $config = (new SeoSettings())->config($context);
         if (! $config->site->isSet()) {
             return CheckResult::skipped('Set the site URL first: the share image and logo are addressed from it.');

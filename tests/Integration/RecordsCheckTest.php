@@ -34,6 +34,7 @@ final class RecordsCheckTest extends TestCase
     #[Test]
     public function aPartlyMissingSiteNamesWhatIsMissing(): void
     {
+        $this->section();
         $this->host->context('seo')->settings('seo')->set(['description' => 'A studio.']);
 
         static::assertSame(
@@ -62,7 +63,7 @@ final class RecordsCheckTest extends TestCase
         $this->host->seed('library.news.article', 2, ['title' => 'Opening', 'description' => self::DESCRIPTION]);
 
         static::assertSame(
-            [Status::Warning, 'Records need attention for search: Project: 1. See SEO in the menu.'],
+            [Status::Warning, 'Records need attention for search: Projects: 1. See SEO in the menu.'],
             $this->records(),
         );
     }
@@ -70,6 +71,7 @@ final class RecordsCheckTest extends TestCase
     #[Test]
     public function aSiteWithEveryDefaultPasses(): void
     {
+        $this->section();
         $this->host
             ->context('seo')
             ->settings('seo')
@@ -83,8 +85,15 @@ final class RecordsCheckTest extends TestCase
     }
 
     #[Test]
+    public function aSiteWithNoSeoBlocksSkipsTheDefaultsCheck(): void
+    {
+        static::assertSame(Status::Skipped, $this->host->check('seo', 'defaults')->status);
+    }
+
+    #[Test]
     public function oneMissingDefaultIsNamedAlone(): void
     {
+        $this->section();
         $this->host
             ->context('seo')
             ->settings('seo')
@@ -121,7 +130,7 @@ final class RecordsCheckTest extends TestCase
         $this->host->seed('library.news.article', 2, ['title' => 'Opening']);
 
         static::assertSame(
-            [Status::Warning, 'Records need attention for search: Project: 1; News article: 1. See SEO in the menu.'],
+            [Status::Warning, 'Records need attention for search: Projects: 1; News articles: 1. See SEO in the menu.'],
             $this->records(),
         );
     }

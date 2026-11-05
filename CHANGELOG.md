@@ -4,7 +4,22 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.4.0] - 2026-11-06
+
+### Added
+
+- A **Use each record's search settings** checkbox in Search Appearance, under This environment. It is the master
+  switch for what the site's `<seo>` blocks drive (`extensions.seo.records`), saved for the environment only and off
+  until turned on. The Overview says when it is off, and links to it.
+
+### Changed
+
+- The Overview names each section as the records it counts ("Pages", "Projects") rather than one record ("Page",
+  "Project"), and says what to do with the counts: select one to see those records, and fix them there. The Records
+  report and the dashboard check name sections the same way.
+- A site whose sections declare no `<seo>` block no longer has the site-wide defaults check: the check is skipped
+  and left off the Overview, so such a site sees no new warning.
+- Requires `contenir/contenir-seo` ^0.8.
 
 ## [0.3.0] - 2026-11-05
 

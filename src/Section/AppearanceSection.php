@@ -55,6 +55,8 @@ final class AppearanceSection
 
     public const string VISIBILITY = 'visibility';
 
+    public const string RECORDS = 'records';
+
     /**
      * Where uploaded images go, under the site's document root.
      */
@@ -76,6 +78,7 @@ final class AppearanceSection
         self::ORGANISATION_TYPE => SettingKeys::ORGANISATION_TYPE,
         self::ORGANISATION_LOGO => SettingKeys::ORGANISATION_LOGO,
         self::VISIBILITY        => SettingKeys::VISIBILITY,
+        self::RECORDS           => SettingKeys::RECORDS,
     ];
 
     public static function define(): SettingsSection
@@ -191,6 +194,18 @@ final class AppearanceSection
                         options: Visibility::options(),
                         local: true,
                     ),
+                    new Field(
+                        name: self::RECORDS,
+                        label: 'Use each record\'s search settings',
+                        type: FieldType::Checkbox,
+                        description: 'Saved for this environment only. When on, sections that declare search settings'
+                            . ' give their records\' titles, descriptions, images and structured data to the'
+                            . ' site\'s pages, sitemap and breadcrumbs. Turn it on once the Overview has no records'
+                            . ' to fix.',
+                        setting: SettingKeys::RECORDS,
+                        default: false,
+                        local: true,
+                    ),
                 ],
                 [
                     new Group('titles', 'Titles', [
@@ -213,7 +228,7 @@ final class AppearanceSection
                             self::ORGANISATION_LOGO,
                         ],
                     ),
-                    new Group('environment', 'This environment', [self::VISIBILITY]),
+                    new Group('environment', 'This environment', [self::VISIBILITY, self::RECORDS]),
                 ],
             ),
         );

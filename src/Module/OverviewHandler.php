@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Module;
 
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
-use Contenir\Extension\Api\Diagnostic\CheckInterface;
+use Contenir\Extension\Api\Diagnostic\Status;
 use Contenir\Extension\Api\Exception\InvalidDeclarationException;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
@@ -14,11 +14,10 @@ use Contenir\Extension\Api\Handler\HandlerResult;
 use Contenir\Extension\Seo\Check\DefaultsCheck;
 use Contenir\Extension\Seo\Check\SitemapCheck;
 use Contenir\Extension\Seo\Report\SearchReport;
+use Contenir\Extension\Seo\SeoSettings;
 use Override;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
-use function array_map;
 
 /**
  * The SEO area's home: each section described for search, with how many of its
@@ -27,6 +26,28 @@ use function array_map;
 final readonly class OverviewHandler implements HandlerInterface
 {
     public const string NAME = 'overview';
+
+    /**
+     * The site-wide checks that apply to the site, each as the template shows it.
+     *
+     * @return list<array{label: string, status: string, message: string}>
+     *
+     * @throws UnknownSettingException When a setting isn't one of the add-on's.
+     */
+    private static function checks(ExtensionContextInterface $context): array
+    {
+        $checks = [];
+        foreach ([new DefaultsCheck(), new SitemapCheck()] as $check) {
+            $result = $check->check($context);
+            if (Status::Skipped === $result->status) {
+                continue;
+            }
+
+            $checks[] = ['label' => $check->label(), 'status' => $result->status->value, 'message' => $result->message];
+        }
+
+        return $checks;
+    }
 
     /**
      * @throws ContainerExceptionInterface When the host's records can't be reached.
@@ -44,18 +65,8 @@ final readonly class OverviewHandler implements HandlerInterface
                 'sections' => (new SearchReport($context))->sections(),
                 'roles'    => SearchReport::ROLES,
                 'settings' => SettingsLinks::all(),
-                'checks'   => array_map(
-                    static function (CheckInterface $check) use ($context): array {
-                        $result = $check->check($context);
-
-                        return [
-                            'label'   => $check->label(),
-                            'status'  => $result->status->value,
-                            'message' => $result->message,
-                        ];
-                    },
-                    [new DefaultsCheck(), new SitemapCheck()],
-                ),
+                'records'  => (new SeoSettings())->config($context)->records,
+                'checks'   => self::checks($context),
             ],
             Tabs::of(self::NAME),
         );
