@@ -9,9 +9,11 @@ use Contenir\Extension\Api\Diagnostic\CheckInterface;
 use Contenir\Extension\Api\Diagnostic\CheckResult;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
+use Contenir\Seo\Sections\LinkedValue;
 use Override;
 
 use function array_diff;
+use function array_keys;
 use function array_merge;
 use function count;
 use function implode;
@@ -21,7 +23,8 @@ use function sprintf;
  * Whether each section's `<seo>` block in admin.xml says what the site and
  * the save check need: a type, which the site's section map is keyed by; a
  * section with pages of its own, since a record without an address has
- * nothing to describe; and columns that are fields of the section.
+ * nothing to describe; and columns that are fields of the section, a linked
+ * record's being the site's to find.
  */
 final readonly class SectionsCheck implements CheckInterface
 {
@@ -31,7 +34,8 @@ final readonly class SectionsCheck implements CheckInterface
     private static function problems(SectionBlock $block): array
     {
         $seo      = SeoDeclaration::read($block->element);
-        $unknown  = array_diff(SeoDeclaration::named($block->element), $block->fields);
+        $named    = SeoDeclaration::named($block->element);
+        $unknown  = array_diff($named, $block->fields, array_keys(LinkedValue::among($named)));
         $problems = [];
         if ('' === $seo->type) {
             $problems[] = sprintf('%s names no type for the site to describe it by', $block->section);

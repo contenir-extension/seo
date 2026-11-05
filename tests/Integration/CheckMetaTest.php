@@ -40,6 +40,22 @@ final class CheckMetaTest extends TestCase
     private InMemoryHost $host;
 
     /**
+     * @return array<string, array{string}>
+     */
+    public static function linkedProvider(): array
+    {
+        return [
+            'a title'       => ['<seo type="project"><title required="true">hero.title</title></seo>'],
+            'a description' => [
+                '<seo type="project"><description required="true">meta_description, hero.text</description></seo>',
+            ],
+            'an image'      => [
+                '<seo type="project"><image required="true">image_lg, assets[type=hero].path</image></seo>',
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, array{string, array<string, string>, array<string, list<string>>}>
      */
     public static function requiredProvider(): array
@@ -126,6 +142,21 @@ final class CheckMetaTest extends TestCase
             [Outcome::Stopped, ['meta_description' => ['Add a description for search results and shared links.']]],
             [$result->outcome, $result->errors],
         );
+    }
+
+    #[Test]
+    #[DataProvider('linkedProvider')]
+    public function aRoleALinkedRecordCanFillDoesNotHoldTheSave(string $block): void
+    {
+        $this->host->block('library.news.article', $block, self::FIELDS);
+        $values = [
+            'meta_title'       => 'House',
+            'title'            => '',
+            'meta_description' => ' ',
+            'description'      => self::DESCRIPTION,
+        ];
+
+        static::assertSame([], $this->host->save('library.news.article', 1, $values)->errors);
     }
 
     #[Test]

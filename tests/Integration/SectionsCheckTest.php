@@ -24,6 +24,40 @@ final class SectionsCheckTest extends TestCase
     private InMemoryHost $host;
 
     #[Test]
+    public function aLinkedRecordsColumnNeedsNoFieldOfTheSection(): void
+    {
+        $this->host->linkable(new LinkableSection('library.projects.project', 'Projects'));
+        $this->host->block(
+            'library.projects.project',
+            '<seo type="project"><image alt="assets[type=hero].alt, title">assets[type=hero].path, hero.path</image></seo>',
+            ['title'],
+        );
+
+        static::assertEquals(
+            CheckResult::success('1 section is described for search.'),
+            $this->host->check('seo', 'sections'),
+        );
+    }
+
+    #[Test]
+    public function aMalformedLinkIsReportedAsAnUnknownField(): void
+    {
+        $this->host->linkable(new LinkableSection('library.projects.project', 'Projects'));
+        $this->host->block(
+            'library.projects.project',
+            '<seo type="project"><image>assets[type].path</image></seo>',
+            [],
+        );
+
+        static::assertEquals(
+            CheckResult::warning(
+                'Check the <seo> blocks in admin.xml: library.projects.project names assets[type].path, which it has no field for.',
+            ),
+            $this->host->check('seo', 'sections'),
+        );
+    }
+
+    #[Test]
     public function aSiteWithoutBlocksSkipsTheCheck(): void
     {
         static::assertEquals(

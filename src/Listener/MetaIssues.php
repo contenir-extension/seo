@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Listener;
 
+use Contenir\Seo\Sections\LinkedValue;
 use Contenir\Seo\Sections\SeoBlock;
 use Contenir\Seo\Title\TitleTemplate;
 
@@ -30,6 +31,17 @@ final readonly class MetaIssues
     }
 
     /**
+     * The issue of a role with no value in its columns, which isn't one while
+     * it can still come from a linked record, as only the site can tell.
+     *
+     * @param list<string> $columns
+     */
+    private static function missing(string $role, string $field, array $columns, string $message): ?MetaIssue
+    {
+        return LinkedValue::any($columns) ? null : new MetaIssue($role, $field, $message, missing: true);
+    }
+
+    /**
      * @return list<MetaIssue>
      */
     public function of(MetaValues $values): array
@@ -38,23 +50,23 @@ final readonly class MetaIssues
         $columns  = $this->seo->roles['title'] ?? [];
         $title    = $values->text($columns);
         $issues[] = null === $title
-            ? new MetaIssue('title', $values->field($columns), 'Add a title for search results.', missing: true)
+            ? self::missing('title', $values->field($columns), $columns, 'Add a title for search results.')
             : self::issue('title', $values->field($columns), MetaLengths::title($this->template->format($title)));
 
         $columns     = $this->seo->roles['description'] ?? [];
         $description = $values->text($columns);
         $issues[]    = null === $description
-            ? new MetaIssue(
+            ? self::missing(
                 'description',
                 $values->field($columns),
+                $columns,
                 'Add a description for search results and shared links.',
-                missing: true,
             )
             : self::issue('description', $values->field($columns), MetaLengths::description($description));
 
         $columns  = $this->seo->roles['image'] ?? [];
         $issues[] = [] !== $columns && null === $values->text($columns)
-            ? new MetaIssue('image', $values->field($columns), 'Add an image for shared links.', missing: true)
+            ? self::missing('image', $values->field($columns), $columns, 'Add an image for shared links.')
             : null;
 
         return array_values(array_filter($issues));
