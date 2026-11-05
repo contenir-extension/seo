@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "da42fa607447bdcbb2622b5b01a5b288",
+    "content-hash": "685487b1fa0fdb0cbbdfa40e1067d6e8",
     "packages": [
         {
             "name": "contenir/contenir-contact",
@@ -170,16 +170,16 @@
         },
         {
             "name": "contenir/contenir-seo",
-            "version": "v0.7.0",
+            "version": "v0.7.1",
             "source": {
                 "type": "git",
-                "url": "git@github.com:contenir/contenir-seo.git",
-                "reference": "6fc73fbbaad32b9fe732e8d8b4dd8e77c233cc57"
+                "url": "https://github.com/contenir/contenir-seo.git",
+                "reference": "5a3c4818f8e9f8a5254335036deaf6068a4f3c53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/contenir/contenir-seo/zipball/6fc73fbbaad32b9fe732e8d8b4dd8e77c233cc57",
-                "reference": "6fc73fbbaad32b9fe732e8d8b4dd8e77c233cc57",
+                "url": "https://api.github.com/repos/contenir/contenir-seo/zipball/5a3c4818f8e9f8a5254335036deaf6068a4f3c53",
+                "reference": "5a3c4818f8e9f8a5254335036deaf6068a4f3c53",
                 "shasum": ""
             },
             "require": {
@@ -258,7 +258,7 @@
                 "issues": "https://github.com/contenir/contenir-seo/issues",
                 "source": "https://github.com/contenir/contenir-seo"
             },
-            "time": "2026-11-04T20:21:07+00:00"
+            "time": "2026-11-05T04:02:27+00:00"
         },
         {
             "name": "psr/clock",

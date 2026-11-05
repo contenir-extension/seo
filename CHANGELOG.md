@@ -4,11 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.1] - 2026-11-05
 
 ### Added
 
 - The SEO area's Overview links to the Search Appearance, Site Verification and Sitemap settings.
+- A `<seo>` block may name a linked record's column, as `assets[type=hero].path`. The sections check accepts these, and
+  a save doesn't ask for a value only the site can find, leaving that to what the site last rendered.
 - The report and panel warn when the file a page's share image was made from is smaller than 1200×630, which a share
   variant would otherwise hide. Only for images in the site's public folder, once the site has been asked again.
 
