@@ -50,7 +50,7 @@ final class AdvancedFieldTest extends TestCase
             'only space'                      => ['  ', null],
             'trimmed'                         => ['{"image_alt":" Café ","other":"x"}', '{"image_alt":"Café"}'],
             'a title and description dropped' => [
-                '{\"title\":\"T\",\"description\":\"D\",\"image\":\"/a.jpg\",\"robots\":\"noindex\"}',
+                '{"title":"T","description":"D","image":"/a.jpg","robots":"noindex"}',
                 '{"robots":"noindex"}',
             ],
             'only a title'                    => ['{"title":"T"}', null],
