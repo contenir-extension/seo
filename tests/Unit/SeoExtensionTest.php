@@ -87,7 +87,12 @@ final class SeoExtensionTest extends TestCase
     #[Test]
     public function declaresItsRoundOfAskingTheSite(): void
     {
-        static::assertSame([InspectRecords::NAME], array_keys(self::registration()->schedules));
+        $schedules = self::registration()->schedules;
+
+        static::assertSame(
+            [[InspectRecords::NAME], 15],
+            [array_keys($schedules), $schedules[InspectRecords::NAME]->frequency->minutes ?? null],
+        );
     }
 
     #[Test]

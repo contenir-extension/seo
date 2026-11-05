@@ -733,7 +733,7 @@ final class SiteInspectionTest extends TestCase
     {
         return (
             (new SearchPanel())->panel(new RecordView(self::SECTION, 1, $values), $this->host->context('seo'))
-                ?->paragraphs ?? []
+                ->paragraphs ?? []
         );
     }
 
