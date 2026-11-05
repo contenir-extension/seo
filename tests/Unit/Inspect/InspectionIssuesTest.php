@@ -73,6 +73,26 @@ final class InspectionIssuesTest extends TestCase
     }
 
     /**
+     * @return array<string, array{int|null, int|null, list<string>}>
+     */
+    public static function sizeProvider(): array
+    {
+        $small = static fn(
+            int $w,
+            int $h,
+        ): string => "The share image is {$w}×{$h}, and sharing sites show about 1200×630, so it may look soft.";
+
+        return [
+            'exactly enough' => [1200, 630, []],
+            'larger'         => [2000, 1333, []],
+            'too narrow'     => [1199, 630, [$small(1199, h: 630)]],
+            'too short'      => [1200, 629, [$small(1200, h: 629)]],
+            'width unknown'  => [null, 630, []],
+            'height unknown' => [1200, null, []],
+        ];
+    }
+
+    /**
      * @param list<array{string, string, bool}> $issues
      */
     #[Test]
@@ -82,6 +102,19 @@ final class InspectionIssuesTest extends TestCase
         static::assertSame($issues, array_map(
             static fn(MetaIssue $issue): array => [$issue->role, $issue->message, $issue->missing],
             InspectionIssues::of(new Inspection('s', 0, $title, $description, $image)),
+        ));
+    }
+
+    /**
+     * @param list<string> $issues
+     */
+    #[Test]
+    #[DataProvider('sizeProvider')]
+    public function warnsAboutASmallImage(?int $width, ?int $height, array $issues): void
+    {
+        static::assertSame($issues, array_map(
+            static fn(MetaIssue $issue): string => $issue->message,
+            InspectionIssues::of(new Inspection('s', 0, 'House | Site', self::DESCRIPTION, '/a.jpg', $width, $height)),
         ));
     }
 }

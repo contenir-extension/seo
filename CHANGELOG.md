@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - The SEO area's Overview links to the Search Appearance, Site Verification and Sitemap settings.
+- The report and panel warn when the file a page's share image was made from is smaller than 1200×630, which a share
+  variant would otherwise hide. Only for images in the site's public folder, once the site has been asked again.
 
 ### Changed
 
