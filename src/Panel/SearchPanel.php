@@ -40,6 +40,9 @@ final readonly class SearchPanel implements RecordPanelInterface
 {
     public const string NAME = 'search';
 
+    /** The SEO area's Preview screen for a record, where the site is asked what it renders. */
+    private const string PREVIEW = '/admin/extension/seo/preview?section=%s&id=%s';
+
     private const array OFF = ['0', 0, false, ''];
 
     /**
@@ -84,6 +87,11 @@ final readonly class SearchPanel implements RecordPanelInterface
         $description = $values->text($seo->roles['description'] ?? []);
         $shown       = null === $title ? null : $template->format($title);
         $url         = $context->urls()->url($record->reference());
+        $preview     = sprintf(
+            self::PREVIEW,
+            rawurlencode($record->section),
+            rawurlencode((string) $record->reference()->id),
+        );
 
         return new Panel(
             'Search and social',
@@ -114,6 +122,7 @@ final readonly class SearchPanel implements RecordPanelInterface
                 ? []
                 : [
                     new Link('View the page', $url),
+                    new Link('Preview in search', $preview),
                     new Link(
                         'Test its structured data',
                         'https://search.google.com/test/rich-results?url=' . rawurlencode($url),

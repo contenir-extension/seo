@@ -27,6 +27,7 @@ use Contenir\Extension\Seo\Listener\CheckMeta;
 use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoExtension;
+use Contenir\Extension\Seo\Task\InspectRecords;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -81,6 +82,12 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
+    public function declaresItsRoundOfAskingTheSite(): void
+    {
+        static::assertSame([InspectRecords::NAME], array_keys(self::registration()->schedules));
+    }
+
+    #[Test]
     public function declaresThreeSettingsSections(): void
     {
         static::assertSame(
@@ -93,7 +100,7 @@ final class SeoExtensionTest extends TestCase
     public function drawsItsAreaFromTheOverviewRecordsAndExportHandlers(): void
     {
         static::assertSame(
-            ['overview', 'records', 'records-export'],
+            ['overview', 'records', 'records-export', 'preview', 'records-check'],
             array_keys(self::registration()->handlers),
         );
     }
@@ -104,11 +111,10 @@ final class SeoExtensionTest extends TestCase
         $registration = self::registration();
 
         static::assertSame(
-            [[], [], [], [], [], null],
+            [[], [], [], [], null],
             [
                 $registration->webhooks,
                 $registration->migrations,
-                $registration->schedules,
                 $registration->dependencies,
                 $registration->scripts,
                 $registration->icons,

@@ -17,27 +17,21 @@ final readonly class SectionIssues
     /**
      * @param string $section The section's key, such as "library.projects.project"
      * @param string $title What the site calls the section
-     * @param int $checked The records read, at most SearchReport::MAX_ROWS
+     * @param int $checked The published records read
      * @param list<RecordIssues> $records The records with at least one issue
+     * @param int $inspected The records judged by what the site rendered, not their columns
      */
     public function __construct(
         public string $section,
         public string $title,
         public int $checked,
         public array $records,
+        public int $inspected,
     ) {}
 
     public function count(?string $role): int
     {
         return count($this->in($role));
-    }
-
-    /**
-     * Whether the section holds more records than the report reads.
-     */
-    public function cutShort(): bool
-    {
-        return $this->checked >= SearchReport::MAX_ROWS;
     }
 
     /**

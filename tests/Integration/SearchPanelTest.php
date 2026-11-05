@@ -75,6 +75,7 @@ final class SearchPanelTest extends TestCase
         static::assertEquals(
             [
                 new Link('View the page', self::URL),
+                new Link('Preview in search', '/admin/extension/seo/preview?section=library.projects.project&id=4'),
                 new Link(
                     'Test its structured data',
                     'https://search.google.com/test/rich-results?url=https%3A%2F%2Fwww.studioesteta.com.au%2Fwork%2Fhouse',
