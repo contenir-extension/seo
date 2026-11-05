@@ -29,3 +29,25 @@ jobs:
           "/admin/settings/common/index/category/seo/section/seo-verification",
           "/admin/settings/common/index/category/seo/section/seo-sitemap"
         ]
+
+  js:
+    name: "JavaScript"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run test:coverage
+
+      - run: npm run build
+
+      - name: "Check the committed build matches the sources"
+        run: |
+          git diff --exit-code -- public/
+          test -z "$(git status --porcelain -- public/)"

@@ -16,6 +16,7 @@ use Contenir\Extension\Seo\Check\SectionsCheck;
 use Contenir\Extension\Seo\Check\SitemapCheck;
 use Contenir\Extension\Seo\Check\SiteUrlCheck;
 use Contenir\Extension\Seo\Check\VisibilityCheck;
+use Contenir\Extension\Seo\Field\AdvancedField;
 use Contenir\Extension\Seo\Field\BingTokenField;
 use Contenir\Extension\Seo\Field\GoogleTokenField;
 use Contenir\Extension\Seo\Field\MetaTokenField;
@@ -59,6 +60,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->fieldType(MetaTokenField::NAME, MetaTokenField::class);
         $registry->fieldType(WorkflowsField::NAME, WorkflowsField::class);
         $registry->fieldType(RobotsRulesField::NAME, RobotsRulesField::class);
+        $registry->fieldType(AdvancedField::NAME, AdvancedField::class);
 
         $registry->settingsSection(AppearanceSection::define());
         $registry->settingsSection(VerificationSection::define($registry->handle()));
@@ -78,6 +80,8 @@ final class SeoExtension implements ExtensionInterface
 
         $registry->module(dirname(__DIR__) . '/config/admin.xml');
         $registry->templates(dirname(__DIR__) . '/templates');
+        $registry->assets(dirname(__DIR__) . '/public');
+        $registry->component(AdvancedField::COMPONENT, AdvancedField::SCRIPT);
         $registry->handler(OverviewHandler::NAME, OverviewHandler::class);
         $registry->handler(RecordsHandler::NAME, RecordsHandler::class);
         $registry->handler(ExportHandler::NAME, ExportHandler::class);
