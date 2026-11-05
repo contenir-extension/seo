@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<admin>
+    <seo>
+        <title>SEO</title>
+        <icon>search</icon>
+        <description>How the site's records read in search results and shared links</description>
+        <handler>overview</handler>
+    </seo>
+</admin>

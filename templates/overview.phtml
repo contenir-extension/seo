@@ -1,0 +1,75 @@
+<?php
+/**
+ * The SEO area's home: each section's counts per role, each leading to those
+ * records, then how the site's own defaults stand.
+ *
+ * @var array{
+ *     sections: list<\Contenir\Extension\Seo\Report\SectionIssues>,
+ *     roles: array<string, string>,
+ *     checks: list<array{label: string, status: string, message: string}>,
+ * } $values
+ * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
+ */
+?>
+                <?= $view->tabs() ?>
+
+                <div class="stack stack--lg">
+                <section class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">Sections</h2>
+                        <p class="card__description">Read from each record's own columns, so anything the site builds in its code, such as a description from a page's blocks, isn't counted.</p>
+                    </div>
+<?php if ([] === $values['sections']): ?>
+                    <div class="card__content">
+                        <div class="empty">
+                            <div class="empty__content">
+                                <h3 class="empty__title">No sections described yet</h3>
+                                <p class="empty__description">Add an &lt;seo&gt; block to a section with pages of its own in admin.xml.</p>
+                            </div>
+                        </div>
+                    </div>
+<?php else: ?>
+                    <div class="table__wrapper table__wrapper--borderless">
+                        <table class="table table--hoverable table--card">
+                            <thead class="table__header">
+                                <tr class="table__row">
+                                    <th class="table__head">Section</th>
+                                    <th class="table__head">Records</th>
+<?php foreach ($values['roles'] as $label): ?>
+                                    <th class="table__head"><?= $view->escape($label) ?></th>
+<?php endforeach ?>
+                                </tr>
+                            </thead>
+                            <tbody class="table__body">
+<?php foreach ($values['sections'] as $section): ?>
+                                <tr class="table__row">
+                                    <td class="table__cell"><a class="text--medium" href="<?= $view->escape($view->url('records', ['section' => $section->section])) ?>"><?= $view->escape($section->title) ?></a></td>
+                                    <td class="table__cell"><?= $section->checked ?><?= $section->cutShort() ? '+' : '' ?></td>
+<?php foreach ($values['roles'] as $role => $label): ?>
+<?php $count = $section->count($role); ?>
+                                    <td class="table__cell"><?php if (0 === $count): ?><span class="text--muted">0</span><?php else: ?><a href="<?= $view->escape($view->url('records', ['section' => $section->section, 'role' => $role])) ?>"><?= $count ?></a><?php endif ?></td>
+<?php endforeach ?>
+                                </tr>
+<?php endforeach ?>
+                            </tbody>
+                        </table>
+                    </div>
+<?php endif ?>
+                </section>
+
+                <section class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">Site-wide</h2>
+                    </div>
+                    <div class="card__content">
+                        <dl class="datalist">
+<?php foreach ($values['checks'] as $check): ?>
+                            <div class="datalist__item">
+                                <dt class="datalist__label"><?= $view->escape($check['label']) ?></dt>
+                                <dd class="datalist__value"><span class="badge badge--<?= 'success' === $check['status'] ? 'success-muted' : 'warning-muted' ?>"><?= 'success' === $check['status'] ? 'OK' : 'Check' ?></span> <?= $view->escape($check['message']) ?></dd>
+                            </div>
+<?php endforeach ?>
+                        </dl>
+                    </div>
+                </section>
+                </div>
