@@ -45,7 +45,7 @@ $description = $values['description'] ?? 'No description';
 <?php if (null === $values['image']): ?>
                             <p class="text--muted seo-preview__no-image">No share image</p>
 <?php else: ?>
-                            <img class="seo-preview__image" src="<?= $view->escape($values['image']) ?>" alt="<?= $view->escape($values['imageAlt'] ?? '') ?>" style="display:block;width:100%;aspect-ratio:1.91;object-fit:cover">
+                            <img class="seo-preview__image" src="<?= $view->escape($values['image']) ?>" alt="<?= $view->escape($values['imageAlt'] ?? '') ?>" style="display:block;width:100%">
 <?php endif ?>
                             <div class="stack stack--xs mt--sm">
                                 <p class="text--sm text--medium seo-preview__card-title"><?= $view->escape($title) ?></p>
