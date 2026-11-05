@@ -7,6 +7,7 @@
  *     sections: list<\Contenir\Extension\Seo\Report\SectionIssues>,
  *     roles: array<string, string>,
  *     checks: list<array{label: string, status: string, message: string}>,
+ *     settings: array<string, string>,
  * } $values
  * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
  */
@@ -77,5 +78,10 @@
 <?php endforeach ?>
                         </dl>
                     </div>
+                    <nav class="card__footer card__footer--border cluster cluster--xs" aria-label="SEO settings">
+<?php foreach ($values['settings'] as $url => $title): ?>
+                        <a class="btn btn--ghost btn--sm" href="<?= $view->escape($url) ?>"><?= $view->icon('settings') ?><span><?= $view->escape($title) ?></span></a>
+<?php endforeach ?>
+                    </nav>
                 </section>
                 </div>

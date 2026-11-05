@@ -43,6 +43,7 @@ final readonly class OverviewHandler implements HandlerInterface
             [
                 'sections' => (new SearchReport($context))->sections(),
                 'roles'    => SearchReport::ROLES,
+                'settings' => SettingsLinks::all(),
                 'checks'   => array_map(
                     static function (CheckInterface $check) use ($context): array {
                         $result = $check->check($context);

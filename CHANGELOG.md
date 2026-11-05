@@ -6,6 +6,10 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The SEO area's Overview links to the Search Appearance, Site Verification and Sitemap settings.
+
 ### Changed
 
 - The "Search and social" panel goes by what the site last rendered for a record, as the report does, while the
