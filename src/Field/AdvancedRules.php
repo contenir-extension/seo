@@ -56,7 +56,6 @@ final class AdvancedRules
     {
         return array_values(array_filter([
             self::canonical($overrides['canonical'] ?? null),
-            self::image($overrides['image'] ?? null),
             self::robots($overrides['robots'] ?? 'all'),
             self::schema($overrides['schema'] ?? null),
         ]));
@@ -67,13 +66,6 @@ final class AdvancedRules
         return null === $canonical || self::isUrl($canonical)
             ? null
             : 'The canonical address must be a full address, such as https://www.example.com/about.';
-    }
-
-    private static function image(?string $image): ?string
-    {
-        return null === $image || self::isUrl($image) || str_starts_with($image, '/')
-            ? null
-            : 'The share image must be a full address, or a path on the site starting with /.';
     }
 
     private static function isUrl(string $value): bool

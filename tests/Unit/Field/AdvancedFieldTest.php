@@ -21,20 +21,18 @@ final class AdvancedFieldTest extends TestCase
     public static function acceptedProvider(): array
     {
         return [
-            'nothing'            => [null],
-            'an empty value'     => [''],
-            'an empty object'    => ['{}'],
-            'an empty list'      => ['[]'],
-            'a share title'      => ['{"title":"House"}'],
-            'a full address'     => ['{"canonical":"https://www.example.com/house"}'],
-            'a plain address'    => ['{"canonical":"http://www.example.com/house"}'],
-            'an image at a path' => ['{"image":"/asset/house.jpg"}'],
-            'an image elsewhere' => ['{"image":"https://cdn.example.com/house.jpg"}'],
-            'one robots rule'    => ['{"robots":"noindex"}'],
-            'two robots rules'   => ['{"robots":"NoIndex, nofollow"}'],
-            'each schema'        => ['{"schema":"BlogPosting"}'],
-            'the first schema'   => ['{"schema":"WebPage"}'],
-            'a key it ignores'   => ['{"other":"x"}'],
+            'nothing'          => [null],
+            'an empty value'   => [''],
+            'an empty object'  => ['{}'],
+            'an empty list'    => ['[]'],
+            'a share title'    => ['{"title":"House"}'],
+            'a full address'   => ['{"canonical":"https://www.example.com/house"}'],
+            'a plain address'  => ['{"canonical":"http://www.example.com/house"}'],
+            'one robots rule'  => ['{"robots":"noindex"}'],
+            'two robots rules' => ['{"robots":"NoIndex, nofollow"}'],
+            'each schema'      => ['{"schema":"BlogPosting"}'],
+            'the first schema' => ['{"schema":"WebPage"}'],
+            'a key it ignores' => ['{"other":"x"}'],
         ];
     }
 
@@ -44,12 +42,19 @@ final class AdvancedFieldTest extends TestCase
     public static function normaliseProvider(): array
     {
         return [
-            'nothing'         => [null, null],
-            'an empty value'  => ['', null],
-            'empty overrides' => ['{"title":" "}', null],
-            'not JSON'        => ['{not json', null],
-            'trimmed'         => ['{"title":" Café ","other":"x"}', '{"title":"Café"}'],
-            'addresses as is' => [
+            'nothing'                         => [null, null],
+            'an empty value'                  => ['', null],
+            'empty overrides'                 => ['{"image":" "}', null],
+            'not JSON, kept'                  => ['{not json', '{not json'],
+            'a list, kept'                    => ['["x"]', '["x"]'],
+            'only space'                      => ['  ', null],
+            'trimmed'                         => ['{"image_alt":" Café ","other":"x"}', '{"image_alt":"Café"}'],
+            'a title and description dropped' => [
+                '{\"title\":\"T\",\"description\":\"D\",\"image\":\"/a.jpg\",\"robots\":\"noindex\"}',
+                '{"robots":"noindex"}',
+            ],
+            'only a title'                    => ['{"title":"T"}', null],
+            'addresses as is'                 => [
                 '{"canonical":"https://www.example.com/a"}',
                 '{"canonical":"https://www.example.com/a"}',
             ],
@@ -63,7 +68,6 @@ final class AdvancedFieldTest extends TestCase
     {
         $unreadable = 'The SEO overrides could not be read.';
         $canonical  = 'The canonical address must be a full address, such as https://www.example.com/about.';
-        $image      = 'The share image must be a full address, or a path on the site starting with /.';
         $robots     = 'The robots rule must be made of rules such as noindex and nofollow, separated by commas.';
         $schema     = 'The schema type must be one of the types the site can describe.';
 
@@ -75,8 +79,6 @@ final class AdvancedFieldTest extends TestCase
             'a canonical path'            => ['{"canonical":"/house"}', $canonical],
             'a canonical of another kind' => ['{"canonical":"ftp://www.example.com/house"}', $canonical],
             'a script canonical'          => ['{"canonical":"javascript:alert(1)"}', $canonical],
-            'an image without a slash'    => ['{"image":"house.jpg"}', $image],
-            'a script image'              => ['{"image":"javascript:alert(1)"}', $image],
             'an unknown robots rule'      => ['{"robots":"noindex, sometimes"}', $robots],
             'an unknown schema'           => ['{"schema":"Person"}', $schema],
         ];
@@ -114,9 +116,9 @@ final class AdvancedFieldTest extends TestCase
     public function reportsEachProblem(): void
     {
         static::assertCount(
-            4,
+            3,
             (new AdvancedField())->validate(
-                '{"canonical":"x","image":"x","robots":"x","schema":"x"}',
+                '{"canonical":"x","robots":"x","schema":"x"}',
             ),
         );
     }

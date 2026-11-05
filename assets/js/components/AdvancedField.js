@@ -4,11 +4,13 @@ import { BaseComponent } from '@parallelogram-js/core/core/BaseComponent.js'
  * AdvancedField — draws a record's SEO overrides as a group of inputs.
  *
  * Registered against `[data-seo-advanced]`, the textarea the host draws for a
- * `seo:advanced` field, which holds the overrides as JSON. The textarea stays
- * in the form, hidden, so the JSON is still what is posted and what the add-on
- * validates: each input writes it back as it changes. A value the lists don't
- * offer, or a textarea that doesn't hold an object, is kept rather than lost,
- * so an editor never overwrites what they can't see.
+ * `seo:advanced` field, which holds the overrides as JSON. Each override gets a
+ * row of its own beside the form's other fields, in the host's own markup. The
+ * textarea stays in the form, hidden, so the JSON is still what is posted and
+ * what the add-on validates: each input writes it back as it changes. Its row
+ * stays only to show an error the host put there. A value the lists don't offer,
+ * or a textarea that doesn't hold an object, is kept rather than lost, so an
+ * editor never overwrites what they can't see.
  */
 const ROBOTS = [
     ['', 'As the site sets it'],
@@ -29,14 +31,14 @@ const SCHEMAS = [
     ['BlogPosting', 'Blog post'],
 ]
 
-const FIELDS = [
-    { name: 'title', label: 'Share title', hint: 'Replaces the title on this page and in shared links.' },
-    { name: 'description', label: 'Share description', multiline: true },
-    { name: 'image', label: 'Share image', hint: 'A full address, or a path on the site starting with /.' },
-    { name: 'image_alt', label: 'Share image description' },
-    { name: 'canonical', label: 'Canonical address', hint: 'Only when this page copies one published elsewhere.' },
-    { name: 'robots', label: 'Search engines', options: ROBOTS },
-    { name: 'schema', label: 'Schema type', options: SCHEMAS },
+/** Each row of the form, with the fields that sit side by side in it. */
+const ROWS = [
+    [{ name: 'image_alt', label: 'Share image description' }],
+    [{ name: 'canonical', label: 'Canonical address', hint: 'Only when this page copies one published elsewhere.' }],
+    [
+        { name: 'robots', label: 'Search engines', options: ROBOTS },
+        { name: 'schema', label: 'Schema type', options: SCHEMAS },
+    ],
 ]
 
 function parse(text) {
@@ -57,12 +59,13 @@ function control(field, value) {
         for (const [option, label] of options) {
             select.add(new Option(label, option, false, option === value))
         }
-        select.className = 'form__control form__control--select'
+        select.className = 'select'
         return select
     }
 
-    const input = document.createElement(field.multiline ? 'textarea' : 'input')
-    input.className = 'form__control'
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.className = 'input'
     input.value = value
     return input
 }
@@ -79,34 +82,43 @@ export default class AdvancedField extends BaseComponent {
             return {}
         }
 
-        const group = document.createElement('div')
-        group.className = 'stack stack--md'
         const inputs = new Map()
-        for (const field of FIELDS) {
+        const column = (field) => {
             const id = `${element.id || element.name}-${field.name}`
-            const wrapper = document.createElement('div')
-            wrapper.className = 'form__group'
-
             const label = document.createElement('label')
             label.className = 'form__label'
             label.htmlFor = id
             label.textContent = field.label
-            wrapper.append(label)
 
             const input = control(field, typeof values[field.name] === 'string' ? values[field.name] : '')
             input.id = id
             inputs.set(field.name, input)
-            wrapper.append(input)
 
+            const wrapper = document.createElement('div')
+            wrapper.className = 'form__field'
+            wrapper.append(label, input)
             if (field.hint) {
                 const hint = document.createElement('p')
                 hint.className = 'form__description'
+                hint.id = `${id}-desc`
                 hint.textContent = field.hint
+                input.setAttribute('aria-describedby', hint.id)
                 wrapper.append(hint)
             }
 
-            group.append(wrapper)
+            const col = document.createElement('div')
+            col.className = 'form__col'
+            col.append(wrapper)
+
+            return col
         }
+        const rows = ROWS.map((fields) => {
+            const row = document.createElement('div')
+            row.className = 'form__row'
+            row.append(...fields.map(column))
+
+            return row
+        })
 
         const write = () => {
             const written = { ...values }
@@ -117,15 +129,26 @@ export default class AdvancedField extends BaseComponent {
             element.value = Object.keys(written).length === 0 ? '' : JSON.stringify(written)
         }
 
-        group.addEventListener('input', write)
-        group.addEventListener('change', write)
+        const field = element.closest('.form__field')
+        const label = field?.querySelector('label') ?? null
+        const row = element.closest('.form__row')
+        const shown = row ?? element
+        shown.before(...rows)
+        for (const row of rows) {
+            row.addEventListener('input', write)
+            row.addEventListener('change', write)
+        }
+
         element.hidden = true
-        element.after(group)
+        if (label) label.hidden = true
+        if (row && !field.querySelector('.form__error')) row.hidden = true
 
         return {
             cleanup: () => {
-                group.remove()
+                for (const row of rows) row.remove()
                 element.hidden = false
+                if (label) label.hidden = false
+                if (row) row.hidden = false
             },
         }
     }
