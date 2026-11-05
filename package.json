@@ -1,0 +1,22 @@
+{
+    "name": "@contenir-extension/seo",
+    "version": "0.0.0",
+    "private": true,
+    "description": "The seo add-on's dashboard scripts",
+    "license": "BSD-3-Clause",
+    "type": "module",
+    "scripts": {
+        "build": "node bin/build-assets.mjs",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage"
+    },
+    "dependencies": {
+        "@parallelogram-js/core": "0.7.27"
+    },
+    "devDependencies": {
+        "@vitest/coverage-v8": "^4.1.11",
+        "esbuild": "^0.28.2",
+        "jsdom": "^30.0.1",
+        "vitest": "^4.1.11"
+    }
+}

@@ -17,6 +17,7 @@ use Contenir\Extension\Seo\Check\SectionsCheck;
 use Contenir\Extension\Seo\Check\SitemapCheck;
 use Contenir\Extension\Seo\Check\SiteUrlCheck;
 use Contenir\Extension\Seo\Check\VisibilityCheck;
+use Contenir\Extension\Seo\Field\AdvancedField;
 use Contenir\Extension\Seo\Field\BingTokenField;
 use Contenir\Extension\Seo\Field\GoogleTokenField;
 use Contenir\Extension\Seo\Field\MetaTokenField;
@@ -57,6 +58,7 @@ final class SeoExtensionTest extends TestCase
                 'seo:meta-verification'      => MetaTokenField::class,
                 'seo:workflows'              => WorkflowsField::class,
                 'seo:robots-rules'           => RobotsRulesField::class,
+                'seo:advanced'               => AdvancedField::class,
             ],
             array_map(static fn(FieldTypeDeclaration $type): string => $type->class, self::registration()->fieldTypes),
         );

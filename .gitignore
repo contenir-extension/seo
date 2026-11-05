@@ -7,3 +7,5 @@
 /infection.log
 /summary.log
 /infection.json5
+/node_modules/
+/build/

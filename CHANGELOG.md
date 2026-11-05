@@ -21,6 +21,10 @@ adheres to [Semantic Versioning](https://semver.org/).
   staging copy exempting it.
 - A Preview screen shows one record's search result, share card and structured data as the site renders it now, or its
   own columns, marked as approximate, when the site can't be asked. The "Search and social" panel links to it.
+- `seo:advanced`, a field for a record's own SEO overrides, kept as JSON in one column: share title, description, image
+  and alt, canonical address, robots rule and schema type. It draws as a group of inputs, and checks the address, image,
+  robots rule and schema type as they're saved. A section uses it by naming the column in `<advanced>`. Needs a CMS that
+  marks a field for its type's dashboard component.
 - Dashboard checks for the records (`records`), the site's description, share image and organisation logo
   (`defaults`), and the sitemap (`sitemap`).
 - Sections declare themselves to search with an `<seo>` block in admin.xml's `<extensions>`, read as the site reads
