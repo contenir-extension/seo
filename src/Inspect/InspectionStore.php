@@ -14,8 +14,6 @@ use function file_put_contents;
 use function is_array;
 use function is_dir;
 use function is_file;
-use function is_int;
-use function is_string;
 use function json_decode;
 use function json_encode;
 use function rename;
@@ -46,27 +44,6 @@ final readonly class InspectionStore
     }
 
     /**
-     * @param array<array-key, mixed> $entry
-     */
-    private static function entry(array $entry): ?Inspection
-    {
-        return is_string($entry['stamp'] ?? null) && is_int($entry['at'] ?? null)
-            ? new Inspection(
-                $entry['stamp'],
-                $entry['at'],
-                self::text($entry['title'] ?? null),
-                self::text($entry['description'] ?? null),
-                self::text($entry['image'] ?? null),
-            )
-            : null;
-    }
-
-    private static function text(mixed $value): ?string
-    {
-        return is_string($value) ? $value : null;
-    }
-
-    /**
      * @return array<string, Inspection> By InspectionStore::key()
      */
     public function load(): array
@@ -76,7 +53,7 @@ final readonly class InspectionStore
 
         /** @var array<string, Inspection> */
         return array_filter(array_map(
-            static fn(mixed $entry): ?Inspection => is_array($entry) ? self::entry($entry) : null,
+            static fn(mixed $entry): ?Inspection => is_array($entry) ? Inspection::fromStored($entry) : null,
             is_array($values) ? $values : [],
         ));
     }

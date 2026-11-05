@@ -10,6 +10,7 @@ use Contenir\Extension\Seo\Listener\MetaLengths;
 
 use function array_filter;
 use function array_values;
+use function sprintf;
 
 /**
  * What a record needs, going by what the site rendered for it, where the title
@@ -17,6 +18,11 @@ use function array_values;
  */
 final class InspectionIssues
 {
+    /** The size sharing sites show an image at. */
+    public const int IMAGE_WIDTH = 1200;
+
+    public const int IMAGE_HEIGHT = 630;
+
     /**
      * @return list<MetaIssue>
      */
@@ -25,9 +31,7 @@ final class InspectionIssues
         return array_values(array_filter([
             self::title($inspection->title),
             self::description($inspection->description),
-            null === $inspection->image
-                ? new MetaIssue('image', '', 'Add an image for shared links.', missing: true)
-                : null,
+            self::image($inspection),
         ]));
     }
 
@@ -45,6 +49,26 @@ final class InspectionIssues
         $message = MetaLengths::description($description);
 
         return null === $message ? null : new MetaIssue('description', '', $message);
+    }
+
+    private static function image(Inspection $inspection): ?MetaIssue
+    {
+        return null === $inspection->image
+            ? new MetaIssue('image', '', 'Add an image for shared links.', missing: true)
+            : self::small($inspection->imageWidth, $inspection->imageHeight);
+    }
+
+    private static function small(?int $width, ?int $height): ?MetaIssue
+    {
+        return null === $width || null === $height || ($width >= self::IMAGE_WIDTH && $height >= self::IMAGE_HEIGHT)
+            ? null
+            : new MetaIssue('image', '', sprintf(
+                'The share image is %d×%d, and sharing sites show about %d×%d, so it may look soft.',
+                $width,
+                $height,
+                self::IMAGE_WIDTH,
+                self::IMAGE_HEIGHT,
+            ));
     }
 
     private static function title(?string $title): ?MetaIssue

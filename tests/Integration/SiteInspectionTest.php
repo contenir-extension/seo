@@ -36,6 +36,7 @@ use Psr\Http\Message\ResponseInterface;
 
 use function array_keys;
 use function array_map;
+use function base64_decode;
 use function count;
 use function file_put_contents;
 use function iterator_to_array;
@@ -55,6 +56,8 @@ final class SiteInspectionTest extends TestCase
     use TempDirectoryTrait;
 
     private const string SECTION = 'library.projects.project';
+
+    private const string PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAAAAADRSSBWAAAAC0lEQVR4nGNgYAAAAAMAAbitOmMAAAAASUVORK5CYII=';
 
     private const string HEAD = '{"status":200,"title":"House | Site","description":"A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.","image":"https://www.example.com/a.jpg","imageAlt":"The house","canonical":"https://www.example.com/work/house","robots":"index,follow","jsonLd":[{"@type":"CreativeWork"}]}';
 
@@ -300,6 +303,32 @@ final class SiteInspectionTest extends TestCase
                 ]],
             ],
             [$head?->title, $this->host->sitePosts()],
+        );
+    }
+
+    #[Test]
+    public function aSmallSourceImageIsReported(): void
+    {
+        $this->seed();
+        mkdir("{$this->directory}/public/asset", recursive: true);
+        file_put_contents("{$this->directory}/public/asset/a.png", (string) base64_decode(self::PIXEL, strict: true));
+        $this->host->answerSite(
+            SiteInspector::ENDPOINT,
+            new SiteAnswer(
+                200,
+                (string) json_encode([
+                    'status'      => 200,
+                    'title'       => 'House | Site',
+                    'description' => 'A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.',
+                    'image'       => 'https://www.example.com/asset/_variant/share/a.png',
+                ]),
+            ),
+        );
+        $this->refresh();
+
+        static::assertSame(
+            ['The share image is 2×1, and sharing sites show about 1200×630, so it may look soft.'],
+            $this->texts($this->page('records', ['role' => 'image']), '//tbody/tr/td[3]/div'),
         );
     }
 

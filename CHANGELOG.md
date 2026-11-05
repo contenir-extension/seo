@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The report and panel warn when the file a page's share image was made from is smaller than 1200×630, which a share
+  variant would otherwise hide. Only for images in the site's public folder, once the site has been asked again.
+
 ### Changed
 
 - The "Search and social" panel goes by what the site last rendered for a record, as the report does, while the
