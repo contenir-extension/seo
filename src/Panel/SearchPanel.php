@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Panel;
 
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
+use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Panel\Link;
 use Contenir\Extension\Api\Panel\Panel;
 use Contenir\Extension\Api\Panel\RecordPanelInterface;
 use Contenir\Extension\Api\Panel\RecordView;
+use Contenir\Extension\Seo\Inspect\CurrentInspection;
 use Contenir\Extension\Seo\Listener\MetaIssue;
-use Contenir\Extension\Seo\Listener\MetaIssues;
 use Contenir\Extension\Seo\Listener\MetaLengths;
 use Contenir\Extension\Seo\Listener\MetaValues;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
@@ -70,6 +71,7 @@ final readonly class SearchPanel implements RecordPanelInterface
     }
 
     /**
+     * @throws RowsRefusedException When the section's columns can't be read.
      * @throws UnknownSettingException When the host has no Search Appearance settings.
      */
     #[Override]
@@ -83,9 +85,10 @@ final readonly class SearchPanel implements RecordPanelInterface
         $seo         = SeoDeclaration::read($block->element);
         $values      = new MetaValues($block, $record->values);
         $template    = (new SeoSettings())->config($context)->title;
-        $title       = $values->text($seo->roles['title'] ?? []);
-        $description = $values->text($seo->roles['description'] ?? []);
-        $shown       = null === $title ? null : $template->format($title);
+        $site        = (new CurrentInspection($context))->of($record->reference(), $block);
+        $facts       = null === $site ? PanelFacts::ofColumns($seo, $values, $template) : PanelFacts::ofSite($site);
+        $shown       = $facts->title;
+        $description = $facts->description;
         $url         = $context->urls()->url($record->reference());
         $preview     = sprintf(
             self::PREVIEW,
@@ -115,7 +118,7 @@ final readonly class SearchPanel implements RecordPanelInterface
                 ...(self::hidden($seo, $record->values) ? ['Hidden from search: its Discoverable switch is off.'] : []),
                 ...array_map(
                     static fn(MetaIssue $issue): string => "To fix: {$issue->message}",
-                    (new MetaIssues($seo, $template))->of($values),
+                    $facts->issues,
                 ),
             ],
             null === $url

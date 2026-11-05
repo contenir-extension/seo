@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The "Search and social" panel goes by what the site last rendered for a record, as the report does, while the
+  record's columns haven't changed since. It reads the kept answer, so an edit screen never waits on the site, and
+  otherwise goes by the record's columns.
+
 ## [0.2.0] - 2026-11-05
 
 ### Added

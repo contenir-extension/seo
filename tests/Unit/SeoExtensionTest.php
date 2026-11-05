@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 
 use function array_keys;
 use function array_map;
+use function dirname;
 
 #[Group('unit')]
 final class SeoExtensionTest extends TestCase
@@ -157,6 +158,17 @@ final class SeoExtensionTest extends TestCase
                     $registration->listeners,
                 ),
             ],
+        );
+    }
+
+    #[Test]
+    public function shipsItsFieldsScriptFromItsPublicFolder(): void
+    {
+        $module = self::registration()->module;
+
+        static::assertSame(
+            [dirname(__DIR__, levels: 2) . '/public', AdvancedField::COMPONENT, AdvancedField::SCRIPT],
+            [$module->assets, $module->components[0]->selector ?? null, $module->components[0]->script ?? null],
         );
     }
 }
