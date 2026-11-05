@@ -57,7 +57,7 @@ describe('AdvancedField', () => {
             expect([...document.querySelector('.form__row-group').children].map((row) => row.id || 'input')).toEqual([
                 'before',
                 'input',
-                'textarea',
+                'input',
                 'input',
                 'input',
                 'input',
