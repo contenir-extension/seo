@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Tests\Integration;
 
+use Contenir\Extension\Api\Panel\RecordView;
 use Contenir\Extension\Api\Record\LinkableSection;
 use Contenir\Extension\Api\Site\SiteAnswer;
 use Contenir\Extension\Api\Testing\FrozenClock;
@@ -16,6 +17,7 @@ use Contenir\Extension\Seo\Inspect\RecordInspections;
 use Contenir\Extension\Seo\Inspect\Refreshed;
 use Contenir\Extension\Seo\Inspect\SiteInspector;
 use Contenir\Extension\Seo\Module\CheckHandler;
+use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\SeoExtension;
 use Contenir\Extension\Seo\Task\InspectRecords;
 use Contenir\Extension\Seo\Tests\TestAsset\Clock\TickingClock;
@@ -122,6 +124,20 @@ final class SiteInspectionTest extends TestCase
         static::assertSame(
             ['Project', '1', '0', '0', '1', '0', '0'],
             $this->texts($this->page('overview'), '//tbody/tr[1]/td'),
+        );
+    }
+
+    #[Test]
+    public function aKeptAnswerForARecordThatIsGoneIsNotUsed(): void
+    {
+        $this->store()->save([self::SECTION . ':7' => new Inspection('s', 1, 'Old', null, null)]);
+
+        static::assertSame(
+            'Title: Gone | Site (11 of about 60 characters)',
+            (new SearchPanel())->panel(
+                new RecordView(self::SECTION, 7, ['title' => 'Gone']),
+                $this->host->context('seo'),
+            )->paragraphs[0] ?? null,
         );
     }
 
@@ -351,6 +367,86 @@ final class SiteInspectionTest extends TestCase
                 (new Psr17Factory())->createServerRequest('POST', '/admin/extension/seo/records-check'),
                 $this->host->context('seo'),
             )->messages,
+        );
+    }
+
+    #[Test]
+    public function thePanelGoesBackToTheColumnsOnceARecordHasChanged(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->host->seed(self::SECTION, 1, ['title' => 'New title']);
+
+        static::assertSame(
+            'Title: New title | Site (16 of about 60 characters)',
+            $this->panelText(['title' => 'New title'])[0] ?? null,
+        );
+    }
+
+    #[Test]
+    public function thePanelGoesByTheColumnsBeforeTheSiteIsAsked(): void
+    {
+        $this->seed();
+
+        static::assertSame(
+            [
+                'Title: House | Site (12 of about 60 characters)',
+                'Description: none yet.',
+                'To fix: Add a description for search results and shared links.',
+            ],
+            $this->panelText(['title' => 'House']),
+        );
+    }
+
+    #[Test]
+    public function thePanelGoesByWhatTheSiteRendered(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+
+        static::assertSame(
+            [
+                'Title: House | Site (12 of about 60 characters)',
+                'Description: A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.'
+                    . ' (89 of about 160 characters)',
+            ],
+            $this->panelText(['title' => 'House']),
+        );
+    }
+
+    #[Test]
+    public function thePanelListsWhatTheSiteLeftOut(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, '{"status":200,"title":"House | Site"}'));
+        $this->refresh();
+
+        static::assertSame(
+            [
+                'Title: House | Site (12 of about 60 characters)',
+                'Description: none yet.',
+                'To fix: Add a description for search results and shared links.',
+                'To fix: Add an image for shared links.',
+            ],
+            $this->panelText(['title' => 'House']),
+        );
+    }
+
+    #[Test]
+    public function thePanelReadsItsOwnRecordsAnswer(): void
+    {
+        $this->seed(2);
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+
+        static::assertSame(
+            'Title: House | Site (12 of about 60 characters)',
+            (new SearchPanel())->panel(
+                new RecordView(self::SECTION, 2, ['title' => 'House 2']),
+                $this->host->context('seo'),
+            )->paragraphs[0] ?? null,
         );
     }
 
@@ -626,6 +722,19 @@ final class SiteInspectionTest extends TestCase
         libxml_clear_errors();
 
         return new DOMXPath($document);
+    }
+
+    /**
+     * @param array<string, mixed> $values
+     *
+     * @return list<string>
+     */
+    private function panelText(array $values): array
+    {
+        return (
+            (new SearchPanel())->panel(new RecordView(self::SECTION, 1, $values), $this->host->context('seo'))
+                ->paragraphs ?? []
+        );
     }
 
     /**

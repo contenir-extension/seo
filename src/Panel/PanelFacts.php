@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Contenir\Extension\Seo\Panel;
+
+use Contenir\Extension\Seo\Inspect\Inspection;
+use Contenir\Extension\Seo\Listener\MetaIssue;
+use Contenir\Extension\Seo\Listener\MetaIssues;
+use Contenir\Extension\Seo\Listener\MetaValues;
+use Contenir\Extension\Seo\Report\InspectionIssues;
+use Contenir\Seo\Sections\SeoBlock;
+use Contenir\Seo\Title\TitleTemplate;
+
+/**
+ * What the panel says of a record: its title as search shows it, its description
+ * and what it still needs, from what the site rendered or from its own columns.
+ *
+ * @internal
+ */
+final readonly class PanelFacts
+{
+    /**
+     * @param list<MetaIssue> $issues
+     */
+    private function __construct(
+        public ?string $title,
+        public ?string $description,
+        public array $issues,
+    ) {}
+
+    public static function ofColumns(SeoBlock $seo, MetaValues $values, TitleTemplate $template): self
+    {
+        $title = $values->text($seo->roles['title'] ?? []);
+
+        return new self(
+            null === $title ? null : $template->format($title),
+            $values->text($seo->roles['description'] ?? []),
+            (new MetaIssues($seo, $template))->of($values),
+        );
+    }
+
+    public static function ofSite(Inspection $site): self
+    {
+        return new self($site->title, $site->description, InspectionIssues::of($site));
+    }
+}
