@@ -31,11 +31,11 @@ final readonly class PanelFacts
 
     public static function ofColumns(SeoBlock $seo, MetaValues $values, TitleTemplate $template): self
     {
-        $title = $values->text($seo->roles['title'] ?? []);
+        $title = $values->text('title');
 
         return new self(
             null === $title ? null : $template->format($title),
-            $values->text($seo->roles['description'] ?? []),
+            $values->text('description'),
             (new MetaIssues($seo, $template))->of($values),
         );
     }

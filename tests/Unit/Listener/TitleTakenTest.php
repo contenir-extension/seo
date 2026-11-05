@@ -65,6 +65,30 @@ final class TitleTakenTest extends TestCase
     }
 
     #[Test]
+    public function aRecordWithNothingKeptGoesByItsColumnsNotItsAdvancedColumnsText(): void
+    {
+        $rows = [
+            new RecordRow(new RecordReference(self::SECTION, 2), RecordStatus::Draft, [
+                'seo'   => null,
+                'title' => 'House',
+            ]),
+            new RecordRow(new RecordReference(self::SECTION, 3), RecordStatus::Draft, [
+                'seo'   => '{"robots":"noindex"}',
+                'title' => '',
+            ]),
+        ];
+
+        static::assertSame(self::NOTE, $this->taken($rows)->note(self::SECTION, ['seo', 'title'], 'house', 1, 'seo'));
+        static::assertNull($this->taken($rows)->note(
+            self::SECTION,
+            ['seo', 'title'],
+            '{"robots":"noindex"}',
+            1,
+            'seo',
+        ));
+    }
+
+    #[Test]
     public function aRecordWithoutATitleIsNoDuplicate(): void
     {
         $rows = [new RecordRow(new RecordReference(self::SECTION, 2), RecordStatus::Draft, ['title' => null])];
@@ -85,6 +109,32 @@ final class TitleTakenTest extends TestCase
         $sections->expects(static::once())->method('rows')->willReturn(self::rows(5, duplicate: -1));
 
         static::assertNull((new TitleTaken($sections))->note(self::SECTION, ['title'], 'House', 1));
+    }
+
+    #[Test]
+    public function aTitleInTheColumnsIsPassedOverWhenTheAdvancedColumnKeepsAnother(): void
+    {
+        $rows = [
+            new RecordRow(new RecordReference(self::SECTION, 2), RecordStatus::Draft, [
+                'seo'   => '{"title":"Other"}',
+                'title' => 'House',
+            ]),
+        ];
+
+        static::assertNull($this->taken($rows)->note(self::SECTION, ['seo', 'title'], 'house', 1, 'seo'));
+    }
+
+    #[Test]
+    public function comparesATitleKeptInTheAdvancedColumnOverTheRecordsColumns(): void
+    {
+        $rows = [
+            new RecordRow(new RecordReference(self::SECTION, 2), RecordStatus::Draft, [
+                'seo'   => '{"title":" CAFÉ "}',
+                'title' => 'Other',
+            ]),
+        ];
+
+        static::assertSame(self::NOTE, $this->taken($rows)->note(self::SECTION, ['seo', 'title'], 'café', 1, 'seo'));
     }
 
     #[Test]

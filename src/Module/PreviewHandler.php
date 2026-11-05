@@ -70,8 +70,7 @@ final readonly class PreviewHandler implements HandlerInterface
             'Search preview',
             PreviewValues::of(
                 (new SiteInspector($context))->head($row->record),
-                SeoDeclaration::read($block->element),
-                new MetaValues($block, $row->values),
+                new MetaValues($block, $row->values, SeoDeclaration::read($block->element)),
                 $context->urls()->url($row->record),
             ),
             [],

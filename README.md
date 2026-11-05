@@ -69,8 +69,10 @@ The environment is the CMS's `APPLICATION_ENV`. A CMS that names none is taken t
 `$this->seo()->head()` and `X-Robots-Tag`. [contenir/contenir-seo](https://github.com/contenir/contenir-seo) describes the
 title template, head tags, JSON-LD, robots.txt and sitemap.
 
-**Per-record titles and descriptions** stay in each site's own `meta_title` and `meta_description` columns (SEO-1).
-A section's `<seo>` block in admin.xml turns on checks when its records are saved.
+**Per-record titles and descriptions** are kept with a record's other SEO values, as JSON in the column `<advanced>`
+names, through a `seo:advanced` field. They win over the columns a block's roles name, so a site without that field
+keeps its own `meta_title` and `meta_description`. A section's `<seo>` block in admin.xml turns on checks when its
+records are saved.
 
 It needs no tables, scripts or other add-ons. The site's answers are cached in `data/cache`. It stores no personal data. The organisation's
 profile links are read from the Social add-on's `social.social_*` keys as plain data, so neither add-on needs the

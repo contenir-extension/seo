@@ -22,10 +22,10 @@ use const JSON_UNESCAPED_SLASHES;
 use const JSON_UNESCAPED_UNICODE;
 
 /**
- * A record's own SEO overrides, kept as JSON in one column: what no other field
- * gives it, its share image's description, canonical address, robots rule and
- * schema type. Its title, description and image come from fields of its own, so
- * an override of any of them in the JSON isn't kept.
+ * A record's own SEO values, kept as JSON in one column: its meta title and
+ * description, share image's description, canonical address, robots rule and
+ * schema type. Its image comes from its section's image role, so an override of
+ * it in the JSON isn't kept.
  * The host draws a textarea, which the AdvancedField component turns into a
  * group of inputs; without the script an editor can still type the JSON.
  */
@@ -37,8 +37,8 @@ final class AdvancedField implements FieldTypeInterface
 
     public const string SCRIPT = 'js/AdvancedField.js';
 
-    /** The overrides a record's own columns and its section's image role already give it. */
-    private const array OWN_COLUMNS = ['title' => true, 'description' => true, 'image' => true];
+    /** The override a section's image role already gives a record. */
+    private const array OWN_COLUMNS = ['image' => true];
 
     private static function isObject(string $json): bool
     {

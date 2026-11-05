@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `seo:advanced` keeps a record's meta title and description, drawn first in its group. The save check, report, panel and
+  preview read them there before a block's columns, and put their notes on that field. A site without the field keeps
+  its columns, and nothing changes for it. This reverses SEO-1.
+
 ## [0.2.1] - 2026-11-05
 
 ### Added

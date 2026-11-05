@@ -33,6 +33,8 @@ const SCHEMAS = [
 
 /** Each row of the form, with the fields that sit side by side in it. */
 const ROWS = [
+    [{ name: 'title', label: 'Meta Title' }],
+    [{ name: 'description', label: 'Meta Description', multiline: true }],
     [{ name: 'image_alt', label: 'Share image description' }],
     [{ name: 'canonical', label: 'Canonical address', hint: 'Only when this page copies one published elsewhere.' }],
     [
@@ -61,6 +63,14 @@ function control(field, value) {
         }
         select.className = 'select'
         return select
+    }
+
+    if (field.multiline) {
+        const textarea = document.createElement('textarea')
+        textarea.rows = 3
+        textarea.className = 'textarea'
+        textarea.value = value
+        return textarea
     }
 
     const input = document.createElement('input')

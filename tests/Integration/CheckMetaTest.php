@@ -8,6 +8,7 @@ use Contenir\Extension\Api\Event\ActionResult;
 use Contenir\Extension\Api\Event\Outcome;
 use Contenir\Extension\Api\Testing\FrozenClock;
 use Contenir\Extension\Api\Testing\InMemoryHost;
+use Contenir\Extension\Seo\Listener\TitleTaken;
 use Contenir\Extension\Seo\SeoExtension;
 use DateTimeImmutable;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -16,6 +17,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function json_encode;
 use function str_repeat;
 
 /**
@@ -31,6 +33,12 @@ final class CheckMetaTest extends TestCase
         '<seo type="project">'
             . '<description required="true">meta_description, description</description>'
             . '<image>image_lg</image>'
+            . '</seo>';
+
+    private const string ADVANCED =
+        '<seo type="project">'
+            . '<description required="true">description</description>'
+            . '<advanced>seo</advanced>'
             . '</seo>';
 
     private const array FIELDS = ['title', 'meta_title', 'meta_description', 'description', 'image_lg'];
@@ -145,6 +153,17 @@ final class CheckMetaTest extends TestCase
     }
 
     #[Test]
+    public function aRequiredRoleLeftEmptyHoldsTheSaveOnTheAdvancedField(): void
+    {
+        $this->host->block('library.news.article', self::ADVANCED, ['title', 'description', 'seo']);
+
+        static::assertSame(
+            ['seo' => ['Add a description for search results and shared links.']],
+            $this->host->save('library.news.article', 1, ['title' => 'House', 'seo' => '{"title":"House"}'])->errors,
+        );
+    }
+
+    #[Test]
     #[DataProvider('linkedProvider')]
     public function aRoleALinkedRecordCanFillDoesNotHoldTheSave(string $block): void
     {
@@ -168,9 +187,51 @@ final class CheckMetaTest extends TestCase
     }
 
     #[Test]
+    public function aSaveThatOnlyChangesTheAdvancedFieldIsChecked(): void
+    {
+        $this->host->block('library.news.article', self::ADVANCED, ['title', 'description', 'seo']);
+
+        static::assertArrayHasKey(
+            'seo',
+            $this->host->save('library.news.article', 1, ['seo' => '{"robots":"noindex"}'])->errors,
+        );
+    }
+
+    #[Test]
     public function aSectionWithoutABlockIsNotChecked(): void
     {
         static::assertSame([], $this->host->save('site.page.resource', 1, ['title' => ''])->warnings);
+    }
+
+    #[Test]
+    public function aTitleAndDescriptionInTheAdvancedFieldAreCheckedThere(): void
+    {
+        $this->host->block('library.news.article', self::ADVANCED, ['title', 'description', 'seo']);
+        $seo = json_encode(['title' => str_repeat('a', times: 61), 'description' => 'A house.']);
+
+        static::assertSame(
+            ['seo' => [
+                'With the site name, the title is 77 characters; search results cut it off after about 60.',
+                'The description is 8 characters; search results have room for about 160.',
+            ]],
+            $this->host->save('library.news.article', 1, ['title' => 'House', 'seo' => $seo])->warnings,
+        );
+    }
+
+    #[Test]
+    public function aTitleAnotherRecordHasInItsColumnIsNotedAgainstOneInTheAdvancedField(): void
+    {
+        $this->host->block('library.news.article', self::ADVANCED, ['title', 'description', 'seo']);
+        $this->host->seed('library.news.article', 2, ['title' => 'House']);
+
+        static::assertContains(
+            TitleTaken::MESSAGE,
+            $this->host->save('library.news.article', 1, [
+                'title'       => 'Mine',
+                'description' => self::DESCRIPTION,
+                'seo'         => '{"title":"House"}',
+            ])->warnings['seo'] ?? [],
+        );
     }
 
     #[Test]
@@ -184,6 +245,22 @@ final class CheckMetaTest extends TestCase
             ]],
             $this->save(['title' => 'House', 'description' => self::DESCRIPTION, 'image_lg' => '/asset/house.jpg'])
                 ->warnings,
+        );
+    }
+
+    #[Test]
+    public function aTitleAnotherRecordKeepsInItsAdvancedFieldIsNoted(): void
+    {
+        $this->host->block('library.news.article', self::ADVANCED, ['title', 'description', 'seo']);
+        $this->host->seed('library.news.article', 2, ['title' => 'Other', 'seo' => '{"title":"House"}']);
+
+        static::assertContains(
+            TitleTaken::MESSAGE,
+            $this->host->save('library.news.article', 1, [
+                'title'       => 'Mine',
+                'description' => self::DESCRIPTION,
+                'seo'         => '{"title":"House"}',
+            ])->warnings['seo'] ?? [],
         );
     }
 

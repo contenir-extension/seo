@@ -42,19 +42,20 @@ final class AdvancedFieldTest extends TestCase
     public static function normaliseProvider(): array
     {
         return [
-            'nothing'                         => [null, null],
-            'an empty value'                  => ['', null],
-            'empty overrides'                 => ['{"image":" "}', null],
-            'not JSON, kept'                  => ['{not json', '{not json'],
-            'a list, kept'                    => ['["x"]', '["x"]'],
-            'only space'                      => ['  ', null],
-            'trimmed'                         => ['{"image_alt":" Café ","other":"x"}', '{"image_alt":"Café"}'],
-            'a title and description dropped' => [
-                '{"title":"T","description":"D","image":"/a.jpg","robots":"noindex"}',
-                '{"robots":"noindex"}',
+            'nothing'          => [null, null],
+            'an empty value'   => ['', null],
+            'empty overrides'  => ['{"image":" "}', null],
+            'not JSON, kept'   => ['{not json', '{not json'],
+            'a list, kept'     => ['["x"]', '["x"]'],
+            'only space'       => ['  ', null],
+            'trimmed'          => ['{"image_alt":" Café ","other":"x"}', '{"image_alt":"Café"}'],
+            'an image dropped' => [
+                '{"title":"T","image":"/a.jpg","robots":"noindex"}',
+                '{"robots":"noindex","title":"T"}',
             ],
-            'only a title'                    => ['{"title":"T"}', null],
-            'addresses as is'                 => [
+            'only a title'     => ['{"title":"T"}', '{"title":"T"}'],
+            'only an image'    => ['{"image":"/a.jpg"}', null],
+            'addresses as is'  => [
                 '{"canonical":"https://www.example.com/a"}',
                 '{"canonical":"https://www.example.com/a"}',
             ],
