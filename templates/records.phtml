@@ -65,14 +65,14 @@ $pageUrl = static fn(int $page): string => $view->url('records', $filter->query(
                             <tbody class="table__body">
 <?php foreach ($values['rows'] as $row): ?>
                                 <tr class="table__row">
-                                    <td class="table__cell"><?php if (null === $row->edit): ?><?= $view->escape($row->title) ?><?php else: ?><a class="text--medium" href="<?= $view->escape($row->edit) ?>"><?= $view->escape($row->title) ?></a><?php endif ?></td>
-                                    <td class="table__cell text--muted"><?= $view->escape($row->section) ?></td>
+                                    <td class="table__cell"><?php if (null === $row->edit): ?><?= $view->escape($row->row->record->title) ?><?php else: ?><a class="text--medium" href="<?= $view->escape($row->edit) ?>"><?= $view->escape($row->row->record->title) ?></a><?php endif ?></td>
+                                    <td class="table__cell text--muted"><?= $view->escape($row->row->section->title) ?></td>
                                     <td class="table__cell">
 <?php foreach ($row->issues as $issue): ?>
                                         <div><?= $view->escape($issue) ?></div>
 <?php endforeach ?>
                                     </td>
-                                    <td class="table__cell table__actions"><?php if (null !== $row->view): ?><a class="btn btn--ghost btn--sm" href="<?= $view->escape($row->view) ?>" target="_blank" rel="noopener"><?= $view->icon('external-link') ?><span class="sr-only">View the page</span></a><?php endif ?></td>
+                                    <td class="table__cell table__actions"><a class="btn btn--ghost btn--sm" href="<?= $view->escape($view->url('preview', ['section' => $row->row->section->section, 'id' => $row->row->record->record->id])) ?>"><?= $view->icon('eye') ?><span class="sr-only">Preview in search</span></a><?php if (null !== $row->view): ?><a class="btn btn--ghost btn--sm" href="<?= $view->escape($row->view) ?>" target="_blank" rel="noopener"><?= $view->icon('external-link') ?><span class="sr-only">View the page</span></a><?php endif ?></td>
                                 </tr>
 <?php endforeach ?>
                             </tbody>

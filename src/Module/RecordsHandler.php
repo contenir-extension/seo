@@ -67,8 +67,7 @@ final readonly class RecordsHandler implements HandlerInterface
                 'from'     => (($page - 1) * self::PER_PAGE) + 1,
                 'rows'     => array_map(
                     static fn(ReportRow $row): RecordLine => new RecordLine(
-                        $row->section->title,
-                        $row->record->title,
+                        $row,
                         array_map(
                             static fn(MetaIssue $issue): string => $issue->message,
                             $row->record->in($filter->role),

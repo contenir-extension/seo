@@ -9,6 +9,7 @@ use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Record\RecordsInterface;
 use Contenir\Extension\Api\Section\SectionBlock;
+use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\SeoSettings;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -17,11 +18,11 @@ use function array_map;
 use function array_values;
 
 /**
- * Every record of the sections the add-on describes for search, checked as a
- * save checks one, from its raw columns: what a site builds in its own code,
- * such as a description from a page's blocks, isn't seen. It also finds what
- * only shows across a section: titles two records share, and published records
- * hidden from search.
+ * Every record of the sections the add-on describes for search, going by what
+ * the site last rendered for it where it has been asked, and otherwise checked
+ * as a save checks one, from its columns, where what a site builds in its own
+ * code isn't seen. It also finds what only shows across a section: titles two
+ * records share, and published records hidden from search.
  */
 final readonly class SearchReport
 {
@@ -56,7 +57,11 @@ final readonly class SearchReport
     public function sections(): array
     {
         $titles = $this->titles();
-        $scan   = new SectionScan($this->context->sections(), (new SeoSettings())->config($this->context)->title);
+        $scan   = new SectionScan(
+            $this->context->sections(),
+            (new SeoSettings())->config($this->context)->title,
+            InspectionStore::at($this->context->sitePath())->load(),
+        );
         $blocks = array_filter(
             $this->context->sections()->blocks(),
             static fn(SectionBlock $block): bool => $block->linkable,

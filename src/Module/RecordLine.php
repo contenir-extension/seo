@@ -15,8 +15,7 @@ final readonly class RecordLine
      * @param string|null $view Its page on the site
      */
     public function __construct(
-        public string $section,
-        public string $title,
+        public ReportRow $row,
         public array $issues,
         public ?string $edit,
         public ?string $view,

@@ -6,8 +6,10 @@ namespace Contenir\Extension\Seo;
 
 use Contenir\Extension\Api\Event\Record\RecordPreSave;
 use Contenir\Extension\Api\ExtensionInterface;
+use Contenir\Extension\Api\Handler\Privilege;
 use Contenir\Extension\Api\Listener\Scope;
 use Contenir\Extension\Api\Registry;
+use Contenir\Extension\Api\Schedule\Frequency;
 use Contenir\Extension\Seo\Check\DefaultsCheck;
 use Contenir\Extension\Seo\Check\RecordsCheck;
 use Contenir\Extension\Seo\Check\SectionsCheck;
@@ -21,14 +23,17 @@ use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Extension\Seo\Module\CheckHandler;
 use Contenir\Extension\Seo\Module\ExportHandler;
 use Contenir\Extension\Seo\Module\OverviewHandler;
+use Contenir\Extension\Seo\Module\PreviewHandler;
 use Contenir\Extension\Seo\Module\RecordsHandler;
 use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\Section\SitemapSection;
 use Contenir\Extension\Seo\Section\VerificationSection;
+use Contenir\Extension\Seo\Task\InspectRecords;
 use Override;
 
 use function dirname;
@@ -76,5 +81,8 @@ final class SeoExtension implements ExtensionInterface
         $registry->handler(OverviewHandler::NAME, OverviewHandler::class);
         $registry->handler(RecordsHandler::NAME, RecordsHandler::class);
         $registry->handler(ExportHandler::NAME, ExportHandler::class);
+        $registry->handler(PreviewHandler::NAME, PreviewHandler::class);
+        $registry->handler(CheckHandler::NAME, CheckHandler::class, Privilege::Update);
+        $registry->schedule(InspectRecords::NAME, InspectRecords::class, Frequency::everyMinutes(15));
     }
 }

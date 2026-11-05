@@ -1,0 +1,79 @@
+<?php
+/**
+ * One record as search and sharing sites would show it: its search result, its
+ * share card and its structured data, as the site renders it now, or its own
+ * columns when the site can't be asked.
+ *
+ * @var array{
+ *     approximate: bool,
+ *     title: string|null,
+ *     description: string|null,
+ *     image: string|null,
+ *     imageAlt: string|null,
+ *     canonical: string|null,
+ *     robots: string|null,
+ *     url: string|null,
+ *     rich: string|null,
+ *     jsonLd: string|null,
+ * } $values
+ * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
+ */
+$title       = $values['title'] ?? 'No title';
+$description = $values['description'] ?? 'No description';
+?>
+                <div class="stack stack--lg">
+<?php if ($values['approximate']): ?>
+                <div class="alert alert--warning" role="status">Approximate: the site didn't answer, so this shows the record's own columns, not what the site renders.</div>
+<?php endif ?>
+                <section class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">Search result</h2>
+                    </div>
+                    <div class="card__content">
+                        <p class="text--muted seo-preview__url"><?= $view->escape($values['url'] ?? 'No page on the site') ?></p>
+                        <p class="text--medium seo-preview__title"><?= $view->escape($title) ?></p>
+                        <p class="seo-preview__description"><?= $view->escape($description) ?></p>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">Share card</h2>
+                    </div>
+                    <div class="card__content">
+<?php if (null === $values['image']): ?>
+                        <p class="text--muted seo-preview__no-image">No share image</p>
+<?php else: ?>
+                        <img class="seo-preview__image" src="<?= $view->escape($values['image']) ?>" alt="<?= $view->escape($values['imageAlt'] ?? '') ?>" style="display:block;width:100%;max-width:480px;aspect-ratio:1.91;object-fit:cover">
+<?php endif ?>
+                        <p class="text--medium"><?= $view->escape($title) ?></p>
+                        <p class="text--muted"><?= $view->escape($description) ?></p>
+                    </div>
+                </section>
+
+<?php if (! $values['approximate']): ?>
+                <section class="card">
+                    <div class="card__header">
+                        <h2 class="card__title">For search engines</h2>
+                    </div>
+                    <div class="card__content">
+                        <dl class="datalist">
+                            <div class="datalist__item">
+                                <dt class="datalist__label">Canonical address</dt>
+                                <dd class="datalist__value"><?= $view->escape($values['canonical'] ?? 'None') ?></dd>
+                            </div>
+                            <div class="datalist__item">
+                                <dt class="datalist__label">Robots</dt>
+                                <dd class="datalist__value"><?= $view->escape($values['robots'] ?? 'None') ?></dd>
+                            </div>
+                        </dl>
+<?php if (null !== $values['rich']): ?>
+                        <p><a href="<?= $view->escape($values['rich']) ?>" target="_blank" rel="noopener">Test its structured data</a></p>
+<?php endif ?>
+<?php if (null !== $values['jsonLd']): ?>
+                        <pre class="seo-preview__json-ld"><code><?= $view->escape($values['jsonLd']) ?></code></pre>
+<?php endif ?>
+                    </div>
+                </section>
+<?php endif ?>
+                </div>

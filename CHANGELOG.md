@@ -10,9 +10,17 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 - An SEO area in the CMS. Its Overview counts each described section's records with something to fix, by title,
   description, image and hidden from search, and shows how the site's own defaults stand. Its Records screen lists
-  those records, filtered by section and issue, leading to each one's edit screen and page, and exports them as CSV.
-  It reads each record's own columns, so what a site builds in its code, such as a description from a page's blocks,
-  isn't counted. A role other than an administrator needs granting the new `seo` resource to see it.
+  those records, filtered by section and issue, leading to each one's edit screen, preview and page, and exports them
+  as CSV. It covers published records. A role other than an administrator needs granting the new `seo` resource to see
+  it.
+- The report goes by what the site renders. A scheduled task, `inspect-records`, asks each published record's page
+  through the site's `/api/seo/inspect` every 15 minutes, keeping answers in `data/cache`, and "Check with the site now"
+  runs a round on demand. An answer stands for a day, or until the record's columns change. A record the site hasn't
+  answered for is judged by its own columns, which miss what a site builds in its code. Needs a host that lends
+  `Site\SiteRequestsInterface`, and contenir/contenir-seo-mezzio's endpoint on the site, with any Basic Auth on a
+  staging copy exempting it.
+- A Preview screen shows one record's search result, share card and structured data as the site renders it now, or its
+  own columns, marked as approximate, when the site can't be asked. The "Search and social" panel links to it.
 - Dashboard checks for the records (`records`), the site's description, share image and organisation logo
   (`defaults`), and the sitemap (`sitemap`).
 - Sections declare themselves to search with an `<seo>` block in admin.xml's `<extensions>`, read as the site reads

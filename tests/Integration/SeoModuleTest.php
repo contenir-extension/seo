@@ -107,7 +107,7 @@ final class SeoModuleTest extends TestCase
     public function aCountLeadsToThoseRecords(): void
     {
         $this->seedRecords();
-        $hrefs = $this->texts($this->page('overview'), '//tbody/tr[1]/td[6]/a/@href');
+        $hrefs = $this->texts($this->page('overview'), '//tbody/tr[1]/td[7]/a/@href');
 
         static::assertSame(
             ['/admin/extension/seo/records?section=library.projects.project&role=discoverable'],
@@ -136,7 +136,7 @@ final class SeoModuleTest extends TestCase
     }
 
     #[Test]
-    public function aLongSectionIsMarkedAsCutShort(): void
+    public function aLongSectionIsReadUpToItsLimit(): void
     {
         $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project'));
         $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
@@ -144,7 +144,7 @@ final class SeoModuleTest extends TestCase
             $this->host->seed(self::PROJECTS, $id, ['title' => "House {$id}", 'description' => self::DESCRIPTION]);
         }
 
-        static::assertSame('5000+', $this->texts($this->page('overview'), '//tbody/tr[1]/td[2]')[0] ?? null);
+        static::assertSame('5000', $this->texts($this->page('overview'), '//tbody/tr[1]/td[2]')[0] ?? null);
     }
 
     #[Test]
@@ -162,7 +162,11 @@ final class SeoModuleTest extends TestCase
         $xpath = $this->page('records', ['role' => 'discoverable']);
 
         static::assertSame(
-            ['/admin/records/library.projects.project/3', 'https://www.example.com/work/hut'],
+            [
+                '/admin/records/library.projects.project/3',
+                '/admin/extension/seo/preview?section=library.projects.project&id=3',
+                'https://www.example.com/work/hut',
+            ],
             [...$this->texts($xpath, '//tbody/tr/td[1]/a/@href'), ...$this->texts($xpath, '//tbody/tr/td[4]/a/@href')],
         );
     }
@@ -174,7 +178,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertCount(
             0,
-            $this->page('records', ['section' => self::NEWS])->query('//tbody/tr/td[4]/a'),
+            $this->page('records', ['section' => self::NEWS])->query('//tbody/tr/td[4]/a[@target]'),
         );
     }
 
@@ -251,6 +255,24 @@ final class SeoModuleTest extends TestCase
     }
 
     #[Test]
+    public function onlyPublishedRecordsAreReported(): void
+    {
+        $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project'));
+        $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
+        $this->host->seed(self::PROJECTS, 1, ['title' => 'Draft', 'status' => 'draft']);
+        $this->host->seed(self::PROJECTS, 2, ['title' => 'Archive', 'status' => 'archived']);
+        $this->host->seed(self::PROJECTS, 3, ['title' => 'Live']);
+
+        static::assertSame(
+            [['1'], ['Live']],
+            [
+                $this->texts($this->page('overview'), '//tbody/tr[1]/td[2]'),
+                $this->texts($this->page('records'), '//tbody/tr/td[1]'),
+            ],
+        );
+    }
+
+    #[Test]
     public function pagesKeepTheFilter(): void
     {
         $this->seedLong(120);
@@ -312,8 +334,8 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             [
-                ['Project',      '3', '2', '1', '1', '1'],
-                ['News article', '1', '0', '1', '0', '0'],
+                ['Project',      '3', '0', '2', '1', '1', '1'],
+                ['News article', '1', '0', '0', '1', '0', '0'],
             ],
             [
                 $this->texts($xpath, '//tbody/tr[1]/td'),
