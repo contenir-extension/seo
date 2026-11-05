@@ -54,23 +54,22 @@ final readonly class SectionScan
         $seo    = SeoDeclaration::read($block->element);
         $rows   = (new SectionRows($this->sections))->of($block);
         $issues = new MetaIssues($seo, $this->template);
-        $named  = $seo->roles['title'] ?? [];
         $switch = $seo->roles['discoverable'][0] ?? null;
         $shared = new SharedTitles(array_map(
-            static fn(RecordRow $row): ?string => (new MetaValues($block, $row->values))->text($named),
+            static fn(RecordRow $row): ?string => (new MetaValues($block, $row->values, $seo))->text('title'),
             $rows,
         ));
         $records   = [];
         $inspected = 0;
         foreach ($rows as $row) {
-            $values    = new MetaValues($block, $row->values);
-            $text      = $values->text($named);
+            $values    = new MetaValues($block, $row->values, $seo);
+            $text      = $values->text('title');
             $site      = $this->inspections[InspectionStore::key($row->record)] ?? null;
             $asked     = null !== $site && $site->isCurrent($row);
             $found     = $asked ? InspectionIssues::of($site) : $issues->of($values);
             $inspected += $asked ? 1 : 0;
             if ($shared->has($text)) {
-                $found[] = new MetaIssue('title', $values->field($named), TitleTaken::MESSAGE);
+                $found[] = new MetaIssue('title', $values->field('title'), TitleTaken::MESSAGE);
             }
 
             if (self::hidden($switch, $row)) {

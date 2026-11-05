@@ -57,6 +57,8 @@ describe('AdvancedField', () => {
             expect([...document.querySelector('.form__row-group').children].map((row) => row.id || 'input')).toEqual([
                 'before',
                 'input',
+                'textarea',
+                'input',
                 'input',
                 'input',
                 'host',
@@ -108,6 +110,8 @@ describe('AdvancedField', () => {
         mount(draw())
 
         expect([...document.querySelectorAll('.form__field label')].map((label) => label.htmlFor)).toEqual([
+            'seo-title',
+            'seo-description',
             'seo-image_alt',
             'seo-canonical',
             'seo-robots',
@@ -143,6 +147,19 @@ describe('AdvancedField', () => {
             'published elsewhere',
         )
         expect(input('schema').parentElement.querySelector('.form__description')).toBeNull()
+    })
+
+    it('draws the meta description as a textarea', () => {
+        mount(draw('{"title":"House","description":"A house."}'))
+
+        expect([
+            input('title').value,
+            input('title').tagName,
+            input('description').value,
+            input('description').tagName,
+            input('description').rows,
+            input('description').className,
+        ]).toEqual(['House', 'INPUT', 'A house.', 'TEXTAREA', 3, 'textarea'])
     })
 
     it('writes what is typed back as JSON', () => {

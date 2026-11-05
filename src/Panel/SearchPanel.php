@@ -83,7 +83,7 @@ final readonly class SearchPanel implements RecordPanelInterface
         }
 
         $seo         = SeoDeclaration::read($block->element);
-        $values      = new MetaValues($block, $record->values);
+        $values      = new MetaValues($block, $record->values, $seo);
         $template    = (new SeoSettings())->config($context)->title;
         $site        = (new CurrentInspection($context))->of($record->reference(), $block);
         $facts       = null === $site ? PanelFacts::ofColumns($seo, $values, $template) : PanelFacts::ofSite($site);

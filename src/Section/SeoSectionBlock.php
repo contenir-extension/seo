@@ -79,7 +79,9 @@ final readonly class SeoSectionBlock implements SectionBlockInterface
             $parts[] = $seo->roles[$role] ?? [];
         }
 
-        $fields = self::known($block, array_merge(...$parts));
+        /** @var list<string> $columns */
+        $columns = array_merge(...$parts, ...[null === $seo->advanced ? [] : [$seo->advanced]]);
+        $fields  = self::known($block, $columns);
 
         return [
             new ImpliedListener(CheckMeta::NAME, RecordPreSave::class, $fields),

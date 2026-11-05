@@ -46,7 +46,7 @@ final readonly class CheckMeta implements ListenerInterface
         }
 
         $seo    = SeoDeclaration::read($block->element);
-        $values = new MetaValues($block, $event->values());
+        $values = new MetaValues($block, $event->values(), $seo);
         $notes  = new Notes($event, $seo);
         foreach ((new MetaIssues($seo, (new SeoSettings())->config($context)->title))->of($values) as $issue) {
             $issue->missing
@@ -54,16 +54,19 @@ final readonly class CheckMeta implements ListenerInterface
                 : $notes->warn($issue->field, $issue->message);
         }
 
-        $columns = $seo->roles['title'] ?? [];
-        $title   = $values->text($columns);
+        $title = $values->text('title');
         if (null !== $title) {
             $notes->warn(
-                $values->field($columns),
+                $values->field('title'),
                 (new TitleTaken($context->sections()))->note(
                     $event->section,
-                    SeoSectionBlock::known($block, $columns),
+                    SeoSectionBlock::known($block, [
+                        ...(null === $seo->advanced ? [] : [$seo->advanced]),
+                        ...($seo->roles['title'] ?? []),
+                    ]),
                     $title,
                     $event->id,
+                    $seo->advanced,
                 ),
             );
         }

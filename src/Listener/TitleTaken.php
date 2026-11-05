@@ -6,7 +6,9 @@ namespace Contenir\Extension\Seo\Listener;
 
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Section\SectionsInterface;
+use Contenir\Seo\Sections\Overrides;
 
+use function array_diff;
 use function count;
 use function is_scalar;
 use function mb_strtolower;
@@ -32,11 +34,24 @@ final readonly class TitleTaken
 
     /**
      * @param array<string, scalar|null> $values
+     */
+    private static function kept(array $values, ?string $advanced): ?string
+    {
+        return null === $advanced ? null : Overrides::from($values[$advanced] ?? null)['title'] ?? null;
+    }
+
+    /**
+     * @param array<string, scalar|null> $values
      * @param list<string> $columns
      */
-    private static function title(array $values, array $columns): ?string
+    private static function title(array $values, array $columns, ?string $advanced): ?string
     {
-        foreach ($columns as $column) {
+        $kept = self::kept($values, $advanced);
+        if (null !== $kept) {
+            return mb_strtolower($kept);
+        }
+
+        foreach (array_diff($columns, [(string) $advanced]) as $column) {
             $value = $values[$column] ?? null;
             $text  = is_scalar($value) ? mb_strtolower(trim((string) $value)) : '';
             if ('' !== $text) {
@@ -54,9 +69,14 @@ final readonly class TitleTaken
      *
      * @throws RowsRefusedException When the section has no block, or a column isn't one the block reads.
      */
-    public function note(string $section, array $columns, string $title, string|int|null $id): ?string
-    {
-        return [] !== $columns && $this->taken($section, $columns, $title, $id)
+    public function note(
+        string $section,
+        array $columns,
+        string $title,
+        string|int|null $id,
+        ?string $advanced = null,
+    ): ?string {
+        return [] !== $columns && $this->taken($section, $columns, $title, $id, $advanced)
             ? self::MESSAGE
             : null;
     }
@@ -66,13 +86,21 @@ final readonly class TitleTaken
      *
      * @throws RowsRefusedException
      */
-    private function taken(string $section, array $columns, string $title, string|int|null $id): bool
-    {
+    private function taken(
+        string $section,
+        array $columns,
+        string $title,
+        string|int|null $id,
+        ?string $advanced,
+    ): bool {
         $wanted = mb_strtolower(trim($title));
         for ($offset = 0; $offset < self::MAX_ROWS; $offset += self::PAGE) {
             $rows = $this->sections->rows($section, $columns, limit: self::PAGE, offset: $offset);
             foreach ($rows as $row) {
-                if ((string) $row->record->id !== (string) $id && $wanted === self::title($row->values, $columns)) {
+                if (
+                    (string) $row->record->id !== (string) $id
+                    && $wanted === self::title($row->values, $columns, $advanced)
+                ) {
                     return true;
                 }
             }

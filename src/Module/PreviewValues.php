@@ -6,7 +6,6 @@ namespace Contenir\Extension\Seo\Module;
 
 use Contenir\Extension\Seo\Inspect\SiteHead;
 use Contenir\Extension\Seo\Listener\MetaValues;
-use Contenir\Seo\Sections\SeoBlock;
 
 use function json_encode;
 use function rawurlencode;
@@ -27,24 +26,24 @@ final class PreviewValues
     /**
      * @return array<string, bool|string|null>
      */
-    public static function of(?SiteHead $head, SeoBlock $seo, MetaValues $raw, ?string $url): array
+    public static function of(?SiteHead $head, MetaValues $raw, ?string $url): array
     {
         return [
             'approximate' => null === $head,
             'url'         => $url,
             'rich'        => null === $url ? null : sprintf(self::RICH_RESULTS, rawurlencode($url)),
-            ...(null === $head ? self::columns($seo, $raw) : self::site($head)),
+            ...(null === $head ? self::columns($raw) : self::site($head)),
         ];
     }
 
     /**
      * @return array<string, string|null>
      */
-    private static function columns(SeoBlock $seo, MetaValues $raw): array
+    private static function columns(MetaValues $raw): array
     {
         return [
-            'title'       => $raw->text($seo->roles['title'] ?? []),
-            'description' => $raw->text($seo->roles['description'] ?? []),
+            'title'       => $raw->text('title'),
+            'description' => $raw->text('description'),
             'image'       => null,
             'imageAlt'    => null,
             'canonical'   => null,
