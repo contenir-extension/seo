@@ -17,8 +17,8 @@
     },
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "contenir/contenir-extension-api": "^0.6.1 || ^0.7 || ^0.8",
-        "contenir/contenir-seo": "^0.1"
+        "contenir/contenir-extension-api": "^0.8",
+        "contenir/contenir-seo": "^0.7"
     },
     "require-dev": {
         "contenir/contenir-qa-tools": "0.1.x-dev",
@@ -30,6 +30,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/contenir/contenir-seo"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/contenir/contenir-contact"
         }
     ],
     "autoload": {
