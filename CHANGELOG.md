@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-05
+
 ### Changed
 
 - `seo:advanced` keeps a record's meta title and description, drawn first in its group. The save check, report, panel and
