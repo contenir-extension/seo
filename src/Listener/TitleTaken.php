@@ -24,6 +24,8 @@ final readonly class TitleTaken
     /** The most records read to find a duplicate, so a save never waits on a very long section. */
     public const int MAX_ROWS = 5000;
 
+    public const string MESSAGE = 'Another record in this section has the same title, so search results can\'t tell them apart.';
+
     public function __construct(
         private SectionsInterface $sections,
     ) {}
@@ -55,7 +57,7 @@ final readonly class TitleTaken
     public function note(string $section, array $columns, string $title, string|int|null $id): ?string
     {
         return [] !== $columns && $this->taken($section, $columns, $title, $id)
-            ? 'Another record in this section has the same title, so search results can\'t tell them apart.'
+            ? self::MESSAGE
             : null;
     }
 

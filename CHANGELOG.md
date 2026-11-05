@@ -8,6 +8,13 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- An SEO area in the CMS. Its Overview counts each described section's records with something to fix, by title,
+  description, image and hidden from search, and shows how the site's own defaults stand. Its Records screen lists
+  those records, filtered by section and issue, leading to each one's edit screen and page, and exports them as CSV.
+  It reads each record's own columns, so what a site builds in its code, such as a description from a page's blocks,
+  isn't counted. A role other than an administrator needs granting the new `seo` resource to see it.
+- Dashboard checks for the records (`records`), the site's description, share image and organisation logo
+  (`defaults`), and the sitemap (`sitemap`).
 - Sections declare themselves to search with an `<seo>` block in admin.xml's `<extensions>`, read as the site reads
   it (contenir/contenir-seo's section map): each child names a role and its columns, first non-empty first, with
   `alt`, `required="true"` and `<advanced>`. The add-on asks the host for the columns the block names that the section

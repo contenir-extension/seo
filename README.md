@@ -70,11 +70,17 @@ The environment is the CMS's `APPLICATION_ENV`. A CMS that names none is taken t
 title template, head tags, JSON-LD, robots.txt and sitemap.
 
 **Per-record titles and descriptions** stay in each site's own `meta_title` and `meta_description` columns (SEO-1).
-A per-record SEO field and checks on save come in v2.
+A section's `<seo>` block in admin.xml turns on checks when its records are saved.
 
-It needs no listeners, handlers, tables, scripts or other add-ons. It stores no personal data. The organisation's
+It needs no tables, scripts or other add-ons. It stores no personal data. The organisation's
 profile links are read from the Social add-on's `social.social_*` keys as plain data, so neither add-on needs the
 other.
+
+The add-on also adds an **SEO area** to the CMS. Its Overview counts each described section's records with something
+to fix, and shows how the site's own defaults stand. Its Records screen lists those records, filtered by section and
+issue, each leading to its edit screen and page, and exports them as CSV. Both read each record's own columns, so what
+a site builds in its code, such as a description from a page's blocks, isn't counted. Administrators see the area at
+once; another role needs the `seo` resource granting.
 
 ## Requirements
 

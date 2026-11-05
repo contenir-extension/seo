@@ -11,7 +11,10 @@ use Contenir\Extension\Api\Listener\ListenerDeclaration;
 use Contenir\Extension\Api\Panel\PanelDeclaration;
 use Contenir\Extension\Api\Registration;
 use Contenir\Extension\Api\Registry;
+use Contenir\Extension\Seo\Check\DefaultsCheck;
+use Contenir\Extension\Seo\Check\RecordsCheck;
 use Contenir\Extension\Seo\Check\SectionsCheck;
+use Contenir\Extension\Seo\Check\SitemapCheck;
 use Contenir\Extension\Seo\Check\SiteUrlCheck;
 use Contenir\Extension\Seo\Check\VisibilityCheck;
 use Contenir\Extension\Seo\Field\BingTokenField;
@@ -66,6 +69,9 @@ final class SeoExtensionTest extends TestCase
                 'visibility' => VisibilityCheck::class,
                 'site-url'   => SiteUrlCheck::class,
                 'sections'   => SectionsCheck::class,
+                'defaults'   => DefaultsCheck::class,
+                'sitemap'    => SitemapCheck::class,
+                'records'    => RecordsCheck::class,
             ],
             array_map(
                 static fn(DiagnosticDeclaration $check): string => $check->class,
@@ -84,14 +90,22 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
-    public function needsNoHandlersTablesScriptsOrOtherAddOns(): void
+    public function drawsItsAreaFromTheOverviewRecordsAndExportHandlers(): void
+    {
+        static::assertSame(
+            ['overview', 'records', 'records-export'],
+            array_keys(self::registration()->handlers),
+        );
+    }
+
+    #[Test]
+    public function needsNoTablesScriptsOrOtherAddOns(): void
     {
         $registration = self::registration();
 
         static::assertSame(
-            [[], [], [], [], [], [], null],
+            [[], [], [], [], [], null],
             [
-                $registration->handlers,
                 $registration->webhooks,
                 $registration->migrations,
                 $registration->schedules,
