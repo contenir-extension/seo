@@ -8,6 +8,7 @@ use Contenir\Extension\Api\Diagnostic\DiagnosticDeclaration;
 use Contenir\Extension\Api\Event\Record\RecordPreSave;
 use Contenir\Extension\Api\Field\FieldTypeDeclaration;
 use Contenir\Extension\Api\Listener\ListenerDeclaration;
+use Contenir\Extension\Api\Panel\PanelDeclaration;
 use Contenir\Extension\Api\Registration;
 use Contenir\Extension\Api\Registry;
 use Contenir\Extension\Seo\Check\SectionsCheck;
@@ -20,6 +21,7 @@ use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoExtension;
 use PHPUnit\Framework\Attributes\Group;
@@ -87,17 +89,25 @@ final class SeoExtensionTest extends TestCase
         $registration = self::registration();
 
         static::assertSame(
-            [[], [], [], [], [], [], [], null],
+            [[], [], [], [], [], [], null],
             [
                 $registration->handlers,
                 $registration->webhooks,
                 $registration->migrations,
                 $registration->schedules,
-                $registration->panels,
                 $registration->dependencies,
                 $registration->scripts,
                 $registration->icons,
             ],
+        );
+    }
+
+    #[Test]
+    public function offersTheSearchAndSocialPanel(): void
+    {
+        static::assertSame(
+            [SearchPanel::NAME => SearchPanel::class],
+            array_map(static fn(PanelDeclaration $panel): string => $panel->class, self::registration()->panels),
         );
     }
 
