@@ -55,7 +55,12 @@ final readonly class RecordInspections
                 continue;
             }
 
-            $kept[$key] = Inspection::of($row, $head, $this->now());
+            $kept[$key] = Inspection::of(
+                $row,
+                $head,
+                $this->now(),
+                (new ShareImageFile($this->context->sitePath()))->size($head->image),
+            );
             ++$checked;
         }
 
