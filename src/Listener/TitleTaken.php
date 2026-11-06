@@ -51,7 +51,7 @@ final readonly class TitleTaken
             return mb_strtolower($kept);
         }
 
-        foreach (array_diff($columns, [(string) $advanced]) as $column) {
+        foreach (array_diff($columns, [$advanced]) as $column) {
             $value = $values[$column] ?? null;
             $text  = is_scalar($value) ? mb_strtolower(trim((string) $value)) : '';
             if ('' !== $text) {
