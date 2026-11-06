@@ -25,6 +25,9 @@ use Psr\Container\ContainerExceptionInterface;
  */
 final readonly class DashboardMeter implements MeterInterface
 {
+    /** What the dashboard's card is called, where the area's own name, SEO, would say less. */
+    public const string HEADING = 'SEO ranking';
+
     /**
      * @throws ContainerExceptionInterface When the host's records can't be reached.
      * @throws InvalidDeclarationException When a part of the meter is malformed.
@@ -53,6 +56,7 @@ final readonly class DashboardMeter implements MeterInterface
             },
             null === $ago ? 'Not checked with the site yet' : "Checked {$ago} ago",
             $this->segments($health),
+            self::HEADING,
         );
     }
 

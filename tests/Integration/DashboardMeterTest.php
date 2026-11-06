@@ -54,6 +54,14 @@ final class DashboardMeterTest extends TestCase
     }
 
     #[Test]
+    public function namesTheCardSeoRanking(): void
+    {
+        $this->seedProjects();
+
+        static::assertSame('SEO ranking', (new DashboardMeter())->meter($this->host->context('seo'))?->heading);
+    }
+
+    #[Test]
     public function readsAHealthySiteAsGood(): void
     {
         $this->host
