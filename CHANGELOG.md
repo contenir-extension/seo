@@ -12,6 +12,10 @@ adheres to [Semantic Versioning](https://semver.org/).
   match the Library's. Ticking rows shows the bulk fixes; "Fix all" in the header fixes everything the filters match.
 - Overview and Records have the standard page header, holding their actions and a line on what to do on the screen.
 - The record panel shows how the record reads in search, and says nothing when nothing needs fixing.
+- A description or image a record's Section field gives (the first text block's words, the first media block's image) counts
+  as given: the checks don't ask for one, the record panel says "Taken from the content" and shows the description in its
+  search preview, and bulk "Write descriptions" can save it as the record's own where no summary column gives one.
+  Requires `contenir-seo` ^0.9 and `contenir-seo-mezzio` ^0.12 on the site.
 - Description length is a low-impact issue, since a long one is only cut off and doesn't affect ranking.
 
 ## [0.4.0] - 2026-11-06
