@@ -14,12 +14,13 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- The Overview names each section as the records it counts ("Pages", "Projects") rather than one record ("Page",
-  "Project"), and says what to do with the counts: select one to see those records, and fix them there. The Records
-  report and the dashboard check name sections the same way.
+- The Overview names each section as the site's admin.xml does ("Site Pages", "Projects"), the heading the host gives
+  through `LinkableSection::$heading`; a host that gives none gets the records' name as a plural ("Pages"). It also
+  says what to do with the counts: select one to see those records, and fix them there. The Records report and the
+  dashboard check name sections the same way.
 - A site whose sections declare no `<seo>` block no longer has the site-wide defaults check: the check is skipped
   and left off the Overview, so such a site sees no new warning.
-- Requires `contenir/contenir-seo` ^0.8.
+- Requires `contenir/contenir-seo` ^0.8 and `contenir/contenir-extension-api` ^0.9.1.
 
 ## [0.3.0] - 2026-11-05
 

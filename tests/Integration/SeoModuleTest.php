@@ -394,6 +394,16 @@ final class SeoModuleTest extends TestCase
     }
 
     #[Test]
+    public function theOverviewNamesASectionByItsOwnHeading(): void
+    {
+        $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project', heading: 'Our Projects'));
+        $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
+        $this->host->seed(self::PROJECTS, 1, ['title' => 'House']);
+
+        static::assertSame(['Our Projects'], $this->texts($this->page('overview'), '//tbody/tr/td[1]'));
+    }
+
+    #[Test]
     public function theOverviewSaysNothingOnceRecordsReachTheSite(): void
     {
         $this->host->context('seo')->settings('seo')->set(['site_name' => 'Site', 'records' => true]);
