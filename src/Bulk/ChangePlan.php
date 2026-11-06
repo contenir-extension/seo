@@ -65,6 +65,7 @@ final readonly class ChangePlan
             $seo     = SeoDeclaration::read($block->element);
             $columns = SeoSectionBlock::known($block, [
                 ...array_merge([], ...array_values($seo->roles)),
+                ...(null === $seo->advanced ? [] : [$seo->advanced]),
                 ...SeoSectionBlock::SUMMARY,
             ]);
             $rows    = $this->sections->rows($section, $columns, $ids, count($ids));
@@ -106,6 +107,7 @@ final readonly class ChangePlan
             $made[0],
             $made[1],
             $made[2],
+            $made[3],
         );
     }
 }

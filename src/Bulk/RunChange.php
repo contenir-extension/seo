@@ -36,6 +36,7 @@ final readonly class RunChange
         public string $after,
         public string $status = self::PENDING,
         public string $message = '',
+        public ?string $key = null,
     ) {}
 
     public static function of(Change $change): self
@@ -47,6 +48,7 @@ final readonly class RunChange
             $change->column,
             $change->before,
             $change->after,
+            key: $change->key,
         );
     }
 
@@ -61,6 +63,7 @@ final readonly class RunChange
             $this->after,
             $status,
             $message,
+            $this->key,
         );
     }
 
@@ -75,6 +78,7 @@ final readonly class RunChange
             $this->after,
             $this->status,
             $this->message,
+            $this->key,
         );
     }
 }

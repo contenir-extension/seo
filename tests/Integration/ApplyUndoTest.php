@@ -37,6 +37,11 @@ final class ApplyUndoTest extends TestCase
 
     private InMemoryHost $host;
 
+    private static function advanced(int $id): RunChange
+    {
+        return RunFactory::change($id, section: RunFactory::ADVANCED, column: 'seo', key: 'description');
+    }
+
     #[Test]
     public function appliesTheChangesAndFinishesTheRun(): void
     {
@@ -75,6 +80,21 @@ final class ApplyUndoTest extends TestCase
     }
 
     #[Test]
+    public function holdsBackAChangeWhoseAdvancedColumnIsNotJson(): void
+    {
+        $this->keep(RunFactory::make(
+            at: self::NOW - 60,
+            changes: [self::advanced(2)],
+        ));
+        $this->queue(ApplyChanges::NAME);
+
+        static::assertSame(
+            [[RunChange::STOPPED], 'not json'],
+            [$this->statuses(), $this->stored(RunFactory::ADVANCED, 2, 'seo')],
+        );
+    }
+
+    #[Test]
     public function leavesAChangeAloneWhenTheRecordHasChangedSince(): void
     {
         $this->applied();
@@ -109,6 +129,35 @@ final class ApplyUndoTest extends TestCase
         ]);
     }
 
+    #[Test]
+    public function setsADescriptionIntoTheAdvancedColumnBesideItsOtherSettings(): void
+    {
+        $this->keep(RunFactory::make(
+            at: self::NOW - 60,
+            changes: [self::advanced(1)],
+        ));
+        $this->queue(ApplyChanges::NAME);
+
+        static::assertSame(
+            ['{"robots":"noindex","description":"A weatherboard house."}', null],
+            [$this->stored(RunFactory::ADVANCED, 1, 'seo'), $this->kept()->changes[0]->before],
+        );
+    }
+
+    #[Test]
+    public function takesTheDescriptionBackOutOfTheAdvancedColumnOnUndo(): void
+    {
+        $this->keep(RunFactory::make(
+            at: self::NOW - 60,
+            changes: [self::advanced(1)],
+        ));
+        $this->queue(ApplyChanges::NAME);
+        $this->keep($this->kept()->with($this->kept()->changes, Run::FINISHED));
+        $this->queue(UndoChanges::NAME);
+
+        static::assertSame('{"robots":"noindex"}', $this->stored(RunFactory::ADVANCED, 1, 'seo'));
+    }
+
     #[Override]
     protected function setUp(): void
     {
@@ -133,6 +182,10 @@ final class ApplyUndoTest extends TestCase
             ['title', 'meta_title', 'meta_description', 'description'],
         );
         $this->host->seed(RunFactory::SECTION, 1, ['title' => 'House 1']);
+        $this->host->linkable(new LinkableSection(RunFactory::ADVANCED, 'News'));
+        $this->host->block(RunFactory::ADVANCED, '<seo type="news"><advanced>seo</advanced></seo>', ['title', 'seo']);
+        $this->host->seed(RunFactory::ADVANCED, 1, ['title' => 'Post', 'seo' => '{"robots":"noindex"}']);
+        $this->host->seed(RunFactory::ADVANCED, 2, ['title' => 'Odd', 'seo' => 'not json']);
     }
 
     #[Override]
@@ -182,5 +235,12 @@ final class ApplyUndoTest extends TestCase
     private function statuses(): array
     {
         return array_map(static fn(RunChange $change): string => $change->status, $this->kept()->changes);
+    }
+
+    private function stored(string $section, int $id, string $column): ?string
+    {
+        $value = $this->host->stored($section, $id)[$column] ?? null;
+
+        return null === $value ? null : (string) $value;
     }
 }

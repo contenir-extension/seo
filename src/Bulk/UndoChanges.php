@@ -35,14 +35,6 @@ final readonly class UndoChanges implements QueuedTaskInterface
     }
 
     /**
-     * @return array<string, mixed>
-     */
-    private static function values(RunChange $change): array
-    {
-        return [$change->column => $change->before ?? ''];
-    }
-
-    /**
      * @param array<string, mixed> $payload
      *
      * @throws ContainerExceptionInterface When the host's record updates can't be reached.
@@ -65,10 +57,11 @@ final readonly class UndoChanges implements QueuedTaskInterface
 
         $changes = (new ChangedSince($context->sections()))->mark($run);
         $saved   = array_filter($changes, static fn(RunChange $change): bool => RunChange::DONE === $change->status);
+        $writer  = new ChunkWriter($saver, $context->sections());
         foreach (array_chunk($saved, RecordUpdatesInterface::MAX_RECORDS, preserve_keys: true) as $chunk) {
-            $changes = array_replace($changes, (new BatchSave($saver))->run(
+            $changes = array_replace($changes, $writer->run(
                 $chunk,
-                self::values(...),
+                static fn(RunChange $change): ?string => $change->before,
                 self::settle(...),
             ));
         }

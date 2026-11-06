@@ -25,18 +25,22 @@ final readonly class BatchSave
     ) {}
 
     /**
-     * @param array<int, RunChange>                           $chunk  The changes in this call, by their place in the run
-     * @param Closure(RunChange): array<string, mixed>        $values What each change saves
+     * @param array<int, RunChange>                             $chunk  The changes in this call, by their place in the run
+     * @param array<int, string>                                $stored What each is to leave in its column, by the same places
      * @param Closure(RunChange, RecordUpdateResult): RunChange $settle What each change is once it has been saved
      *
      * @return array<int, RunChange> The changes as settled, by the same places
      *
      * @throws InvalidDeclarationException When a change names no field, or there are too many.
      */
-    public function run(array $chunk, Closure $values, Closure $settle): array
+    public function run(array $chunk, array $stored, Closure $settle): array
     {
         $results = $this->updates->update(array_values(array_map(
-            static fn(RunChange $change): RecordUpdate => new RecordUpdate($change->record, $values($change)),
+            static fn(int $place, RunChange $change): RecordUpdate => new RecordUpdate(
+                $change->record,
+                [$change->column => $stored[$place] ?? ''],
+            ),
+            array_keys($chunk),
             $chunk,
         )));
 

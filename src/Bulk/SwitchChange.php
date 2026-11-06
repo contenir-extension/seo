@@ -24,7 +24,7 @@ final readonly class SwitchChange
     /**
      * The column and the value to write, or null when the section has no switch or the record is already so.
      *
-     * @return array{string, ?string, string}|null The column, what it holds now and what to write
+     * @return array{string, ?string, string, ?string}|null The column, what it holds now, what to write and the key it is under
      */
     public static function of(FixKind $kind, SectionBlock $block, SeoBlock $seo, RecordRow $row): ?array
     {
@@ -38,6 +38,6 @@ final readonly class SwitchChange
         $on    = null !== $now && self::OFF !== $now;
         $after = FixKind::ShowInSearch === $kind ? self::ON : self::OFF;
 
-        return $on === (self::ON === $after) ? null : [$switch, $now, $after];
+        return $on === (self::ON === $after) ? null : [$switch, $now, $after, null];
     }
 }

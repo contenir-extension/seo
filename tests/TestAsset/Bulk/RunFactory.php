@@ -16,20 +16,29 @@ final class RunFactory
 {
     public const string SECTION = 'library.projects.project';
 
+    public const string ADVANCED = 'library.news.article';
+
+    /**
+     * @mago-expect lint:excessive-parameter-list A change is built for a test by naming only what the test is about.
+     */
     public static function change(
         int $id = 1,
         string $status = RunChange::PENDING,
         ?string $before = null,
         string $after = 'A weatherboard house.',
+        string $section = self::SECTION,
+        string $column = 'meta_description',
+        ?string $key = null,
     ): RunChange {
         return new RunChange(
-            new RecordReference(self::SECTION, $id),
+            new RecordReference($section, $id),
             "House {$id}",
             'Projects',
-            'meta_description',
+            $column,
             $before,
             $after,
             $status,
+            key: $key,
         );
     }
 

@@ -37,6 +37,7 @@ final class ChangeCodec
             $after,
             Stored::string($stored['status'] ?? RunChange::PENDING),
             Stored::string($stored['message'] ?? ''),
+            is_string($stored['key'] ?? null) ? $stored['key'] : null,
         );
     }
 
@@ -51,6 +52,7 @@ final class ChangeCodec
             'title'        => $change->title,
             'sectionTitle' => $change->sectionTitle,
             'column'       => $change->column,
+            'key'          => $change->key,
             'before'       => $change->before,
             'after'        => $change->after,
             'status'       => $change->status,

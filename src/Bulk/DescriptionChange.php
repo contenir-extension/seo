@@ -20,22 +20,23 @@ use function trim;
 final readonly class DescriptionChange
 {
     /**
-     * The column and the text to write, or null when the record has a description already, there is nowhere to
-     * put one, or nothing to write it from.
+     * What to write and where, or null when the record has a description already, there is nowhere to put one,
+     * or nothing to write it from. A section with an advanced column keeps it there, as the record's own
+     * description, as the record's SEO tab does; else it goes in the first description column.
      *
-     * @return array{string, ?string, string}|null The column, what it holds now and what to write
+     * @return array{string, ?string, string, ?string}|null The column, what it holds now, what to write and the key it is under
      */
     public static function of(SectionBlock $block, SeoBlock $seo, RecordRow $row): ?array
     {
         $target = self::target($block, $seo);
-        if (null === $target || null !== (new MetaValues($block, $row->values, $seo))->text('description')) {
+        if (null === $target[0] || null !== (new MetaValues($block, $row->values, $seo))->text('description')) {
             return null;
         }
 
         foreach (SeoSectionBlock::SUMMARY as $column) {
             $written = Summary::of(self::text($row->value($column)) ?? '');
             if (null !== $written) {
-                return [$target, self::text($row->value($target)), $written];
+                return [$target[0], ColumnValue::read($row->value($target[0]), $target[1]), $written, $target[1]];
             }
         }
 
@@ -43,17 +44,24 @@ final readonly class DescriptionChange
     }
 
     /**
-     * The column a written description goes in, or null when the section has none to hold one.
+     * The column a written description goes in, and the key it is under in that column: the advanced column's
+     * `description` when the block has one, else the first of the description role's columns the section has.
+     *
+     * @return array{?string, ?string}
      */
-    public static function target(SectionBlock $block, SeoBlock $seo): ?string
+    public static function target(SectionBlock $block, SeoBlock $seo): array
     {
+        if (null !== $seo->advanced && $block->hasField($seo->advanced)) {
+            return [$seo->advanced, 'description'];
+        }
+
         foreach ($seo->roles['description'] ?? [] as $column) {
             if ($block->hasField($column)) {
-                return $column;
+                return [$column, null];
             }
         }
 
-        return null;
+        return [null, null];
     }
 
     private static function text(mixed $value): ?string

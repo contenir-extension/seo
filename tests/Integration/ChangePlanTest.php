@@ -29,6 +29,8 @@ final class ChangePlanTest extends TestCase
 {
     private const string PROJECTS = 'library.projects.project';
 
+    private const string NEWS = 'library.news.article';
+
     use TempDirectoryTrait;
 
     private InMemoryHost $host;
@@ -75,6 +77,29 @@ final class ChangePlanTest extends TestCase
         );
     }
 
+    #[Test]
+    public function writesTheDescriptionIntoTheAdvancedColumnWhenTheBlockHasOne(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::WriteDescriptions,
+            [new RecordReference(self::NEWS, 5), new RecordReference(self::NEWS, 6)],
+        );
+
+        static::assertSame(
+            [[5, 'seo', 'description', null, 'A short post.']],
+            array_map(
+                static fn(Change $change): array => [
+                    $change->record->id,
+                    $change->column,
+                    $change->key,
+                    $change->before,
+                    $change->after,
+                ],
+                $changes,
+            ),
+        );
+    }
+
     #[Override]
     protected function setUp(): void
     {
@@ -109,6 +134,22 @@ final class ChangePlanTest extends TestCase
             'visible'          => '0',
         ]);
         $this->host->seed(self::PROJECTS, 3, ['title' => 'Hut', 'visible' => '0']);
+        $this->host->linkable(new LinkableSection(self::NEWS, 'News'));
+        $this->host->block(
+            self::NEWS,
+            '<seo type="news"><advanced>seo</advanced></seo>',
+            ['title', 'summary', 'seo'],
+        );
+        $this->host->seed(self::NEWS, 5, [
+            'title'   => 'Post',
+            'summary' => 'A short post.',
+            'seo'     => '{"robots":"noindex"}',
+        ]);
+        $this->host->seed(self::NEWS, 6, [
+            'title'   => 'Kept',
+            'summary' => 'Another post.',
+            'seo'     => '{"description":"Already here."}',
+        ]);
     }
 
     #[Override]

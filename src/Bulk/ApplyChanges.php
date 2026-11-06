@@ -14,6 +14,7 @@ use Psr\Container\ContainerExceptionInterface;
 
 use function array_chunk;
 use function array_filter;
+use function array_key_exists;
 use function array_replace;
 use function array_values;
 use function is_string;
@@ -29,19 +30,11 @@ final readonly class ApplyChanges implements QueuedTaskInterface
 
     private static function settle(RunChange $change, RecordUpdateResult $result): RunChange
     {
-        /** @var mixed $before */
-        $before = $result->previous[$change->column] ?? $change->before;
+        $saved = $change->with(Outcomes::status($result->result), Outcomes::reason($result->result));
 
-        return $change->withBefore(is_string($before) ? $before : null)
-            ->with(Outcomes::status($result->result), Outcomes::reason($result->result));
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function values(RunChange $change): array
-    {
-        return [$change->column => $change->after];
+        return array_key_exists($change->column, $result->previous)
+            ? $saved->withBefore(ColumnValue::read($result->previous[$change->column], $change->key))
+            : $saved;
     }
 
     /**
@@ -63,13 +56,14 @@ final readonly class ApplyChanges implements QueuedTaskInterface
         /** @var RecordUpdatesInterface $saver */
         $saver = $context->services()->get(RecordUpdatesInterface::class);
 
+        $writer  = new ChunkWriter($saver, $context->sections());
         $changes = $run->changes;
         $store->put($run->with($changes, Run::RUNNING));
         $waiting = array_filter($changes, static fn(RunChange $change): bool => RunChange::PENDING === $change->status);
         foreach (array_chunk($waiting, RecordUpdatesInterface::MAX_RECORDS, preserve_keys: true) as $chunk) {
-            $changes = array_replace($changes, (new BatchSave($saver))->run(
+            $changes = array_replace($changes, $writer->run(
                 $chunk,
-                self::values(...),
+                static fn(RunChange $change): string => $change->after,
                 self::settle(...),
             ));
             $store->put($run->with(array_values($changes), Run::RUNNING));

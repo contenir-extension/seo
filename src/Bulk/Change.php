@@ -22,6 +22,7 @@ final readonly class Change
         public string $column,
         public ?string $before,
         public string $after,
+        public ?string $key = null,
     ) {}
 
     /**
@@ -48,6 +49,7 @@ final readonly class Change
             $this->column,
             $this->before,
             $after,
+            $this->key,
         );
     }
 }
