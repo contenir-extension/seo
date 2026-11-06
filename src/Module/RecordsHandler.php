@@ -70,7 +70,7 @@ final readonly class RecordsHandler implements HandlerInterface
                         $row,
                         array_map(
                             static fn(MetaIssue $issue): string => $issue->message,
-                            $row->record->in($filter->role),
+                            $filter->issuesOf($row->record),
                         ),
                         $records->describe($row->record->record)?->editUrl,
                         $context->urls()->url($row->record->record),

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Report;
 
+use Contenir\Extension\Seo\Health\IssueKind;
+
 use function array_filter;
 use function array_values;
 use function count;
@@ -49,6 +51,19 @@ final readonly class SectionIssues
         return array_values(array_filter(
             $this->records,
             static fn(RecordIssues $record): bool => [] !== $record->in($role),
+        ));
+    }
+
+    /**
+     * The records with an issue of this kind.
+     *
+     * @return list<RecordIssues>
+     */
+    public function ofKind(IssueKind $kind): array
+    {
+        return array_values(array_filter(
+            $this->records,
+            static fn(RecordIssues $record): bool => [] !== $record->ofKind($kind),
         ));
     }
 }

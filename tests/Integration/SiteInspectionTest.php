@@ -119,7 +119,7 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             ['Projects', '1', '0', '0', '1', '0', '0'],
-            $this->texts($this->page('overview'), '//tbody/tr[1]/td'),
+            $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]'),
         );
     }
 
@@ -163,7 +163,7 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             ['Projects', '1', '0', '0', '1', '0', '0'],
-            $this->texts($this->page('overview'), '//tbody/tr[1]/td'),
+            $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]'),
         );
     }
 
@@ -626,7 +626,7 @@ final class SiteInspectionTest extends TestCase
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
         $this->refresh();
 
-        static::assertSame('2', $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]')[0] ?? null);
+        static::assertSame('2', $this->texts($this->page('overview'), '//tbody/tr[1]/td[4]')[0] ?? null);
     }
 
     #[Test]
@@ -634,7 +634,7 @@ final class SiteInspectionTest extends TestCase
     {
         $this->seed();
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
-        $before = $this->texts($this->page('overview'), '//tbody/tr[1]/td');
+        $before = $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]');
         $this->refresh();
 
         static::assertSame(
@@ -642,7 +642,7 @@ final class SiteInspectionTest extends TestCase
                 ['Projects', '1', '0', '0', '1', '0', '0'],
                 ['Projects', '1', '1', '0', '0', '0', '0'],
             ],
-            [$before, $this->texts($this->page('overview'), '//tbody/tr[1]/td')],
+            [$before, $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]')],
         );
     }
 

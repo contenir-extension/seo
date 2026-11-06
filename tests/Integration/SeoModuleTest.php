@@ -108,7 +108,7 @@ final class SeoModuleTest extends TestCase
     public function aCountLeadsToThoseRecords(): void
     {
         $this->seedRecords();
-        $hrefs = $this->texts($this->page('overview'), '//tbody/tr[1]/td[7]/a/@href');
+        $hrefs = $this->texts($this->page('overview'), '//tbody/tr[1]/td[8]/a/@href');
 
         static::assertSame(
             ['/admin/extension/seo/records?section=library.projects.project&role=discoverable'],
@@ -145,7 +145,7 @@ final class SeoModuleTest extends TestCase
             $this->host->seed(self::PROJECTS, $id, ['title' => "House {$id}", 'description' => self::DESCRIPTION]);
         }
 
-        static::assertSame('5000', $this->texts($this->page('overview'), '//tbody/tr[1]/td[2]')[0] ?? null);
+        static::assertSame('5000', $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]')[0] ?? null);
     }
 
     #[Test]
@@ -267,7 +267,7 @@ final class SeoModuleTest extends TestCase
         static::assertSame(
             [['1'], ['Live']],
             [
-                $this->texts($this->page('overview'), '//tbody/tr[1]/td[2]'),
+                $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]'),
                 $this->texts($this->page('records'), '//tbody/tr/td[1]'),
             ],
         );
@@ -339,8 +339,8 @@ final class SeoModuleTest extends TestCase
                 ['News articles', '1', '0', '0', '1', '0', '0'],
             ],
             [
-                $this->texts($xpath, '//tbody/tr[1]/td'),
-                $this->texts($xpath, '//tbody/tr[2]/td'),
+                $this->texts($xpath, '//tbody/tr[1]/td[position()!=2]'),
+                $this->texts($xpath, '//tbody/tr[2]/td[position()!=2]'),
             ],
         );
     }
@@ -349,7 +349,7 @@ final class SeoModuleTest extends TestCase
     public function theOverviewExplainsWhatToDoWithTheCounts(): void
     {
         static::assertStringContainsString(
-            'Select a number to see those records',
+            'Ranked by impact, then by how many records are affected.',
             implode(' ', $this->texts($this->page('overview'), '//p[@class="card__description"]')),
         );
     }
@@ -364,7 +364,7 @@ final class SeoModuleTest extends TestCase
                 'Check The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
                     . ' Settings, under Sitemap.',
             ],
-            $this->texts($this->page('overview'), '//dd'),
+            $this->texts($this->page('overview'), '//dt[not(starts-with(., "Each record"))]/following-sibling::dd'),
         );
     }
 
@@ -416,7 +416,7 @@ final class SeoModuleTest extends TestCase
     {
         static::assertSame(
             ['/admin/settings/common/view/category/seo/section/seo'],
-            $this->texts($this->page('overview'), '//p[contains(., "switched off")]/a/@href'),
+            $this->texts($this->page('overview'), '//dt[starts-with(., "Each record")]/following-sibling::dd/a/@href'),
         );
     }
 
@@ -433,7 +433,7 @@ final class SeoModuleTest extends TestCase
                 'Check The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
                     . ' Settings, under Sitemap.',
             ],
-            $this->texts($this->page('overview'), '//dd'),
+            $this->texts($this->page('overview'), '//dt[not(starts-with(., "Each record"))]/following-sibling::dd'),
         );
     }
 

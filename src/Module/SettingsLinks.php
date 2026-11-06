@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Module;
 
+use Contenir\Extension\Seo\Health\IssueKind;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SitemapSection;
 use Contenir\Extension\Seo\Section\VerificationSection;
@@ -27,5 +28,18 @@ final class SettingsLinks
             self::PATH . VerificationSection::NAME => 'Site Verification',
             self::PATH . SitemapSection::NAME      => 'Sitemap',
         ];
+    }
+
+    /**
+     * Where a site-wide issue is settled: the screen of the setting it is about, or null for a kind of issue
+     * that is about a record.
+     */
+    public static function of(IssueKind $kind): ?string
+    {
+        return match ($kind) {
+            IssueKind::DefaultsNotSet => self::PATH . AppearanceSection::NAME,
+            IssueKind::SitemapOff     => self::PATH . SitemapSection::NAME,
+            default                   => null,
+        };
     }
 }

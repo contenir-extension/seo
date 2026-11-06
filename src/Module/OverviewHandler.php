@@ -13,11 +13,17 @@ use Contenir\Extension\Api\Handler\HandlerInterface;
 use Contenir\Extension\Api\Handler\HandlerResult;
 use Contenir\Extension\Seo\Check\DefaultsCheck;
 use Contenir\Extension\Seo\Check\SitemapCheck;
+use Contenir\Extension\Seo\Health\Age;
+use Contenir\Extension\Seo\Health\SiteChecks;
+use Contenir\Extension\Seo\Health\SiteHealth;
+use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\Report\SearchReport;
 use Contenir\Extension\Seo\SeoSettings;
 use Override;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Http\Message\ServerRequestInterface;
+
+use function max;
 
 /**
  * The SEO area's home: each section described for search, with how many of its
@@ -26,6 +32,20 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class OverviewHandler implements HandlerInterface
 {
     public const string NAME = 'overview';
+
+    /**
+     * How long ago the site was last asked what it renders for a record, as people read it ("4 minutes"), or
+     * null when it never has been.
+     */
+    private static function checkedAgo(ExtensionContextInterface $context): ?string
+    {
+        $latest = null;
+        foreach (InspectionStore::at($context->sitePath())->load() as $inspection) {
+            $latest = max($latest ?? 0, $inspection->at);
+        }
+
+        return null === $latest ? null : Age::of($context->clock()->now()->getTimestamp() - $latest);
+    }
 
     /**
      * The site-wide checks that apply to the site, each as the template shows it.
@@ -58,11 +78,15 @@ final readonly class OverviewHandler implements HandlerInterface
     #[Override]
     public function handle(ServerRequestInterface $request, ExtensionContextInterface $context): HandlerResult
     {
+        $sections = (new SearchReport($context))->sections();
+
         return HandlerResult::template(
             'overview',
             'SEO',
             [
-                'sections' => (new SearchReport($context))->sections(),
+                'sections' => $sections,
+                'health'   => SiteHealth::of($sections, SiteChecks::of($context)),
+                'ago'      => self::checkedAgo($context),
                 'roles'    => SearchReport::ROLES,
                 'settings' => SettingsLinks::all(),
                 'records'  => (new SeoSettings())->config($context)->records,
