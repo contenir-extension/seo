@@ -125,6 +125,14 @@ final class AdvancedFieldTest extends TestCase
     }
 
     #[Test]
+    public function showsItsValueThroughTheDisplayClass(): void
+    {
+        $lines = (new AdvancedField())->display('{"title":"Tea"}', []);
+
+        static::assertSame(['Title', 'Tea'], [$lines[0]->label, $lines[0]->text]);
+    }
+
+    #[Test]
     #[DataProvider('normaliseProvider')]
     public function storesTheOverridesThatHoldSomething(mixed $value, ?string $stored): void
     {

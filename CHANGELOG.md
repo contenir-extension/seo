@@ -20,6 +20,9 @@ adheres to [Semantic Versioning](https://semver.org/).
   extension API does. Several equivalent code paths were simplified for it: a bulk fix's "holds now" is always nothing
   where a description is written, the Records list no longer carries an unused first-row number, and the Bulk run store
   keeps its newest-first order as it saves.
+- A record's View page shows the "Search and social" field as labelled lines (Title, Description, Share image description,
+  Canonical address, Robots, Schema type) instead of the stored JSON, with an info label "From content" on a description
+  the record doesn't hold but its Section field gives. Requires extension API 0.9.3.
 - Description length is a low-impact issue, since a long one is only cut off and doesn't affect ranking.
 
 ## [0.4.0] - 2026-11-06
