@@ -32,6 +32,13 @@ final readonly class SeoSectionBlock implements SectionBlockInterface
     public const array CHECKED = ['title', 'description', 'image'];
 
     /**
+     * Columns a section may keep a summary in, which a bulk fix writes descriptions from.
+     *
+     * @var list<string>
+     */
+    public const array SUMMARY = ['summary', 'abstract', 'excerpt', 'intro', 'lead', 'teaser'];
+
+    /**
      * The columns that are fields of the section, by a name the host accepts, each once.
      *
      * @param list<string> $columns
@@ -64,7 +71,7 @@ final readonly class SeoSectionBlock implements SectionBlockInterface
     #[Override]
     public function columns(SectionBlock $block): array
     {
-        return self::known($block, SeoDeclaration::read($block->element)->columns());
+        return self::known($block, [...SeoDeclaration::read($block->element)->columns(), ...self::SUMMARY]);
     }
 
     /**
