@@ -18,8 +18,8 @@ jobs:
       enable-composer-audit: true
       enable-infection: true
       infection-diff-on-pull-requests: true
-      min-msi: "80"
-      min-covered-msi: "80"
+      min-msi: "100"
+      min-covered-msi: "100"
       boot-cms: true
       # Extension API 0.8 is hosted only on the CMS's main until v2.1.0 is tagged
       boot-cms-ref: main

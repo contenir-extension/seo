@@ -16,6 +16,10 @@ adheres to [Semantic Versioning](https://semver.org/).
   as given: the checks don't ask for one, the record panel says "Taken from the content" and shows the description in its
   search preview, and bulk "Write descriptions" can save it as the record's own where no summary column gives one.
   Requires `contenir-seo` ^0.9 and `contenir-seo-mezzio` ^0.12 on the site.
+- Mutation testing now has to cover and kill every mutant, with `min-msi` and `min-covered-msi` at 100 in CI, as the
+  extension API does. Several equivalent code paths were simplified for it: a bulk fix's "holds now" is always nothing
+  where a description is written, the Records list no longer carries an unused first-row number, and the Bulk run store
+  keeps its newest-first order as it saves.
 - Description length is a low-impact issue, since a long one is only cut off and doesn't affect ranking.
 
 ## [0.4.0] - 2026-11-06
