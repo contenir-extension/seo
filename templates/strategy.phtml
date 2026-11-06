@@ -30,68 +30,100 @@ $editing = $values['editing'];
                     </div>
 <?php endif ?>
 <?php if (null !== $editing): ?>
-                    <form method="post" action="<?= $view->escape($view->url('strategy-save')) ?>" class="card">
+<?php $off = $values['saves'] ? '' : ' disabled'; ?>
+                    <form class="form form--record" method="post" action="<?= $view->escape($view->url('strategy-save')) ?>">
                         <?= $view->token() ?>
                         <input type="hidden" name="section" value="<?= $view->escape($editing->section) ?>">
                         <input type="hidden" name="version" value="<?= $view->escape($values['version']) ?>">
-                        <div class="card__header">
-                            <h2 class="card__title"><?= $view->escape($editing->title) ?></h2>
-                            <p class="card__description">Each role is read from the first field below that holds a value.</p>
-                        </div>
-                        <div class="card__content stack stack--md">
-                            <div class="form__field">
-                                <label class="form__label" for="strategy-schema">Schema type</label>
-                                <input class="input" type="text" id="strategy-schema" name="schema" list="strategy-schemas" value="<?= $view->escape($editing->schema) ?>" placeholder="WebPage"<?= $values['saves'] ? '' : ' disabled' ?>>
-                                <datalist id="strategy-schemas">
+                        <fieldset class="card form__card" aria-labelledby="strategy-type">
+                            <h2 class="card__header form__card-title" id="strategy-type"><?= $view->escape($editing->title) ?></h2>
+                            <div class="card__content form__card-body">
+                                <div class="form__row-group">
+                                    <div class="form__row">
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <label class="form__label" for="strategy-schema">Schema type</label>
+                                                <input class="input" type="text" id="strategy-schema" name="schema" list="strategy-schemas" value="<?= $view->escape($editing->schema) ?>" placeholder="WebPage" aria-describedby="strategy-schema-desc"<?= $off ?>>
+                                                <datalist id="strategy-schemas">
 <?php foreach (['WebPage', 'Article', 'BlogPosting', 'NewsArticle', 'CreativeWork', 'Product', 'Event', 'Person', 'Organization', 'LocalBusiness'] as $type): ?>
-                                    <option value="<?= $view->escape($type) ?>"></option>
+                                                    <option value="<?= $view->escape($type) ?>"></option>
 <?php endforeach ?>
-                                </datalist>
+                                                </datalist>
+                                                <p class="form__description" id="strategy-schema-desc">The schema.org type of this section's pages.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form__row">
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <span class="form__label" id="strategy-mode-label">What is taken from content</span>
+                                                <div class="radio-group" role="radiogroup" aria-labelledby="strategy-mode-label">
+                                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="automatic"<?= $editing->automatic ? ' checked' : '' ?><?= $off ?>><span class="radio-group__label">Automatic</span></label>
+                                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="manual"<?= $editing->automatic ? '' : ' checked' ?><?= $off ?>><span class="radio-group__label">Manual</span></label>
+                                                </div>
+                                                <p class="form__description">Automatic: the page uses it, and the record shows "Taken from content" with nothing to fix. Manual: it is only a suggestion, and the record keeps its warning until you use it as the record's own.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                        </fieldset>
 <?php foreach ($values['roles'] as $role): ?>
 <?php $chosen = $editing->sourcesOf($role); $slots = max(3, count($chosen) + 1); $options = array_values(array_unique([...$editing->fields, ...$chosen])); ?>
-                            <fieldset class="form__field">
-                                <legend class="form__label"><?= $view->escape($labels[$role]) ?> comes from</legend>
-                                <div class="cluster cluster--sm">
+                        <fieldset class="card form__card" aria-labelledby="strategy-<?= $view->escape($role) ?>">
+                            <h2 class="card__header form__card-title" id="strategy-<?= $view->escape($role) ?>"><?= $view->escape($labels[$role]) ?></h2>
+                            <div class="card__content form__card-body">
+                                <div class="form__row-group">
+                                    <div class="form__row">
 <?php for ($slot = 0; $slot < $slots; ++$slot): ?>
-                                    <select class="select select--auto" name="sources[<?= $view->escape($role) ?>][]" aria-label="<?= $view->escape($labels[$role]) ?> source <?= $slot + 1 ?>"<?= $values['saves'] ? '' : ' disabled' ?>>
-                                        <option value="">–</option>
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <label class="form__label" for="strategy-<?= $view->escape($role) ?>-<?= $slot ?>"><?= 0 === $slot ? 'Read from' : 'Otherwise' ?></label>
+                                                <select class="select" id="strategy-<?= $view->escape($role) ?>-<?= $slot ?>" name="sources[<?= $view->escape($role) ?>][]"<?= $off ?>>
+                                                    <option value="">–</option>
 <?php foreach ($options as $field): ?>
-                                        <option value="<?= $view->escape($field) ?>"<?= ($chosen[$slot] ?? null) === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
+                                                    <option value="<?= $view->escape($field) ?>"<?= ($chosen[$slot] ?? null) === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
 <?php endforeach ?>
-                                    </select>
+                                                </select>
+                                            </div>
+                                        </div>
 <?php endfor ?>
-                                </div>
+                                    </div>
 <?php if (in_array($role, ['description', 'image'], true)): ?>
-                                <label class="checkbox"><input type="hidden" name="content[<?= $view->escape($role) ?>]" value="0"><input type="checkbox" class="checkbox__input" name="content[<?= $view->escape($role) ?>]" value="1"<?= $editing->takesContent($role) ? ' checked' : '' ?><?= $values['saves'] ? '' : ' disabled' ?>> <span>From content, where those are empty</span></label>
+                                    <div class="form__row">
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <label class="checkbox"><input type="hidden" name="content[<?= $view->escape($role) ?>]" value="0"><input type="checkbox" class="checkbox__input" name="content[<?= $view->escape($role) ?>]" value="1"<?= $editing->takesContent($role) ? ' checked' : '' ?><?= $off ?>> <span>From content</span></label>
+                                                <p class="form__description">Where none of those has a value, use what the record's Section field gives.</p>
+                                            </div>
+                                        </div>
+                                    </div>
 <?php endif ?>
 <?php if ('image' === $role): ?>
-                                <div class="form__field">
-                                    <label class="form__label" for="strategy-alt">Alt text comes from</label>
-                                    <select class="select select--auto" id="strategy-alt" name="alt"<?= $values['saves'] ? '' : ' disabled' ?>>
-                                        <option value="">The title</option>
+                                    <div class="form__row">
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <label class="form__label" for="strategy-alt">Alt text</label>
+                                                <select class="select" id="strategy-alt" name="alt"<?= $off ?>>
+                                                    <option value="">The title</option>
 <?php foreach (array_values(array_unique([...$editing->fields, ...('' === $editing->altSource() ? [] : [$editing->altSource()])])) as $field): ?>
-                                        <option value="<?= $view->escape($field) ?>"<?= $editing->altSource() === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
+                                                    <option value="<?= $view->escape($field) ?>"<?= $editing->altSource() === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
 <?php endforeach ?>
-                                    </select>
-                                </div>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
 <?php endif ?>
-                            </fieldset>
-<?php endforeach ?>
-                            <fieldset class="form__field">
-                                <legend class="form__label">What is taken from content</legend>
-                                <div class="radio-group" role="radiogroup">
-                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="automatic"<?= $editing->automatic ? ' checked' : '' ?><?= $values['saves'] ? '' : ' disabled' ?>><span class="radio-group__label">Automatic: the page uses it, and the record shows "Taken from content" with nothing to fix</span></label>
-                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="manual"<?= $editing->automatic ? '' : ' checked' ?><?= $values['saves'] ? '' : ' disabled' ?>><span class="radio-group__label">Manual: it is only a suggestion, and the record keeps its warning until you use it as the record's own</span></label>
                                 </div>
-                            </fieldset>
-                        </div>
-                        <div class="card__footer">
+                            </div>
+                        </fieldset>
+<?php endforeach ?>
+                        <fieldset class="form__actions form__actions--bar">
+                            <a class="btn btn--outline" href="<?= $view->escape($view->url('strategy')) ?>"><?= $view->icon('x') ?><span class="btn__label"><?= $values['saves'] ? 'Cancel' : 'Back' ?></span></a>
 <?php if ($values['saves']): ?>
                             <button type="submit" class="btn btn--primary">Save</button>
 <?php endif ?>
-                            <a class="btn btn--outline" href="<?= $view->escape($view->url('strategy')) ?>">Back to the sections</a>
-                        </div>
+                        </fieldset>
                     </form>
 <?php else: ?>
                     <section class="card">
