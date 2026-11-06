@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Tests\Integration;
 
+use Contenir\Extension\Api\Panel\Panel;
+use Contenir\Extension\Api\Panel\PanelRow;
 use Contenir\Extension\Api\Panel\RecordView;
 use Contenir\Extension\Api\Record\LinkableSection;
 use Contenir\Extension\Api\Site\SiteAnswer;
@@ -146,15 +148,9 @@ final class SiteInspectionTest extends TestCase
     #[Test]
     public function aKeptAnswerForARecordThatIsGoneIsNotUsed(): void
     {
-        $this->store()->save([self::SECTION . ':7' => new Inspection('s', 1, 'Old', null, null)]);
+        $this->store()->save([self::SECTION . ':7' => new Inspection('s', 1, 'Old', null, 'https://x/old.jpg')]);
 
-        static::assertSame(
-            'Title: Gone | Site (11 of about 60 characters)',
-            (new SearchPanel())->panel(
-                new RecordView(self::SECTION, 7, ['title' => 'Gone']),
-                $this->host->context('seo'),
-            )->paragraphs[0] ?? null,
-        );
+        static::assertNull($this->panel(['title' => 'Gone'], 7)?->image);
     }
 
     #[Test]
@@ -456,10 +452,7 @@ final class SiteInspectionTest extends TestCase
         $this->refresh();
         $this->host->seed(self::SECTION, 1, ['title' => 'New title']);
 
-        static::assertSame(
-            'Title: New title | Site (16 of about 60 characters)',
-            $this->panelText(['title' => 'New title'])[0] ?? null,
-        );
+        static::assertNull($this->panel(['title' => 'New title'])?->image);
     }
 
     #[Test]
@@ -467,14 +460,7 @@ final class SiteInspectionTest extends TestCase
     {
         $this->seed();
 
-        static::assertSame(
-            [
-                'Title: House | Site (12 of about 60 characters)',
-                'Description: none yet.',
-                'To fix: Add a description for search results and shared links.',
-            ],
-            $this->panelText(['title' => 'House']),
-        );
+        static::assertSame([['Description', 'Missing']], $this->panelRows(['title' => 'House']));
     }
 
     #[Test]
@@ -485,12 +471,8 @@ final class SiteInspectionTest extends TestCase
         $this->refresh();
 
         static::assertSame(
-            [
-                'Title: House | Site (12 of about 60 characters)',
-                'Description: A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.'
-                    . ' (89 of about 160 characters)',
-            ],
-            $this->panelText(['title' => 'House']),
+            [[], true],
+            [$this->panelRows(['title' => 'House']), null !== $this->panel(['title' => 'House'])?->image],
         );
     }
 
@@ -503,12 +485,10 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             [
-                'Title: House | Site (12 of about 60 characters)',
-                'Description: none yet.',
-                'To fix: Add a description for search results and shared links.',
-                'To fix: Add an image for shared links.',
+                ['Description', 'Missing'],
+                ['Share image', 'Missing'],
             ],
-            $this->panelText(['title' => 'House']),
+            $this->panelRows(['title' => 'House']),
         );
     }
 
@@ -520,11 +500,8 @@ final class SiteInspectionTest extends TestCase
         $this->refresh();
 
         static::assertSame(
-            'Title: House | Site (12 of about 60 characters)',
-            (new SearchPanel())->panel(
-                new RecordView(self::SECTION, 2, ['title' => 'House 2']),
-                $this->host->context('seo'),
-            )->paragraphs[0] ?? null,
+            [[], 'House | Site'],
+            [$this->panelRows(['title' => 'House 2'], 2), $this->panel(['title' => 'House 2'], 2)?->image?->alt],
         );
     }
 
@@ -830,14 +807,24 @@ final class SiteInspectionTest extends TestCase
 
     /**
      * @param array<string, mixed> $values
-     *
-     * @return list<string>
      */
-    private function panelText(array $values): array
+    private function panel(array $values, int $id = 1): ?Panel
     {
-        return (
-            (new SearchPanel())->panel(new RecordView(self::SECTION, 1, $values), $this->host->context('seo'))
-                ->paragraphs ?? []
+        return (new SearchPanel())->panel(new RecordView(self::SECTION, $id, $values), $this->host->context('seo'));
+    }
+
+    /**
+     * What the panel says needs fixing, as label and detail.
+     *
+     * @param array<string, mixed> $values
+     *
+     * @return list<array{string, string}>
+     */
+    private function panelRows(array $values, int $id = 1): array
+    {
+        return array_map(
+            static fn(PanelRow $row): array => [$row->label, $row->detail],
+            $this->panel($values, $id)->rows ?? [],
         );
     }
 

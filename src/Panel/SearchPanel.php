@@ -9,33 +9,34 @@ use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Panel\Link;
 use Contenir\Extension\Api\Panel\Panel;
+use Contenir\Extension\Api\Panel\PanelImage;
 use Contenir\Extension\Api\Panel\RecordPanelInterface;
 use Contenir\Extension\Api\Panel\RecordView;
+use Contenir\Extension\Api\Record\RecordsInterface;
+use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Inspect\CurrentInspection;
 use Contenir\Extension\Seo\Listener\MetaIssue;
-use Contenir\Extension\Seo\Listener\MetaLengths;
 use Contenir\Extension\Seo\Listener\MetaValues;
+use Contenir\Extension\Seo\Report\SearchReport;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\SeoSettings;
 use Contenir\Seo\Sections\SeoBlock;
 use Override;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 use function array_key_exists;
-use function array_map;
 use function in_array;
-use function mb_strlen;
-use function mb_substr;
 use function rawurlencode;
-use function rtrim;
 use function sprintf;
 
 /**
- * "Search and social", beside a saved record of a section with an `<seo>`
- * block: its title and description as search results show them, with
- * their lengths, whether it is hidden from search, what to fix, and, once it is published, links to the page and to Google's test of
- * its structured data. It reads the record as stored, so it shows the last
- * save, and needs the site to bind it: `<panels><panel extension="seo"
- * name="search"/></panels>`.
+ * "SEO", beside a saved record of a section with an `<seo>` block: its share image, then only what
+ * needs fixing, each a short row with a Fix button, or "Nothing to fix"; and an Actions menu to preview
+ * the record in search results and, once it has a page, to view it and to run Google's test of its
+ * structured data. It reads the record as stored, so it shows the last save, and a site binds it with
+ * `<panels><panel extension="seo" name="search"/></panels>`, or gets it by default on any section with an
+ * `<seo>` block.
  */
 final readonly class SearchPanel implements RecordPanelInterface
 {
@@ -45,6 +46,24 @@ final readonly class SearchPanel implements RecordPanelInterface
     private const string PREVIEW = '/admin/extension/seo/preview?section=%s&id=%s';
 
     private const array OFF = ['0', 0, false, ''];
+
+    /**
+     * The record's edit screen, which the Fix buttons go to, or null when the host can't say where it is.
+     *
+     * @throws ContainerExceptionInterface When the host's records can't be made.
+     * @throws NotFoundExceptionInterface When the host has no records after saying it has.
+     */
+    private static function editLink(ExtensionContextInterface $context, RecordReference $record): ?Link
+    {
+        $services = $context->services();
+        if (! $services->has(RecordsInterface::class)) {
+            return null;
+        }
+
+        $url = $services->get(RecordsInterface::class)->describe($record)?->editUrl;
+
+        return null === $url ? null : new Link('Fix', $url);
+    }
 
     /**
      * Whether the record's Discoverable switch, the first column of its block's `discoverable`
@@ -63,14 +82,9 @@ final readonly class SearchPanel implements RecordPanelInterface
         );
     }
 
-    private static function shown(string $text): string
-    {
-        return mb_strlen($text) > MetaLengths::DESCRIPTION_MAX
-            ? rtrim(mb_substr($text, start: 0, length: MetaLengths::DESCRIPTION_MAX - 1)) . '…'
-            : $text;
-    }
-
     /**
+     * @throws ContainerExceptionInterface When the host's services can't be reached.
+     * @throws NotFoundExceptionInterface When the host's records can't be found.
      * @throws RowsRefusedException When the section's columns can't be read.
      * @throws UnknownSettingException When the host has no Search Appearance settings.
      */
@@ -82,55 +96,53 @@ final readonly class SearchPanel implements RecordPanelInterface
             return null;
         }
 
-        $seo         = SeoDeclaration::read($block->element);
-        $values      = new MetaValues($block, $record->values, $seo);
-        $template    = (new SeoSettings())->config($context)->title;
-        $site        = (new CurrentInspection($context))->of($record->reference(), $block);
-        $facts       = null === $site ? PanelFacts::ofColumns($seo, $values, $template) : PanelFacts::ofSite($site);
-        $shown       = $facts->title;
-        $description = $facts->description;
-        $url         = $context->urls()->url($record->reference());
-        $preview     = sprintf(
+        $seo      = SeoDeclaration::read($block->element);
+        $values   = new MetaValues($block, $record->values, $seo);
+        $template = (new SeoSettings())->config($context)->title;
+        $site     = (new CurrentInspection($context))->of($record->reference(), $block);
+        $facts    = null === $site ? PanelFacts::ofColumns($seo, $values, $template) : PanelFacts::ofSite($site);
+        $issues   = $facts->issues;
+        if (self::hidden($seo, $record->values)) {
+            $issues[] = new MetaIssue('discoverable', 'discoverable', SearchReport::HIDDEN);
+        }
+
+        $rows = PanelRows::of($facts, $issues, self::editLink($context, $record->reference()));
+
+        return new Panel(
+            'SEO',
+            paragraphs: [] === $rows ? ['Nothing to fix.'] : [],
+            image: null === $facts->image ? null : new PanelImage($facts->image, $facts->title ?? ''),
+            rows: $rows,
+            menu: $this->menu($context, $record),
+        );
+    }
+
+    /**
+     * The panel's Actions menu: the record's preview in search results, and, once it has a page, the page
+     * and Google's test of its structured data.
+     *
+     * @return list<Link>
+     */
+    private function menu(ExtensionContextInterface $context, RecordView $record): array
+    {
+        $preview = new Link('Preview in search', sprintf(
             self::PREVIEW,
             rawurlencode($record->section),
             rawurlencode((string) $record->reference()->id),
-        );
+        ));
+        $url = $context->urls()->url($record->reference());
 
-        return new Panel(
-            'Search and social',
-            [
-                null === $shown
-                    ? 'Title: none yet.'
-                    : sprintf(
-                        'Title: %s (%d of about %d characters)',
-                        $shown,
-                        mb_strlen($shown),
-                        MetaLengths::TITLE_MAX,
-                    ),
-                null === $description
-                    ? 'Description: none yet.'
-                    : sprintf(
-                        'Description: %s (%d of about %d characters)',
-                        self::shown($description),
-                        mb_strlen($description),
-                        MetaLengths::DESCRIPTION_MAX,
-                    ),
-                ...(self::hidden($seo, $record->values) ? ['Hidden from search: its Discoverable switch is off.'] : []),
-                ...array_map(
-                    static fn(MetaIssue $issue): string => "To fix: {$issue->message}",
-                    $facts->issues,
-                ),
-            ],
+        return (
             null === $url
-                ? []
+                ? [$preview]
                 : [
+                    $preview,
                     new Link('View the page', $url),
-                    new Link('Preview in search', $preview),
                     new Link(
                         'Test its structured data',
                         'https://search.google.com/test/rich-results?url=' . rawurlencode($url),
                     ),
-                ],
+                ]
         );
     }
 }

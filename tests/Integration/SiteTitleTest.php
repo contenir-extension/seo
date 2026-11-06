@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Tests\Integration;
 
+use Contenir\Extension\Api\Panel\PanelRow;
 use Contenir\Extension\Api\Panel\RecordView;
 use Contenir\Extension\Api\Testing\FrozenClock;
 use Contenir\Extension\Api\Testing\InMemoryHost;
@@ -18,6 +19,8 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function array_filter;
+use function array_values;
 use function str_repeat;
 
 /**
@@ -35,15 +38,18 @@ final class SiteTitleTest extends TestCase
     private InMemoryHost $host;
 
     #[Test]
-    public function thePanelShowsTheTitleWithTheSitesOwnTitle(): void
+    public function thePanelCountsTheTitleWithTheSitesOwnTitleAsSearchShowsIt(): void
     {
-        static::assertSame(
-            'Title: House | Studio Esteta (21 of about 60 characters)',
-            (new SearchPanel())->panel(new RecordView(self::SECTION, 1, [
-                'title' => 'House',
-            ]), $this->host->context('seo'))
-                ?->paragraphs[0] ?? null,
-        );
+        $title = str_repeat('t', times: 55);
+        $panel = (new SearchPanel())->panel(new RecordView(self::SECTION, 1, [
+            'title' => $title,
+        ]), $this->host->context('seo'));
+        $rows = array_values(array_filter(
+            $panel->rows ?? [],
+            static fn(PanelRow $row): bool => 'Title' === $row->label,
+        ));
+
+        static::assertSame('Too long (71 of about 60)', $rows[0]->detail ?? null);
     }
 
     #[Test]

@@ -22,11 +22,14 @@ final readonly class PanelFacts
 {
     /**
      * @param list<MetaIssue> $issues
+     * @param ?array{int, int} $imageSize The share image's width and height, when the site said
      */
     private function __construct(
         public ?string $title,
         public ?string $description,
         public array $issues,
+        public ?string $image = null,
+        public ?array $imageSize = null,
     ) {}
 
     public static function ofColumns(SeoBlock $seo, MetaValues $values, TitleTemplate $template): self
@@ -42,6 +45,12 @@ final readonly class PanelFacts
 
     public static function ofSite(Inspection $site): self
     {
-        return new self($site->title, $site->description, InspectionIssues::of($site));
+        return new self(
+            $site->title,
+            $site->description,
+            InspectionIssues::of($site),
+            $site->image,
+            null === $site->imageWidth || null === $site->imageHeight ? null : [$site->imageWidth, $site->imageHeight],
+        );
     }
 }
