@@ -168,7 +168,7 @@ final class SeoModuleTest extends TestCase
                 '/admin/extension/seo/preview?section=library.projects.project&id=3',
                 'https://www.example.com/work/hut',
             ],
-            [...$this->texts($xpath, '//tbody/tr/td[1]/a/@href'), ...$this->texts($xpath, '//tbody/tr/td[4]/a/@href')],
+            [...$this->texts($xpath, '//tbody/tr/td[2]/a/@href'), ...$this->texts($xpath, '//tbody/tr/td[5]/a/@href')],
         );
     }
 
@@ -179,7 +179,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertCount(
             0,
-            $this->page('records', ['section' => self::NEWS])->query('//tbody/tr/td[4]/a[@target]'),
+            $this->page('records', ['section' => self::NEWS])->query('//tbody/tr/td[5]/a[@target]'),
         );
     }
 
@@ -190,7 +190,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             ['Hidden from search: its Discoverable switch is off.'],
-            $this->texts($this->page('records', ['role' => 'discoverable']), '//tbody/tr/td[3]/div'),
+            $this->texts($this->page('records', ['role' => 'discoverable']), '//tbody/tr/td[4]/div'),
         );
     }
 
@@ -268,7 +268,7 @@ final class SeoModuleTest extends TestCase
             [['1'], ['Live']],
             [
                 $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]'),
-                $this->texts($this->page('records'), '//tbody/tr/td[1]'),
+                $this->texts($this->page('records'), '//tbody/tr/td[2]'),
             ],
         );
     }
@@ -447,7 +447,7 @@ final class SeoModuleTest extends TestCase
     {
         $this->seedRecords();
 
-        static::assertSame($titles, $this->texts($this->page('records', $query), '//tbody/tr/td[1]'));
+        static::assertSame($titles, $this->texts($this->page('records', $query), '//tbody/tr/td[2]'));
     }
 
     protected function setUp(): void

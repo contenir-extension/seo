@@ -373,7 +373,7 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             ['The share image is 2×1, and sharing sites show about 1200×630, so it may look soft.'],
-            $this->texts($this->page('records', ['role' => 'image']), '//tbody/tr/td[3]/div'),
+            $this->texts($this->page('records', ['role' => 'image']), '//tbody/tr/td[4]/div'),
         );
     }
 

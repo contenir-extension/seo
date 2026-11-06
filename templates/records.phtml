@@ -12,10 +12,16 @@
  *     pages: int,
  *     from: int,
  *     rows: list<\Contenir\Extension\Seo\Module\RecordLine>,
+ *     bulk: bool,
+ *     kinds: array<string, string>,
  * } $values
  * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
  */
+use Contenir\Extension\Seo\Bulk\FixKind;
+use Contenir\Extension\Seo\Bulk\Selection;
+
 $filter  = $values['filter'];
+$bulk    = $values['bulk'];
 $pageUrl = static fn(int $page): string => $view->url('records', $filter->query() + ['page' => $page]);
 ?>
                 <?= $view->tabs() ?>
@@ -36,8 +42,34 @@ $pageUrl = static fn(int $page): string => $view->url('records', $filter->query(
                                     <option value="<?= $view->escape($role) ?>"<?= $filter->role === $role ? ' selected' : '' ?>><?= $view->escape($label) ?></option>
 <?php endforeach ?>
                                 </select>
+                                <select name="kind" class="select select--auto" aria-label="Problem" data-autosubmit="1">
+                                    <option value="">Any problem</option>
+<?php foreach ($values['kinds'] as $kind => $label): ?>
+                                    <option value="<?= $view->escape($kind) ?>"<?= $filter->kind?->value === $kind ? ' selected' : '' ?>><?= $view->escape($label) ?></option>
+<?php endforeach ?>
+                                </select>
                                 <button type="submit" class="sr-only">Filter</button>
                             </form>
+<?php if ($bulk && [] !== $values['rows']): ?>
+                            <form id="seo-fix" method="post" action="<?= $view->escape($view->url('records-fix')) ?>" hidden>
+                                <?= $view->token() ?>
+<?php foreach ($filter->query() as $name => $value): ?>
+                                <input type="hidden" name="<?= $view->escape($name) ?>" value="<?= $view->escape($value) ?>">
+<?php endforeach ?>
+                            </form>
+                            <select name="scope" form="seo-fix" class="select select--auto" aria-label="Fix which records">
+                                <option value="">Ticked records</option>
+                                <option value="<?= Selection::ALL ?>">All <?= $values['total'] ?> matching</option>
+                            </select>
+                            <div class="dropdown dropdown--right">
+                                <button type="button" class="btn btn--outline dropdown__trigger" aria-haspopup="menu" aria-expanded="false" data-toggle data-toggle-target="#seo-fix-menu" data-toggle-capture="true"><span>Fix</span><?= $view->icon('chevron-down') ?></button>
+                                <div class="dropdown__menu dropdown__menu--sm" id="seo-fix-menu" role="menu" popover="manual">
+<?php foreach (FixKind::cases() as $fix): ?>
+                                    <button type="submit" form="seo-fix" name="fix" value="<?= $view->escape($fix->value) ?>" class="dropdown__item" role="menuitem"><span class="dropdown__item-text"><?= $view->escape($fix->label()) ?></span></button>
+<?php endforeach ?>
+                                </div>
+                            </div>
+<?php endif ?>
                             <a class="btn btn--outline" href="<?= $view->escape($view->url('records-export', $filter->query())) ?>"><?= $view->icon('table-export') ?><span>Export CSV</span></a>
                         </div>
                     </div>
@@ -56,6 +88,9 @@ $pageUrl = static fn(int $page): string => $view->url('records', $filter->query(
                         <table class="table table--hoverable table--card">
                             <thead class="table__header">
                                 <tr class="table__row">
+<?php if ($bulk): ?>
+                                    <th class="table__head table__actions"><span class="sr-only">Pick</span></th>
+<?php endif ?>
                                     <th class="table__head">Record</th>
                                     <th class="table__head">Section</th>
                                     <th class="table__head">To fix</th>
@@ -65,6 +100,9 @@ $pageUrl = static fn(int $page): string => $view->url('records', $filter->query(
                             <tbody class="table__body">
 <?php foreach ($values['rows'] as $row): ?>
                                 <tr class="table__row">
+<?php if ($bulk): ?>
+                                    <td class="table__cell table__actions"><input type="checkbox" name="records[]" form="seo-fix" value="<?= $view->escape(Selection::key($row->row->record->record)) ?>" aria-label="Pick <?= $view->escape($row->row->record->title) ?>"></td>
+<?php endif ?>
                                     <td class="table__cell"><?php if (null === $row->edit): ?><?= $view->escape($row->row->record->title) ?><?php else: ?><a class="text--medium" href="<?= $view->escape($row->edit) ?>"><?= $view->escape($row->row->record->title) ?></a><?php endif ?></td>
                                     <td class="table__cell text--muted"><?= $view->escape($row->row->section->title) ?></td>
                                     <td class="table__cell">

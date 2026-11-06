@@ -26,12 +26,16 @@ use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Extension\Seo\Module\ApplyHandler;
 use Contenir\Extension\Seo\Module\CheckHandler;
 use Contenir\Extension\Seo\Module\DashboardMeter;
 use Contenir\Extension\Seo\Module\ExportHandler;
+use Contenir\Extension\Seo\Module\FixHandler;
 use Contenir\Extension\Seo\Module\OverviewHandler;
 use Contenir\Extension\Seo\Module\PreviewHandler;
 use Contenir\Extension\Seo\Module\RecordsHandler;
+use Contenir\Extension\Seo\Module\RunHandler;
+use Contenir\Extension\Seo\Module\UndoHandler;
 use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
@@ -93,6 +97,10 @@ final class SeoExtension implements ExtensionInterface
         $registry->handler(ExportHandler::NAME, ExportHandler::class);
         $registry->handler(PreviewHandler::NAME, PreviewHandler::class);
         $registry->handler(CheckHandler::NAME, CheckHandler::class, Privilege::Update);
+        $registry->handler(FixHandler::NAME, FixHandler::class, Privilege::Update);
+        $registry->handler(ApplyHandler::NAME, ApplyHandler::class, Privilege::Update);
+        $registry->handler(RunHandler::NAME, RunHandler::class);
+        $registry->handler(UndoHandler::NAME, UndoHandler::class, Privilege::Update);
         $registry->schedule(InspectRecords::NAME, InspectRecords::class, Frequency::everyMinutes(15));
     }
 }

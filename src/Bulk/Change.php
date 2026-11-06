@@ -37,4 +37,17 @@ final readonly class Change
             'after'   => $this->after,
         ];
     }
+
+    public function withAfter(string $after): self
+    {
+        return new self(
+            $this->record,
+            $this->title,
+            $this->sectionTitle,
+            $this->kind,
+            $this->column,
+            $this->before,
+            $after,
+        );
+    }
 }
