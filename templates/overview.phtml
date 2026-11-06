@@ -32,6 +32,19 @@ foreach ($values['sections'] as $each) {
 $tones    = ['success' => 'var(--success)', 'warning' => 'var(--warning)', 'destructive' => 'var(--destructive)'];
 $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning', Tier::Low->value => 'info'];
 ?>
+                <div class="pageheader pageheader--row pageheader--sticky">
+                    <div class="pageheader__content">
+                        <h1 class="pageheader__title">SEO</h1>
+                    </div>
+                    <div class="pageheader__actions">
+                        <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
+                            <?= $view->token() ?>
+                            <button type="submit" class="btn btn--outline"><?= $view->icon('refresh') ?><span><?= null === $values['ago'] ? 'Check with the site' : 'Re-check now' ?></span></button>
+                        </form>
+                    </div>
+                </div>
+                <p class="pageheader__description">How your site reads in search. Start with Fix first, and open a section's counts for the records to fix. Re-check asks the site about each page again: it changes nothing, and doesn't affect Site-wide.</p>
+
                 <?= $view->tabs() ?>
 
                 <div class="stack stack--lg">
@@ -42,10 +55,6 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
                                 <h2 class="card__title">Overall rank<?php if (null !== $score->value): ?> <span class="badge badge--<?= $view->escape($score->tone()) ?>"><?= $view->escape($score->label()) ?></span><?php endif ?></h2>
                                 <p class="card__description"><?= null === $values['ago'] ? 'Not checked with the site yet.' : 'Checked ' . $view->escape($values['ago']) . ' ago.' ?></p>
                             </div>
-                            <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
-                                <?= $view->token() ?>
-                                <button type="submit" class="btn btn--outline btn--sm"><?= $view->icon('refresh') ?><span><?= null === $values['ago'] ? 'Check with the site' : 'Re-check now' ?></span></button>
-                            </form>
                         </div>
                         <div class="card__content stack stack--md" style="display: flex; flex: 1; flex-direction: column">
 <?php if (null === $score->value): ?>

@@ -84,12 +84,12 @@ final class SeoModuleTest extends TestCase
     public static function pageProvider(): array
     {
         return [
-            'the first page'     => [[], '1', '50', ['pagination__next']],
-            'a middle page'      => [['page' => 2], '51', '100', ['pagination__prev', 'pagination__next']],
-            'the last page'      => [['page' => 3], '101', '120', ['pagination__prev']],
-            'past the last page' => [['page' => 9], '101', '120', ['pagination__prev']],
-            'before the first'   => [['page' => 0], '1', '50', ['pagination__next']],
-            'not a number'       => [['page' => 'x'], '1', '50', ['pagination__next']],
+            'the first page'     => [[], 'House 1', 50],
+            'a middle page'      => [['page' => 2], 'House 51', 50],
+            'the last page'      => [['page' => 3], 'House 101', 20],
+            'past the last page' => [['page' => 9], 'House 101', 20],
+            'before the first'   => [['page' => 0], 'House 1', 50],
+            'not a number'       => [['page' => 'x'], 'House 1', 50],
         ];
     }
 
@@ -122,16 +122,17 @@ final class SeoModuleTest extends TestCase
      */
     #[Test]
     #[DataProvider('pageProvider')]
-    public function aLongReportComesInPages(array $query, string $from, string $to, array $links): void
+    public function aLongReportComesInPages(array $query, string $first, int $rows): void
     {
         $this->seedLong(120);
         $xpath = $this->page('records', $query);
 
         static::assertSame(
-            [[$from, $to, '120'], $links],
+            [$first, $rows, 3],
             [
-                $this->texts($xpath, '//div[@class="pagination__text"]/strong'),
-                $this->texts($xpath, '//nav[@class="pagination"]/a/@class'),
+                $this->texts($xpath, '//table/tr[2]/td[2]')[0] ?? null,
+                $xpath->query('//table/tr[position()>1]')->length,
+                $xpath->query('//table/following-sibling::a')->length,
             ],
         );
     }
@@ -153,7 +154,7 @@ final class SeoModuleTest extends TestCase
     {
         $this->seedLong(120);
 
-        static::assertCount(RecordsHandler::PER_PAGE, $this->page('records')->query('//tbody/tr'));
+        static::assertCount(RecordsHandler::PER_PAGE, $this->page('records')->query('//table/tr[position()>1]'));
     }
 
     #[Test]
@@ -168,7 +169,7 @@ final class SeoModuleTest extends TestCase
                 '/admin/extension/seo/preview?section=library.projects.project&id=3',
                 'https://www.example.com/work/hut',
             ],
-            [...$this->texts($xpath, '//tbody/tr/td[2]/a/@href'), ...$this->texts($xpath, '//tbody/tr/td[5]/a/@href')],
+            [...$this->texts($xpath, '//table/tr/td/a/@href')],
         );
     }
 
@@ -179,7 +180,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertCount(
             0,
-            $this->page('records', ['section' => self::NEWS])->query('//tbody/tr/td[5]/a[@target]'),
+            $this->page('records', ['section' => self::NEWS])->query('//table/tr/td[6]'),
         );
     }
 
@@ -190,7 +191,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             ['Hidden from search: its Discoverable switch is off.'],
-            $this->texts($this->page('records', ['role' => 'discoverable']), '//tbody/tr/td[4]/div'),
+            $this->texts($this->page('records', ['role' => 'discoverable']), '//table/tr/td[4]'),
         );
     }
 
@@ -208,7 +209,7 @@ final class SeoModuleTest extends TestCase
     {
         $this->seedRecords();
 
-        static::assertCount(0, $this->page('records')->query('//nav[@class="pagination"]'));
+        static::assertCount(0, $this->page('records')->query('//table/following-sibling::a'));
     }
 
     #[Test]
@@ -251,7 +252,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             ['Nothing to fix'],
-            $this->texts($this->page('records'), '//h2[@class="empty__title"]'),
+            $this->texts($this->page('records'), '//div[@class="empty"]/h2'),
         );
     }
 
@@ -268,7 +269,7 @@ final class SeoModuleTest extends TestCase
             [['1'], ['Live']],
             [
                 $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]'),
-                $this->texts($this->page('records'), '//tbody/tr/td[2]'),
+                $this->texts($this->page('records'), '//table/tr/td[2]'),
             ],
         );
     }
@@ -282,7 +283,7 @@ final class SeoModuleTest extends TestCase
             ['/admin/extension/seo/records?section=library.projects.project&page=2'],
             $this->texts(
                 $this->page('records', ['section' => self::PROJECTS]),
-                '//a[@class="pagination__next"]/@href',
+                '//table/following-sibling::a[2]/@href',
             ),
         );
     }
@@ -447,7 +448,7 @@ final class SeoModuleTest extends TestCase
     {
         $this->seedRecords();
 
-        static::assertSame($titles, $this->texts($this->page('records', $query), '//tbody/tr/td[2]'));
+        static::assertSame($titles, $this->texts($this->page('records', $query), '//table/tr/td[2]'));
     }
 
     protected function setUp(): void

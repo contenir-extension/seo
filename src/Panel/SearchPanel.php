@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Panel\Link;
 use Contenir\Extension\Api\Panel\Panel;
 use Contenir\Extension\Api\Panel\PanelImage;
+use Contenir\Extension\Api\Panel\PanelPreview;
 use Contenir\Extension\Api\Panel\RecordPanelInterface;
 use Contenir\Extension\Api\Panel\RecordView;
 use Contenir\Extension\Api\Record\RecordsInterface;
@@ -31,8 +32,8 @@ use function rawurlencode;
 use function sprintf;
 
 /**
- * "SEO", beside a saved record of a section with an `<seo>` block: its share image, then only what
- * needs fixing, each a short row with a Fix button, or "Nothing to fix"; and an Actions menu to preview
+ * "SEO", beside a saved record of a section with an `<seo>` block: its share image, how it reads as a
+ * search result, then only what needs fixing, each a short row with a Fix button; and an Actions menu to preview
  * the record in search results and, once it has a page, to view it and to run Google's test of its
  * structured data. It reads the record as stored, so it shows the last save, and a site binds it with
  * `<panels><panel extension="seo" name="search"/></panels>`, or gets it by default on any section with an
@@ -110,10 +111,10 @@ final readonly class SearchPanel implements RecordPanelInterface
 
         return new Panel(
             'SEO',
-            paragraphs: [] === $rows ? ['Nothing to fix.'] : [],
             image: null === $facts->image ? null : new PanelImage($facts->image, $facts->title ?? ''),
             rows: $rows,
             menu: $this->menu($context, $record),
+            preview: new PanelPreview($facts->title, $facts->description),
         );
     }
 

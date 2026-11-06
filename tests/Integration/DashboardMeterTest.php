@@ -45,8 +45,8 @@ final class DashboardMeterTest extends TestCase
 
         static::assertSame(
             [
-                ['High',   MeterTone::Poor],
-                ['Medium', MeterTone::Warning],
+                ['High', MeterTone::Poor],
+                ['Low',  MeterTone::Neutral],
             ],
             array_map(static fn(MeterSegment $one): array => [$one->label, $one->tone], $meter->segments ?? []),
         );

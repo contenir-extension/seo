@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function str_contains;
 use function str_repeat;
 
 /**
@@ -72,11 +73,11 @@ final class SearchPanelTest extends TestCase
     }
 
     #[Test]
-    public function aReadyRecordHasNothingToFix(): void
+    public function aReadyRecordSaysNothingAboutFixing(): void
     {
         $panel = $this->panel($this->ready());
 
-        static::assertSame(['SEO', ['Nothing to fix.'], []], [$panel?->title, $panel?->paragraphs, $panel?->rows]);
+        static::assertSame(['SEO', [], []], [$panel?->title, $panel?->paragraphs, $panel?->rows]);
     }
 
     #[Test]
@@ -112,8 +113,8 @@ final class SearchPanelTest extends TestCase
         static::assertSame(
             [
                 ['Title',       'Missing'],
-                ['Description', 'Too long (200 of about 160)'],
                 ['Share image', 'Missing'],
+                ['Description', 'Too long (200 of about 160)'],
             ],
             array_map(static fn(PanelRow $row): array => [$row->label, $row->detail], $rows),
         );
@@ -156,6 +157,20 @@ final class SearchPanelTest extends TestCase
         static::assertSame(
             $hidden,
             array_map(static fn(PanelRow $row): array => [$row->label, $row->detail], $panel->rows ?? []),
+        );
+    }
+
+    #[Test]
+    public function showsHowARecordReadsInSearch(): void
+    {
+        $panel = $this->panel($this->ready());
+
+        static::assertSame(
+            [true, true],
+            [
+                str_contains((string) $panel?->preview?->title, $this->ready()['title']),
+                $this->ready()['description'] === $panel?->preview?->description,
+            ],
         );
     }
 

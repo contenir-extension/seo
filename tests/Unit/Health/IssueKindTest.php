@@ -82,8 +82,8 @@ final class IssueKindTest extends TestCase
         static::assertSame(
             [
                 'high'   => $high,
-                'medium' => ['title-length', 'description-length', 'missing-image'],
-                'low'    => ['small-image', 'hidden'],
+                'medium' => ['title-length', 'missing-image'],
+                'low'    => ['description-length', 'small-image', 'hidden'],
             ],
             $tiers,
         );

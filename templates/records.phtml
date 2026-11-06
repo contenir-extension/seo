@@ -1,7 +1,7 @@
 <?php
 /**
- * The search report: filters by section and role, an export of what they
- * show, then a row per record with its issues and where to fix it.
+ * The search report: a header with what to do here, Fix and Export for everything the filters
+ * match, the filters, then the records as the host's own list, whose ticked rows can be fixed too.
  *
  * @var array{
  *     sections: list<\Contenir\Extension\Seo\Report\SectionIssues>,
@@ -19,11 +19,39 @@
  */
 use Contenir\Extension\Seo\Bulk\FixKind;
 use Contenir\Extension\Seo\Bulk\Selection;
+use Contenir\Extension\Seo\Module\RecordsList;
 
-$filter  = $values['filter'];
-$bulk    = $values['bulk'];
-$pageUrl = static fn(int $page): string => $view->url('records', $filter->query() + ['page' => $page]);
+$filter = $values['filter'];
+$bulk   = $values['bulk'] && [] !== $values['rows'];
+$list   = (new RecordsList($filter, $values['rows'], $values['page'], $values['total'], $values['bulk']))->of($view);
 ?>
+                <div class="pageheader pageheader--row pageheader--sticky">
+                    <div class="pageheader__content">
+                        <h1 class="pageheader__title">Records</h1>
+                    </div>
+                    <div class="pageheader__actions">
+                        <a class="btn btn--outline" href="<?= $view->escape($view->url('records-export', $filter->query())) ?>"><?= $view->icon('table-export') ?><span>Export CSV</span></a>
+<?php if ($bulk): ?>
+                        <form id="seo-fix-all" method="post" action="<?= $view->escape($view->url('records-fix')) ?>" hidden>
+                            <?= $view->token() ?>
+                            <input type="hidden" name="scope" value="<?= Selection::ALL ?>">
+<?php foreach ($filter->query() as $name => $value): ?>
+                            <input type="hidden" name="<?= $view->escape($name) ?>" value="<?= $view->escape($value) ?>">
+<?php endforeach ?>
+                        </form>
+                        <div class="dropdown dropdown--right">
+                            <button type="button" class="btn btn--primary dropdown__trigger" aria-haspopup="menu" aria-expanded="false" data-toggle data-toggle-target="#seo-fix-menu" data-toggle-capture="true"><span>Fix all <?= $values['total'] ?></span><?= $view->icon('chevron-down') ?></button>
+                            <div class="dropdown__menu dropdown__menu--sm" id="seo-fix-menu" role="menu" popover="manual">
+<?php foreach (FixKind::cases() as $fix): ?>
+                                <button type="submit" form="seo-fix-all" name="fix" value="<?= $view->escape($fix->value) ?>" class="dropdown__item" role="menuitem"><?= $view->icon($fix->icon()) ?><span class="dropdown__item-text"><?= $view->escape($fix->label()) ?></span></button>
+<?php endforeach ?>
+                            </div>
+                        </div>
+<?php endif ?>
+                    </div>
+                </div>
+                <p class="pageheader__description">The published records that need something. Open one to fix it, tick several to fix them together, or use Fix for everything these filters match. You review a fix before it's applied.</p>
+
                 <?= $view->tabs() ?>
 
                 <div class="card">
@@ -50,87 +78,8 @@ $pageUrl = static fn(int $page): string => $view->url('records', $filter->query(
                                 </select>
                                 <button type="submit" class="sr-only">Filter</button>
                             </form>
-<?php if ($bulk && [] !== $values['rows']): ?>
-                            <form id="seo-fix" method="post" action="<?= $view->escape($view->url('records-fix')) ?>" hidden>
-                                <?= $view->token() ?>
-<?php foreach ($filter->query() as $name => $value): ?>
-                                <input type="hidden" name="<?= $view->escape($name) ?>" value="<?= $view->escape($value) ?>">
-<?php endforeach ?>
-                            </form>
-                            <select name="scope" form="seo-fix" class="select select--auto" aria-label="Fix which records">
-                                <option value="">Ticked records</option>
-                                <option value="<?= Selection::ALL ?>">All <?= $values['total'] ?> matching</option>
-                            </select>
-                            <div class="dropdown dropdown--right">
-                                <button type="button" class="btn btn--outline dropdown__trigger" aria-haspopup="menu" aria-expanded="false" data-toggle data-toggle-target="#seo-fix-menu" data-toggle-capture="true"><span>Fix</span><?= $view->icon('chevron-down') ?></button>
-                                <div class="dropdown__menu dropdown__menu--sm" id="seo-fix-menu" role="menu" popover="manual">
-<?php foreach (FixKind::cases() as $fix): ?>
-                                    <button type="submit" form="seo-fix" name="fix" value="<?= $view->escape($fix->value) ?>" class="dropdown__item" role="menuitem"><span class="dropdown__item-text"><?= $view->escape($fix->label()) ?></span></button>
-<?php endforeach ?>
-                                </div>
-                            </div>
-<?php endif ?>
-                            <a class="btn btn--outline" href="<?= $view->escape($view->url('records-export', $filter->query())) ?>"><?= $view->icon('table-export') ?><span>Export CSV</span></a>
                         </div>
                     </div>
 
-<?php if ([] === $values['rows']): ?>
-                    <div class="card__content">
-                        <div class="empty">
-                            <div class="empty__content">
-                                <h2 class="empty__title">Nothing to fix</h2>
-                                <p class="empty__description">No record matches these filters.</p>
-                            </div>
-                        </div>
-                    </div>
-<?php else: ?>
-                    <div class="table__wrapper table__wrapper--borderless">
-                        <table class="table table--hoverable table--card">
-                            <thead class="table__header">
-                                <tr class="table__row">
-<?php if ($bulk): ?>
-                                    <th class="table__head table__actions"><span class="sr-only">Pick</span></th>
-<?php endif ?>
-                                    <th class="table__head">Record</th>
-                                    <th class="table__head">Section</th>
-                                    <th class="table__head">To fix</th>
-                                    <th class="table__head table__actions"><span class="sr-only">Links</span></th>
-                                </tr>
-                            </thead>
-                            <tbody class="table__body">
-<?php foreach ($values['rows'] as $row): ?>
-                                <tr class="table__row">
-<?php if ($bulk): ?>
-                                    <td class="table__cell table__actions"><input type="checkbox" name="records[]" form="seo-fix" value="<?= $view->escape(Selection::key($row->row->record->record)) ?>" aria-label="Pick <?= $view->escape($row->row->record->title) ?>"></td>
-<?php endif ?>
-                                    <td class="table__cell"><?php if (null === $row->edit): ?><?= $view->escape($row->row->record->title) ?><?php else: ?><a class="text--medium" href="<?= $view->escape($row->edit) ?>"><?= $view->escape($row->row->record->title) ?></a><?php endif ?></td>
-                                    <td class="table__cell text--muted"><?= $view->escape($row->row->section->title) ?></td>
-                                    <td class="table__cell">
-<?php foreach ($row->issues as $issue): ?>
-                                        <div><?= $view->escape($issue) ?></div>
-<?php endforeach ?>
-                                    </td>
-                                    <td class="table__cell table__actions"><a class="btn btn--ghost btn--sm" href="<?= $view->escape($view->url('preview', ['section' => $row->row->section->section, 'id' => $row->row->record->record->id])) ?>"><?= $view->icon('eye') ?><span class="sr-only">Preview in search</span></a><?php if (null !== $row->view): ?><a class="btn btn--ghost btn--sm" href="<?= $view->escape($row->view) ?>" target="_blank" rel="noopener"><?= $view->icon('external-link') ?><span class="sr-only">View the page</span></a><?php endif ?></td>
-                                </tr>
-<?php endforeach ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="card__footer card__footer--border">
-                        <div class="pagination__info">
-                            <div class="pagination__text">Showing <strong><?= $values['from'] ?></strong> to <strong><?= $values['from'] + count($values['rows']) - 1 ?></strong> of <strong><?= $values['total'] ?></strong></div>
-<?php if ($values['pages'] > 1): ?>
-                            <nav class="pagination" aria-label="Pages">
-<?php if ($values['page'] > 1): ?>
-                                <a class="pagination__prev" href="<?= $view->escape($pageUrl($values['page'] - 1)) ?>" aria-label="Previous page"><?= $view->icon('chevron-left') ?></a>
-<?php endif ?>
-<?php if ($values['page'] < $values['pages']): ?>
-                                <a class="pagination__next" href="<?= $view->escape($pageUrl($values['page'] + 1)) ?>" aria-label="Next page"><?= $view->icon('chevron-right') ?></a>
-<?php endif ?>
-                            </nav>
-<?php endif ?>
-                        </div>
-                    </div>
-<?php endif ?>
+                    <?= $view->recordList($list) ?>
                 </div>

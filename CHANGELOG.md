@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-11-06
+
+### Changed
+
+- Records is drawn with the host's own list (extension API 0.9.3), so its boxes, Select all, row actions and pagination
+  match the Library's. Ticking rows shows the bulk fixes; "Fix all" in the header fixes everything the filters match.
+- Overview and Records have the standard page header, holding their actions and a line on what to do on the screen.
+- The record panel shows how the record reads in search, and says nothing when nothing needs fixing.
+- Description length is a low-impact issue, since a long one is only cut off and doesn't affect ranking.
+
 ## [0.4.0] - 2026-11-06
 
 ### Added

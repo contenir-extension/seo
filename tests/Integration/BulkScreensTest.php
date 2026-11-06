@@ -131,7 +131,7 @@ final class BulkScreensTest extends TestCase
         $page = $this->page($this->get('records'));
 
         static::assertSame(
-            [1, 'Fix'],
+            [1, 'Fix all 1'],
             [
                 $page->query('//input[@name="records[]"]')->length,
                 $this->texts($page, '//button[contains(@class, "dropdown__trigger")]/span')[0] ?? null,

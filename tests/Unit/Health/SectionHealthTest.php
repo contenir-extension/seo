@@ -22,7 +22,7 @@ final class SectionHealthTest extends TestCase
     {
         $health = SectionHealth::of($this->section([], inspected: 4));
 
-        static::assertSame(434, $health->total);
+        static::assertSame(404, $health->total);
     }
 
     #[Test]
@@ -52,7 +52,7 @@ final class SectionHealthTest extends TestCase
     {
         $declared = SectionHealth::of($this->section([], applies: ['title', 'description']));
 
-        static::assertSame(380, $declared->total);
+        static::assertSame(350, $declared->total);
     }
 
     #[Test]
@@ -75,7 +75,7 @@ final class SectionHealthTest extends TestCase
             $this->record(1, [new MetaIssue('description', 'summary', 'Add one.', missing: true)]),
         ]));
 
-        static::assertSame([89, 'Needs work', true, 10, 430], [
+        static::assertSame([89, 'Needs work', true, 10, 400], [
             $health->score->value,
             $health->score->label(),
             $health->highOpen,
