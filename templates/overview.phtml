@@ -47,11 +47,11 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
                                 <button type="submit" class="btn btn--outline btn--sm"><?= $view->icon('refresh') ?><span><?= null === $values['ago'] ? 'Check with the site' : 'Re-check now' ?></span></button>
                             </form>
                         </div>
-                        <div class="card__content stack stack--md">
+                        <div class="card__content stack stack--md" style="display: flex; flex: 1; flex-direction: column">
 <?php if (null === $score->value): ?>
                             <p class="text--sm text--muted">Nothing to score yet. Add an &lt;seo&gt; block to a section with pages of its own in admin.xml.</p>
 <?php else: ?>
-                            <div style="text-align: center">
+                            <div style="display: flex; flex: 1; align-items: center; justify-content: center">
                                 <svg width="240" height="140" viewBox="0 0 200 116" role="img" aria-label="Score <?= $score->value ?> of 100">
                                     <path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="var(--bg-muted)" stroke-width="14" stroke-linecap="round"/>
                                     <path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="<?= $view->escape($tones[$score->tone()]) ?>" stroke-width="14" stroke-linecap="round" stroke-dasharray="<?= round($arc * $score->value / 100, 1) ?> <?= round($arc, 1) ?>"/>
