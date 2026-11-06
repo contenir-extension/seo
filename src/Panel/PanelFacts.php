@@ -43,7 +43,7 @@ final readonly class PanelFacts
 
         return new self(
             null === $title ? null : $template->format($title),
-            $values->text('description') ?? $derived,
+            $values->shownDescription(),
             (new MetaIssues($seo, $template))->of($values),
             derived: [
                 ...(null === $derived ? [] : ['description']),

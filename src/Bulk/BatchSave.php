@@ -13,7 +13,6 @@ use Contenir\Extension\Api\Record\RecordUpdatesInterface;
 use function array_combine;
 use function array_keys;
 use function array_map;
-use function array_values;
 
 /**
  * One call to the host's batched update for some of a run's changes, and what became of each.
@@ -35,15 +34,15 @@ final readonly class BatchSave
      */
     public function run(array $chunk, array $stored, Closure $settle): array
     {
-        $results = $this->updates->update(array_values(array_map(
+        $results = $this->updates->update(array_map(
             static fn(int $place, RunChange $change): RecordUpdate => new RecordUpdate(
                 $change->record,
                 [$change->column => $stored[$place] ?? ''],
             ),
             array_keys($chunk),
             $chunk,
-        )));
+        ));
 
-        return array_combine(array_keys($chunk), array_map($settle, array_values($chunk), $results));
+        return array_combine(array_keys($chunk), array_map($settle, $chunk, $results));
     }
 }

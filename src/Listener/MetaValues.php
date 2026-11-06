@@ -67,6 +67,14 @@ final readonly class MetaValues
         return null === $this->text('image') && (new DerivedContent($this->values))->hasImage();
     }
 
+    /**
+     * The description a search result shows: the record's own, or else the one its Section field gives.
+     */
+    public function shownDescription(): ?string
+    {
+        return $this->text('description') ?? (new DerivedContent($this->values))->description();
+    }
+
     public function text(string $role): ?string
     {
         $advanced = $this->advanced($role);

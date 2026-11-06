@@ -38,11 +38,10 @@ final readonly class SiteHealth
      */
     public static function of(array $sections, array $siteChecks): self
     {
-        $health   = array_map(SectionHealth::of(...), $sections);
-        $total    = array_sum(array_map(static fn(SectionHealth $one): int => $one->total, $health));
-        $failing  = array_sum(array_map(static fn(SectionHealth $one): int => $one->failing, $health));
-        $highOpen = [] !== array_filter($health, static fn(SectionHealth $one): bool => $one->highOpen);
-        $broken   = [];
+        $health  = array_map(SectionHealth::of(...), $sections);
+        $total   = array_sum(array_map(static fn(SectionHealth $one): int => $one->total, $health));
+        $failing = array_sum(array_map(static fn(SectionHealth $one): int => $one->failing, $health));
+        $broken  = [];
         foreach (IssueKind::cases() as $kind) {
             if (! $kind->siteWide() || ! array_key_exists($kind->value, $siteChecks)) {
                 continue;
@@ -54,9 +53,16 @@ final readonly class SiteHealth
             }
 
             $failing  += $kind->tier()->weight();
-            $highOpen = $highOpen || Tier::High === $kind->tier();
             $broken[] = $kind;
         }
+
+        $highOpen =
+            [] !== array_filter($health, static fn(SectionHealth $one): bool => $one->highOpen)
+            || in_array(
+                Tier::High,
+                array_map(static fn(IssueKind $kind): Tier => $kind->tier(), $broken),
+                strict: true,
+            );
 
         return new self(Score::of($total, $failing, $highOpen ? Tier::High : null), $health, $broken);
     }
@@ -92,7 +98,7 @@ final readonly class SiteHealth
     private function countOf(IssueKind $kind): IssueCount
     {
         if ($kind->siteWide()) {
-            return new IssueCount($kind, in_array($kind, $this->siteIssues, strict: true) ? 1 : 0);
+            return new IssueCount($kind, (int) in_array($kind, $this->siteIssues, strict: true));
         }
 
         $sections = [];

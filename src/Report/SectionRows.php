@@ -37,12 +37,13 @@ final readonly class SectionRows
     {
         $columns = SeoSectionBlock::known($block, SeoDeclaration::read($block->element)->columns());
         $pages   = [];
-        $offset  = 0;
-        do {
+        for ($offset = 0; $offset < SearchReport::MAX_ROWS; $offset += SearchReport::PAGE) {
             $page    = $this->sections->rows($block->section, $columns, limit: SearchReport::PAGE, offset: $offset);
             $pages[] = $page;
-            $offset  += SearchReport::PAGE;
-        } while (SearchReport::PAGE === count($page) && $offset < SearchReport::MAX_ROWS);
+            if (SearchReport::PAGE !== count($page)) {
+                break;
+            }
+        }
 
         return array_values(array_filter(
             array_merge([], ...$pages),

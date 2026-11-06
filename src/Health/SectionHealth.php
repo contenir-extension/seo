@@ -7,7 +7,6 @@ namespace Contenir\Extension\Seo\Health;
 use Contenir\Extension\Seo\Report\RecordIssues;
 use Contenir\Extension\Seo\Report\SectionIssues;
 
-use function array_filter;
 use function array_values;
 use function in_array;
 
@@ -78,10 +77,6 @@ final readonly class SectionHealth
      */
     private static function checkedFor(SectionIssues $section, IssueKind $kind): int
     {
-        if ($kind->siteWide()) {
-            return 0;
-        }
-
         return match (true) {
             IssueKind::SmallImage === $kind => in_array('image', $section->applies, strict: true)
                 ? $section->inspected
@@ -102,7 +97,7 @@ final readonly class SectionHealth
             $kinds[IssueKind::of($issue)->value] = IssueKind::of($issue);
         }
 
-        return array_values(array_filter($kinds));
+        return array_values($kinds);
     }
 
     /**

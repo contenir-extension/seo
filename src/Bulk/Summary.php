@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Bulk;
 
-use function array_key_exists;
+use function array_shift;
 use function html_entity_decode;
 use function mb_strlen;
 use function mb_strrpos;
@@ -46,13 +46,9 @@ final class Summary
             start: 0,
             length: $max,
         );
-        $sentence = self::sentenceEnd($head);
+        $sentence = self::sentence($head);
         if (null !== $sentence) {
-            return mb_substr(
-                string: $head,
-                start: 0,
-                length: $sentence + 1,
-            );
+            return $sentence;
         }
 
         $space = mb_strrpos($head, needle: ' ');
@@ -80,15 +76,12 @@ final class Summary
     }
 
     /**
-     * Where the last full sentence in $head stops, when it is long enough to say something.
+     * The last full sentence in $head, when it is long enough to say something.
      */
-    private static function sentenceEnd(string $head): ?int
+    private static function sentence(string $head): ?string
     {
         $found = [];
-        if (1 !== preg_match('/^(.{40,}[.!?])(?=\s|$)/us', $head, matches: $found) || ! array_key_exists(1, $found)) {
-            return null;
-        }
 
-        return mb_strlen($found[1]) - 1;
+        return 1 === preg_match('/.{40,}[.!?](?=\s|$)/u', $head, matches: $found) ? array_shift($found) : null;
     }
 }

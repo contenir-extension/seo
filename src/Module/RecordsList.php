@@ -15,7 +15,6 @@ use Contenir\Extension\Seo\Bulk\FixKind;
 use Contenir\Extension\Seo\Bulk\Selection;
 
 use function array_map;
-use function array_values;
 
 /**
  * The Records screen's list as the host draws it: a row per record with what it needs, leading to its
@@ -57,7 +56,7 @@ final readonly class RecordsList
                         'fix',
                         $fix->value,
                     ),
-                    array_values(FixKind::cases()),
+                    FixKind::cases(),
                 ) : [],
             bulkUrl: $this->bulk ? $view->url(FixHandler::NAME) : '',
             bulkValues: $query,

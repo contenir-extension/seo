@@ -18,8 +18,10 @@ use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Report\SearchReport;
 use Override;
 use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+use function array_filter;
 use function array_map;
 use function array_slice;
 use function ceil;
@@ -41,6 +43,14 @@ final readonly class RecordsHandler implements HandlerInterface
     public const int PER_PAGE = 50;
 
     /**
+     * Whether the host lends what a bulk fix needs: record updates, and a queue to run them in.
+     */
+    public static function canFix(ContainerInterface $services): bool
+    {
+        return $services->has(RecordUpdatesInterface::class) && $services->has(TaskQueueInterface::class);
+    }
+
+    /**
      * The problems a record can have, by name, for the screen's filter.
      *
      * @return array<string, string>
@@ -48,11 +58,7 @@ final readonly class RecordsHandler implements HandlerInterface
     private static function kinds(): array
     {
         $kinds = [];
-        foreach (IssueKind::cases() as $kind) {
-            if ($kind->siteWide()) {
-                continue;
-            }
-
+        foreach (array_filter(IssueKind::cases(), static fn(IssueKind $kind): bool => ! $kind->siteWide()) as $kind) {
             $kinds[$kind->value] = $kind->label();
         }
 
@@ -86,9 +92,7 @@ final readonly class RecordsHandler implements HandlerInterface
                 'total'    => count($rows),
                 'page'     => $page,
                 'pages'    => $pages,
-                'from'     => (($page - 1) * self::PER_PAGE) + 1,
-                'bulk'     => $context->services()->has(RecordUpdatesInterface::class)
-                    && $context->services()->has(TaskQueueInterface::class),
+                'bulk'     => self::canFix($context->services()),
                 'kinds'    => self::kinds(),
                 'rows'     => array_map(
                     static fn(ReportRow $row): RecordLine => new RecordLine(
