@@ -2,7 +2,7 @@
 <admin>
     <seo>
         <title>SEO</title>
-        <icon>search</icon>
+        <icon>seo</icon>
         <description>How the site's records read in search results and shared links</description>
         <handler>overview</handler>
     </seo>
