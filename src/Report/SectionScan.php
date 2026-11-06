@@ -83,6 +83,15 @@ final readonly class SectionScan
             }
         }
 
-        return new SectionIssues($block->section, $title, count($rows), $records, $inspected);
+        $applies = ['title', 'description'];
+        if ([] !== ($seo->roles['image'] ?? [])) {
+            $applies[] = 'image';
+        }
+
+        if (null !== $switch) {
+            $applies[] = 'discoverable';
+        }
+
+        return new SectionIssues($block->section, $title, count($rows), $records, $inspected, $applies);
     }
 }
