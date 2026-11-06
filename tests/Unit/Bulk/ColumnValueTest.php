@@ -69,6 +69,12 @@ final class ColumnValueTest extends TestCase
     }
 
     #[Test]
+    public function readsNoTextUnderAKeyThatHoldsOnlySpace(): void
+    {
+        static::assertNull(ColumnValue::read('{"description":"  "}', 'description'));
+    }
+
+    #[Test]
     #[DataProvider('readProvider')]
     public function readsTheTextAStoredValueHolds(mixed $stored, ?string $expected): void
     {

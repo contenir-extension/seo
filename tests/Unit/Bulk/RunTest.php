@@ -95,4 +95,37 @@ final class RunTest extends TestCase
 
         static::assertEquals($run, RunCodec::decode(RunCodec::encode($run)));
     }
+
+    #[Test]
+    public function keepsAChangesMessageThroughStorage(): void
+    {
+        $run = RunFactory::make(changes: [RunFactory::change(1, RunChange::STOPPED)->with(
+            RunChange::STOPPED,
+            'Held back.',
+        )]);
+
+        static::assertSame('Held back.', RunCodec::decode(RunCodec::encode($run))?->changes[0]->message);
+    }
+
+    #[Test]
+    public function keepsWhenItWasUndoneThroughAChangeOfState(): void
+    {
+        $run = RunFactory::make(
+            state: Run::FINISHED,
+            undoneAt: 2_000,
+        )->with([], Run::FINISHED);
+
+        static::assertSame(2_000, $run->undoneAt);
+    }
+
+    #[Test]
+    public function recordsWhenItWasUndoneOverAnEarlierTime(): void
+    {
+        $run = RunFactory::make(
+            state: Run::FINISHED,
+            undoneAt: 2_000,
+        )->with([], Run::FINISHED, undoneAt: 3_000);
+
+        static::assertSame(3_000, $run->undoneAt);
+    }
 }

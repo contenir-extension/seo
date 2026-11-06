@@ -43,7 +43,7 @@ final class SeoSectionBlockTest extends TestCase
     public function readsEveryColumnTheBlockNamesThatTheSectionHasOnce(): void
     {
         static::assertSame(
-            ['seo', 'meta_title', 'title', 'description', 'image_lg', 'publish'],
+            ['seo', 'meta_title', 'title', 'description', 'image_lg', 'publish', 'section'],
             (new SeoSectionBlock())->columns(self::block(
                 '<seo type="project"><image alt="title">image_lg, Bad-Name, image-lg, a_column_name_longer_than_sixty_four_characters_which_the_host_refuses</image><published>publish</published>'
                     . '<advanced>seo</advanced></seo>',
@@ -54,6 +54,7 @@ final class SeoSectionBlockTest extends TestCase
                     'image_lg',
                     'publish',
                     'seo',
+                    'section',
                     'Bad-Name',
                     'image-lg',
                     'a_column_name_longer_than_sixty_four_characters_which_the_host_refuses',

@@ -4,6 +4,40 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-11-06
+
+### Added
+
+- A Strategy tab beside Overview and Records. It lists each section with its schema type, where its title, description and
+  image are read from, and whether what a record's Section field gives is taken automatically or only suggested. A
+  section's form changes the schema type, the ordered sources of each role, the alt text's source, "From content" for a
+  description or image, and the mode, and saves them into the section's `<seo>` block in admin.xml through the host
+  (extension API 0.9.3). Where the site doesn't save its configuration, the tab reads it and says where to change it.
+  Overview's section rows link to it, and the screens that save need the Update privilege.
+- `<seo mode="manual">` makes what a Section field gives only a suggestion: the checks keep asking for a description and
+  image, and the bulk "Write descriptions" can write the suggestion as the record's own. `content="false"` on a role
+  stops that role taking it. Requires `contenir-seo` ^0.9 and `contenir-seo-mezzio` ^0.12 on the site.
+- Overview's section rows link to the Strategy tab.
+
+### Changed
+
+- Records is drawn with the host's own list (extension API 0.9.3), so its boxes, Select all, row actions and pagination
+  match the Library's. Ticking rows shows the bulk fixes; "Fix all" in the header fixes everything the filters match.
+- Overview and Records have the standard page header, holding their actions and a line on what to do on the screen.
+- The record panel shows how the record reads in search, and says nothing when nothing needs fixing.
+- A description or image a record's Section field gives (the first text block's words, the first media block's image) counts
+  as given: the checks don't ask for one, the record panel says "Taken from the content" and shows the description in its
+  search preview, and bulk "Write descriptions" can save it as the record's own where no summary column gives one.
+  Requires `contenir-seo` ^0.9 and `contenir-seo-mezzio` ^0.12 on the site.
+- Mutation testing now has to cover and kill every mutant, with `min-msi` and `min-covered-msi` at 100 in CI, as the
+  extension API does. Several equivalent code paths were simplified for it: a bulk fix's "holds now" is always nothing
+  where a description is written, the Records list no longer carries an unused first-row number, and the Bulk run store
+  keeps its newest-first order as it saves.
+- A record's View page shows the "Search and social" field as labelled lines (Title, Description, Share image description,
+  Canonical address, Robots, Schema type) instead of the stored JSON, with an info label "From content" on a description
+  the record doesn't hold but its Section field gives. Requires extension API 0.9.3.
+- Description length is a low-impact issue, since a long one is only cut off and doesn't affect ranking.
+
 ## [0.4.0] - 2026-11-06
 
 ### Added

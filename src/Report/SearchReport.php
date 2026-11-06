@@ -7,7 +7,6 @@ namespace Contenir\Extension\Seo\Report;
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
-use Contenir\Extension\Api\Record\RecordsInterface;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\Inspect\RenderingState;
@@ -87,11 +86,6 @@ final readonly class SearchReport
      */
     private function titles(): array
     {
-        $titles = [];
-        foreach ($this->context->services()->get(RecordsInterface::class)->sections() as $section) {
-            $titles[$section->section] = $section->heading ?? SectionNames::plural($section->title);
-        }
-
-        return $titles;
+        return SectionHeadings::of($this->context);
     }
 }

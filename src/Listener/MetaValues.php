@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Listener;
 
 use Contenir\Extension\Api\Section\SectionBlock;
+use Contenir\Extension\Seo\Section\DerivedContent;
 use Contenir\Seo\Sections\Overrides;
 use Contenir\Seo\Sections\SeoBlock;
 
@@ -18,6 +19,8 @@ use function trim;
  * note about the role belongs to the advanced field where the section has one
  * and the role can be kept there, or else the first of the role's columns the
  * section has, or none for the whole record.
+ *
+ * @mago-expect lint:cyclomatic-complexity Each role is read from the advanced column, the columns and the Section field.
  */
 final readonly class MetaValues
 {
@@ -33,6 +36,15 @@ final readonly class MetaValues
         private SeoBlock $seo,
     ) {}
 
+    /**
+     * The description the record's Section field gives where its columns give none, or null when it has none
+     * or its columns already do.
+     */
+    public function derivedDescription(): ?string
+    {
+        return $this->seo->takesContent('description') ? $this->suggestedDescription() : null;
+    }
+
     public function field(string $role): string
     {
         $advanced = $this->advanced($role);
@@ -45,6 +57,38 @@ final readonly class MetaValues
         }
 
         return '';
+    }
+
+    /**
+     * Whether the record's Section field has an image to give where its columns give none.
+     */
+    public function hasDerivedImage(): bool
+    {
+        return (
+            $this->seo->takesContent('image')
+                && null === $this->text('image')
+                && (new DerivedContent($this->values))->hasImage()
+        );
+    }
+
+    /**
+     * The description a search result shows: the record's own, or else the one its Section field gives.
+     */
+    public function shownDescription(): ?string
+    {
+        return (
+            $this->text('description')
+                ?? ($this->seo->takesContent('description') ? (new DerivedContent($this->values))->description() : null)
+        );
+    }
+
+    /**
+     * The description the record's Section field gives where its columns give none, whether or not the section
+     * lets a page take it: what a fix may write as the record's own.
+     */
+    public function suggestedDescription(): ?string
+    {
+        return null === $this->text('description') ? (new DerivedContent($this->values))->description() : null;
     }
 
     public function text(string $role): ?string

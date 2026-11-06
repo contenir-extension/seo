@@ -22,6 +22,50 @@ use function str_repeat;
 final class PanelRowsTest extends TestCase
 {
     #[Test]
+    public function countsADescriptionInCharactersNotBytes(): void
+    {
+        $facts = PanelFacts::ofSite(
+            new Inspection(
+                's',
+                1,
+                'House',
+                str_repeat(
+                    string: 'é',
+                    times: 40,
+                ),
+                'https://x/a.jpg',
+            ),
+        );
+
+        static::assertSame(
+            [['Description', 'Short (40 characters)']],
+            $this->shown(PanelRows::of($facts, [new MetaIssue('description', '', 'Short.')], null)),
+        );
+    }
+
+    #[Test]
+    public function countsATitleInCharactersNotBytes(): void
+    {
+        $facts = PanelFacts::ofSite(
+            new Inspection(
+                's',
+                1,
+                str_repeat(
+                    string: 'é',
+                    times: 65,
+                ),
+                'A description.',
+                'https://x/a.jpg',
+            ),
+        );
+
+        static::assertSame(
+            [['Title', 'Too long (65 of about 60)']],
+            $this->shown(PanelRows::of($facts, [new MetaIssue('title', 'title', 'Too long.')], null)),
+        );
+    }
+
+    #[Test]
     public function givesEveryRowTheFixLinkItWasGiven(): void
     {
         $fix   = new Link('Fix', '/admin/records/4');
@@ -33,6 +77,28 @@ final class PanelRowsTest extends TestCase
                 static fn(PanelRow $row): ?Link => $row->fix,
                 PanelRows::of($facts, [new MetaIssue('image', '', 'Soft.')], $fix),
             ),
+        );
+    }
+
+    #[Test]
+    public function saysADescriptionOfExactlyTheShortestGoodLengthIsTooLong(): void
+    {
+        $facts = PanelFacts::ofSite(
+            new Inspection(
+                's',
+                1,
+                'House',
+                str_repeat(
+                    string: 'a',
+                    times: 70,
+                ),
+                'https://x/a.jpg',
+            ),
+        );
+
+        static::assertSame(
+            [['Description', 'Too long (70 of about 160)']],
+            $this->shown(PanelRows::of($facts, [new MetaIssue('description', '', 'Long.')], null)),
         );
     }
 

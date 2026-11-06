@@ -25,7 +25,7 @@ final class Outcomes
             return '';
         }
 
-        $errors = array_values(array_merge([], ...array_values($result->errors)));
+        $errors = array_merge([], ...array_values($result->errors));
 
         return [] === $errors ? $result->message : implode(' ', $errors);
     }

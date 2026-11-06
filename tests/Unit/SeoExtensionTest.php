@@ -25,6 +25,7 @@ use Contenir\Extension\Seo\Field\PinterestTokenField;
 use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Extension\Seo\Module\DashboardMeter;
 use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoExtension;
@@ -96,6 +97,12 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
+    public function declaresTheDashboardMeter(): void
+    {
+        static::assertSame(DashboardMeter::class, self::registration()->module->meter);
+    }
+
+    #[Test]
     public function declaresThreeSettingsSections(): void
     {
         static::assertSame(
@@ -105,12 +112,14 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
-    public function drawsItsAreaFromTheOverviewRecordsAndExportHandlers(): void
+    public function drawsItsAreaFromTheOverviewRecordsStrategyAndExportHandlers(): void
     {
         static::assertSame(
             [
                 'overview',
                 'records',
+                'strategy',
+                'strategy-save',
                 'records-export',
                 'preview',
                 'records-check',

@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function str_repeat;
 
 #[Group('integration')]
 #[Group('dashboard')]
@@ -45,11 +46,39 @@ final class DashboardMeterTest extends TestCase
 
         static::assertSame(
             [
-                ['High',   MeterTone::Poor],
-                ['Medium', MeterTone::Warning],
+                ['High', MeterTone::Poor],
+                ['Low',  MeterTone::Neutral],
             ],
             array_map(static fn(MeterSegment $one): array => [$one->label, $one->tone], $meter->segments ?? []),
         );
+    }
+
+    #[Test]
+    public function namesTheCardSeoRanking(): void
+    {
+        $this->seedProjects();
+
+        static::assertSame('SEO ranking', (new DashboardMeter())->meter($this->host->context('seo'))?->heading);
+    }
+
+    #[Test]
+    public function readsAHealthySiteAsGood(): void
+    {
+        $this->host
+            ->context('seo')
+            ->settings('seo')
+            ->set([
+                'site_name'         => 'Site',
+                'description'       => 'A studio.',
+                'share_image'       => '/asset/share.jpg',
+                'organisation_logo' => '/asset/logo.png',
+            ]);
+        $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project'));
+        $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
+        $this->host->seed(self::PROJECTS, 1, ['title' => 'House', 'description' => str_repeat('a', times: 100)]);
+        $meter = (new DashboardMeter())->meter($this->host->context('seo'));
+
+        static::assertSame(['100', 'Good', MeterTone::Good], [$meter?->value, $meter?->label, $meter?->tone]);
     }
 
     #[Test]

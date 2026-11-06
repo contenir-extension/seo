@@ -21,6 +21,18 @@ enum FixKind: string
         return self::WriteDescriptions === $this;
     }
 
+    /**
+     * The icon its bulk action shows.
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::WriteDescriptions => 'pencil',
+            self::HideFromSearch => 'eye-off',
+            self::ShowInSearch => 'eye',
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function json_encode;
 
 #[Group('integration')]
 #[Group('bulk')]
@@ -34,6 +35,17 @@ final class ChangePlanTest extends TestCase
     use TempDirectoryTrait;
 
     private InMemoryHost $host;
+
+    #[Test]
+    public function goesOnToASectionAfterOneThatHasNoBlock(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::HideFromSearch,
+            [new RecordReference('no.such.section', 1), new RecordReference(self::PROJECTS, 1)],
+        );
+
+        static::assertSame([1], array_map(static fn(Change $change): string|int => $change->record->id, $changes));
+    }
 
     #[Test]
     public function hidesOnlyTheRecordsThatAreShown(): void
@@ -57,6 +69,23 @@ final class ChangePlanTest extends TestCase
     }
 
     #[Test]
+    public function leavesOutARecordWhoseAdvancedColumnAlreadyHoldsADescription(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::WriteDescriptions,
+            [new RecordReference(self::NEWS, 9)],
+        );
+
+        static::assertSame([], $changes);
+    }
+
+    #[Test]
+    public function leavesOutARecordWhoseSectionFieldIsTooShortToDescribeIt(): void
+    {
+        static::assertSame([], $this->plan(FixKind::WriteDescriptions, [8]));
+    }
+
+    #[Test]
     public function leavesOutARecordWhoseSummaryIsTooShortToDescribeIt(): void
     {
         static::assertSame([], $this->plan(FixKind::WriteDescriptions, [3]));
@@ -69,9 +98,47 @@ final class ChangePlanTest extends TestCase
     }
 
     #[Test]
+    public function makesOneChangeForARecordAskedForTwice(): void
+    {
+        static::assertSame([[1, 'visible', '1', '0']], $this->summary($this->plan(FixKind::HideFromSearch, [1, 1])));
+    }
+
+    #[Test]
+    public function namesEachChangesSectionByItsPathWithoutATitle(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::HideFromSearch,
+            [new RecordReference(self::PROJECTS, 1)],
+        );
+
+        static::assertSame(
+            [self::PROJECTS],
+            array_map(static fn(Change $change): string => $change->sectionTitle, $changes),
+        );
+    }
+
+    #[Test]
+    public function namesEachChangesSectionByTheTitleItWasGiven(): void
+    {
+        static::assertSame(['Projects'], array_map(
+            static fn(Change $change): string => $change->sectionTitle,
+            $this->plan(FixKind::HideFromSearch, [1]),
+        ));
+    }
+
+    #[Test]
     public function showsARecordThatIsHidden(): void
     {
         static::assertSame([[3, 'visible', '0', '1']], $this->summary($this->plan(FixKind::ShowInSearch, [3])));
+    }
+
+    #[Test]
+    public function writesADescriptionFromTheSectionFieldWhenNoSummaryGivesOne(): void
+    {
+        static::assertSame(
+            [[7, 'meta_description', null, 'A studio in Fitzroy, with north light and a garden.']],
+            $this->summary($this->plan(FixKind::WriteDescriptions, [7])),
+        );
     }
 
     #[Test]
@@ -126,8 +193,28 @@ final class ChangePlanTest extends TestCase
         $this->host->block(
             self::PROJECTS,
             '<seo type="project"><discoverable>visible</discoverable></seo>',
-            ['title', 'meta_description', 'description', 'summary', 'visible'],
+            ['title', 'meta_description', 'description', 'summary', 'visible', 'section'],
         );
+        $this->host->seed(self::PROJECTS, 7, [
+            'title'   => 'Studio',
+            'visible' => '1',
+            'section' => (string) json_encode([
+                [
+                    'type'   => 'text',
+                    'status' => '1',
+                    'fields' => ['description' => '<p>A studio in Fitzroy, with north light and a garden.</p>'],
+                ],
+            ]),
+        ]);
+        $this->host->seed(self::PROJECTS, 8, [
+            'title'   => 'Loft',
+            'visible' => '1',
+            'section' => (string) json_encode([[
+                'type'   => 'text',
+                'status' => '1',
+                'fields' => ['description' => '<p>Too short.</p>'],
+            ]]),
+        ]);
         $this->host->seed(self::PROJECTS, 1, [
             'title'   => 'House',
             'summary' => '<p>A weatherboard house in Northcote, opened up to its garden.</p>',
@@ -147,6 +234,11 @@ final class ChangePlanTest extends TestCase
             '<seo type="news"><advanced>seo</advanced></seo>',
             ['title', 'summary', 'seo'],
         );
+        $this->host->seed(self::NEWS, 9, [
+            'title'   => 'Written',
+            'summary' => 'A short post about a new kitchen and the deck out the back.',
+            'seo'     => '{"description":"Already written."}',
+        ]);
         $this->host->seed(self::NEWS, 5, [
             'title'   => 'Post',
             'summary' => 'A short post about a new kitchen and the deck out the back.',

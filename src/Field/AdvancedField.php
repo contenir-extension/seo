@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Field;
 
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
-use Contenir\Extension\Api\Field\FieldTypeInterface;
+use Contenir\Extension\Api\Field\DisplayedFieldTypeInterface;
 use Contenir\Extension\Api\Form\FieldType;
 use Contenir\Seo\Sections\Overrides;
 use Override;
@@ -29,7 +29,7 @@ use const JSON_UNESCAPED_UNICODE;
  * The host draws a textarea, which the AdvancedField component turns into a
  * group of inputs; without the script an editor can still type the JSON.
  */
-final class AdvancedField implements FieldTypeInterface
+final class AdvancedField implements DisplayedFieldTypeInterface
 {
     public const string NAME = 'advanced';
 
@@ -58,6 +58,15 @@ final class AdvancedField implements FieldTypeInterface
     public function control(): FieldType
     {
         return FieldType::Textarea;
+    }
+
+    /**
+     * @param array<string, mixed> $record
+     */
+    #[Override]
+    public function display(mixed $value, array $record): array
+    {
+        return (new AdvancedDisplay())->of($value, $record);
     }
 
     /**

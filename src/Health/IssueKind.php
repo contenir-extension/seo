@@ -39,7 +39,6 @@ enum IssueKind: string
     /** The kinds a medium-impact issue is. */
     private const array MEDIUM = [
         self::TitleLength,
-        self::DescriptionLength,
         self::MissingImage,
     ];
 

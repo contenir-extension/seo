@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Contenir\Extension\Seo\Module;
+
+use Contenir\Extension\Api\Context\ExtensionContextInterface;
+use Contenir\Extension\Api\Exception\InvalidDeclarationException;
+use Contenir\Extension\Api\Handler\HandlerInterface;
+use Contenir\Extension\Api\Handler\HandlerResult;
+use Contenir\Extension\Seo\Report\SectionHeadings;
+use Contenir\Extension\Seo\Strategy\SectionStrategy;
+use Override;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * How each section's pages are described for search: its schema type and where its title, description and
+ * image are read from, listed, and one section's opened to change where the site saves its configuration.
+ */
+final readonly class StrategyHandler implements HandlerInterface
+{
+    public const string NAME = 'strategy';
+
+    /**
+     * @throws ContainerExceptionInterface When the host's records can't be reached.
+     * @throws InvalidDeclarationException When a tab or the template is malformed.
+     * @throws NotFoundExceptionInterface When the host lends no records.
+     */
+    #[Override]
+    public function handle(ServerRequestInterface $request, ExtensionContextInterface $context): HandlerResult
+    {
+        $titles     = SectionHeadings::of($context);
+        $strategies = [];
+        foreach ($context->sections()->blocks() as $block) {
+            $strategies[] = SectionStrategy::of($block, $titles[$block->section] ?? $block->section);
+        }
+
+        $asked   = $request->getQueryParams()['section'] ?? '';
+        $editing = null;
+        foreach ($strategies as $strategy) {
+            if ($strategy->section !== $asked) {
+                continue;
+            }
+
+            $editing = $strategy;
+        }
+
+        return HandlerResult::template(
+            'strategy',
+            'SEO',
+            [
+                'strategies' => $strategies,
+                'editing'    => $editing,
+                'saves'      => $context->sections()->saves(),
+                'version'    => $context->sections()->version(),
+                'roles'      => SectionStrategy::ROLES,
+            ],
+            Tabs::of(self::NAME),
+        );
+    }
+}

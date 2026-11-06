@@ -66,7 +66,7 @@ final readonly class ApplyHandler implements HandlerInterface
         $changes  = EditedChanges::of(
             (new ChangePlan($context->sections(), SectionTitles::of($sections)))->build(
                 $kind,
-                Selection::parse(array_map(static fn(string|int $key): string => (string) $key, array_keys($after))),
+                Selection::parse(array_keys($after)),
             ),
             $after,
         );

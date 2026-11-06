@@ -32,13 +32,21 @@ final readonly class MetaIssues
 
     /**
      * The issue of a role with no value in its columns, which isn't one while
-     * it can still come from a linked record, as only the site can tell.
+     * it can still come from a linked record, as only the site can tell, or
+     * while the record's Section field gives it ($derived).
      *
      * @param list<string> $columns
+     *
+     * @mago-expect lint:no-boolean-flag-parameter Whether the Section field gives the role is the one thing it adds.
      */
-    private static function missing(string $role, string $field, array $columns, string $message): ?MetaIssue
-    {
-        return LinkedValue::any($columns) ? null : new MetaIssue($role, $field, $message, missing: true);
+    private static function missing(
+        string $role,
+        string $field,
+        array $columns,
+        string $message,
+        bool $derived = false,
+    ): ?MetaIssue {
+        return $derived || LinkedValue::any($columns) ? null : new MetaIssue($role, $field, $message, missing: true);
     }
 
     /**
@@ -61,12 +69,19 @@ final readonly class MetaIssues
                 $values->field('description'),
                 $columns,
                 'Add a description for search results and shared links.',
+                derived: null !== $values->derivedDescription(),
             )
             : self::issue('description', $values->field('description'), MetaLengths::description($description));
 
         $columns  = $this->seo->roles['image'] ?? [];
         $issues[] = [] !== $columns && null === $values->text('image')
-            ? self::missing('image', $values->field('image'), $columns, 'Add an image for shared links.')
+            ? self::missing(
+                'image',
+                $values->field('image'),
+                $columns,
+                'Add an image for shared links.',
+                derived: $values->hasDerivedImage(),
+            )
             : null;
 
         return array_values(array_filter($issues));

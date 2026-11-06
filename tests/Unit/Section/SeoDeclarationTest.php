@@ -15,6 +15,14 @@ use PHPUnit\Framework\TestCase;
 final class SeoDeclarationTest extends TestCase
 {
     #[Test]
+    public function aBlockIsAutomaticAndTakesContentForBothRolesUnlessItSaysOtherwise(): void
+    {
+        $block = SeoDeclaration::read(Element::parse('<seo type="page"/>'));
+
+        static::assertSame([true, ['description', 'image']], [$block->automatic, $block->content]);
+    }
+
+    #[Test]
     public function aBlockWithoutATypeIsReadWithNone(): void
     {
         static::assertSame(['', null], [
@@ -75,5 +83,15 @@ final class SeoDeclarationTest extends TestCase
                     . '</seo>',
             )),
         );
+    }
+
+    #[Test]
+    public function readsTheModeAndWhichRolesTakeContent(): void
+    {
+        $block = SeoDeclaration::read(Element::parse(
+            '<seo type="page" mode=" manual "><description content="false">description</description><image content="true"/></seo>',
+        ));
+
+        static::assertSame([false, ['image']], [$block->automatic, $block->content]);
     }
 }

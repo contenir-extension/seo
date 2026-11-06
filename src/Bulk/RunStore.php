@@ -17,6 +17,7 @@ use function is_file;
 use function json_decode;
 use function json_encode;
 use function rename;
+use function sprintf;
 use function uniqid;
 use function usort;
 
@@ -47,13 +48,11 @@ final readonly class RunStore
     {
         /** @var mixed $values */
         $values = is_file($this->file) ? json_decode((string) file_get_contents($this->file), associative: true) : null;
-        $runs   = array_values(array_filter(array_map(
+
+        return array_values(array_filter(array_map(
             static fn(mixed $stored): ?Run => is_array($stored) ? RunCodec::decode($stored) : null,
             is_array($values) ? $values : [],
         )));
-        usort($runs, static fn(Run $a, Run $b): int => $b->at <=> $a->at);
-
-        return $runs;
     }
 
     public function find(string $id): ?Run
@@ -77,9 +76,9 @@ final readonly class RunStore
         }
 
         $kept = array_filter($this->all(), static fn(Run $other): bool => $run->id !== $other->id);
-        $runs = array_slice([$run, ...array_values($kept)], offset: 0, length: self::KEPT);
+        $runs = array_slice([$run, ...$kept], offset: 0, length: self::KEPT);
         usort($runs, static fn(Run $a, Run $b): int => $b->at <=> $a->at);
-        $temporary = "{$this->file}." . uniqid() . '.tmp';
+        $temporary = sprintf('%s.%s.tmp', $this->file, uniqid());
         if (false !== file_put_contents($temporary, (string) json_encode(array_map(RunCodec::encode(...), $runs)))) {
             rename($temporary, $this->file);
         }

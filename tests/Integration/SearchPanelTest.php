@@ -22,6 +22,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function json_encode;
+use function str_contains;
 use function str_repeat;
 
 /**
@@ -55,6 +57,17 @@ final class SearchPanelTest extends TestCase
         ];
     }
 
+    /**
+     * @param list<string> $images
+     */
+    private static function content(string $description, array $images = ['5']): string
+    {
+        return (string) json_encode([
+            ['type' => 'text', 'status' => '1', 'fields' => ['description' => $description]],
+            ['type' => 'media', 'status' => '1', 'fields' => ['images' => $images]],
+        ]);
+    }
+
     #[Test]
     public function aPublishedRecordGetsItsPageAndGooglesTestInTheMenu(): void
     {
@@ -72,11 +85,11 @@ final class SearchPanelTest extends TestCase
     }
 
     #[Test]
-    public function aReadyRecordHasNothingToFix(): void
+    public function aReadyRecordSaysNothingAboutFixing(): void
     {
         $panel = $this->panel($this->ready());
 
-        static::assertSame(['SEO', ['Nothing to fix.'], []], [$panel?->title, $panel?->paragraphs, $panel?->rows]);
+        static::assertSame(['SEO', [], []], [$panel?->title, $panel?->paragraphs, $panel?->rows]);
     }
 
     #[Test]
@@ -112,8 +125,8 @@ final class SearchPanelTest extends TestCase
         static::assertSame(
             [
                 ['Title',       'Missing'],
-                ['Description', 'Too long (200 of about 160)'],
                 ['Share image', 'Missing'],
+                ['Description', 'Too long (200 of about 160)'],
             ],
             array_map(static fn(PanelRow $row): array => [$row->label, $row->detail], $rows),
         );
@@ -148,6 +161,29 @@ final class SearchPanelTest extends TestCase
     }
 
     #[Test]
+    public function saysNothingOfTheContentWhereTheColumnsGiveTheDescriptionAndImage(): void
+    {
+        $panel = $this->panel([...$this->ready(), 'section' => self::content('<p>Other words entirely.</p>')]);
+
+        static::assertSame([[], self::DESCRIPTION], [$panel?->paragraphs, $panel?->preview?->description]);
+    }
+
+    #[Test]
+    public function saysOnlyThatTheDescriptionIsTakenFromContentWhenTheColumnsGiveTheImage(): void
+    {
+        $panel = $this->panel([
+            'title'    => 'House',
+            'image_lg' => '/a.jpg',
+            'section'  => self::content(
+                '<p>A weatherboard house opened up to its garden, with a new kitchen and a deck.</p>',
+                images: [],
+            ),
+        ]);
+
+        static::assertSame(['Taken from the content: description.'], $panel?->paragraphs);
+    }
+
+    #[Test]
     #[DataProvider('discoverableProvider')]
     public function saysWhenTheRecordIsHiddenFromSearch(mixed $visible, array $hidden): void
     {
@@ -160,9 +196,43 @@ final class SearchPanelTest extends TestCase
     }
 
     #[Test]
+    public function showsHowARecordReadsInSearch(): void
+    {
+        $panel = $this->panel($this->ready());
+
+        static::assertSame(
+            [true, true],
+            [
+                str_contains((string) $panel?->preview?->title, $this->ready()['title']),
+                $this->ready()['description'] === $panel?->preview?->description,
+            ],
+        );
+    }
+
+    #[Test]
     public function showsNoShareImageBeforeTheSiteHasBeenAsked(): void
     {
         static::assertNull($this->panel($this->ready())?->image);
+    }
+
+    #[Test]
+    public function takesADescriptionAndImageFromTheSectionFieldAndSaysSo(): void
+    {
+        $panel = $this->panel([
+            'title'   => 'House',
+            'section' => self::content(
+                '<p>A weatherboard house opened up to its garden, with a new kitchen and a deck.</p>',
+            ),
+        ]);
+
+        static::assertSame(
+            [
+                ['Taken from the content: description and image.'],
+                [],
+                'A weatherboard house opened up to its garden, with a new kitchen and a deck.',
+            ],
+            [$panel?->paragraphs, $panel?->rows, $panel?->preview?->description],
+        );
     }
 
     #[Test]
@@ -185,7 +255,7 @@ final class SearchPanelTest extends TestCase
         $this->host->block(
             self::SECTION,
             '<seo type="project"><image alt="title">image_lg</image></seo>',
-            ['title', 'meta_title', 'meta_description', 'description', 'image_lg', 'visible'],
+            ['title', 'meta_title', 'meta_description', 'description', 'image_lg', 'visible', 'section'],
         );
         $this->host->seed(self::SECTION, 4, ['title' => 'House']);
         $this->host->context('seo')->settings('seo')->set(['site_name' => 'Studio Esteta']);

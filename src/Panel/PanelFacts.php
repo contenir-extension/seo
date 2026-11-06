@@ -23,6 +23,9 @@ final readonly class PanelFacts
     /**
      * @param list<MetaIssue> $issues
      * @param ?array{int, int} $imageSize The share image's width and height, when the site said
+     * @param list<string> $derived The roles the record's Section field gives, which its columns don't
+     *
+     * @mago-expect lint:excessive-parameter-list One for each thing the panel says of a record; most are optional.
      */
     private function __construct(
         public ?string $title,
@@ -30,16 +33,22 @@ final readonly class PanelFacts
         public array $issues,
         public ?string $image = null,
         public ?array $imageSize = null,
+        public array $derived = [],
     ) {}
 
     public static function ofColumns(SeoBlock $seo, MetaValues $values, TitleTemplate $template): self
     {
-        $title = $values->text('title');
+        $title   = $values->text('title');
+        $derived = $values->derivedDescription();
 
         return new self(
             null === $title ? null : $template->format($title),
-            $values->text('description'),
+            $values->shownDescription(),
             (new MetaIssues($seo, $template))->of($values),
+            derived: [
+                ...(null === $derived ? [] : ['description']),
+                ...($values->hasDerivedImage() ? ['image'] : []),
+            ],
         );
     }
 

@@ -16,6 +16,7 @@ use Contenir\Extension\Seo\Check\SitemapCheck;
 use Contenir\Extension\Seo\Health\Age;
 use Contenir\Extension\Seo\Health\SiteChecks;
 use Contenir\Extension\Seo\Health\SiteHealth;
+use Contenir\Extension\Seo\Inspect\Inspection;
 use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\Report\SearchReport;
 use Contenir\Extension\Seo\SeoSettings;
@@ -23,6 +24,7 @@ use Override;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+use function array_map;
 use function max;
 
 /**
@@ -39,12 +41,12 @@ final readonly class OverviewHandler implements HandlerInterface
      */
     public static function checkedAgo(ExtensionContextInterface $context): ?string
     {
-        $latest = null;
-        foreach (InspectionStore::at($context->sitePath())->load() as $inspection) {
-            $latest = max($latest ?? 0, $inspection->at);
-        }
+        $times = array_map(
+            static fn(Inspection $inspection): int => $inspection->at,
+            InspectionStore::at($context->sitePath())->load(),
+        );
 
-        return null === $latest ? null : Age::of($context->clock()->now()->getTimestamp() - $latest);
+        return [] === $times ? null : Age::of($context->clock()->now()->getTimestamp() - max($times));
     }
 
     /**
