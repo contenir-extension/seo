@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function json_encode;
 
 #[Group('integration')]
 #[Group('bulk')]
@@ -57,6 +58,12 @@ final class ChangePlanTest extends TestCase
     }
 
     #[Test]
+    public function leavesOutARecordWhoseSectionFieldIsTooShortToDescribeIt(): void
+    {
+        static::assertSame([], $this->plan(FixKind::WriteDescriptions, [8]));
+    }
+
+    #[Test]
     public function leavesOutARecordWhoseSummaryIsTooShortToDescribeIt(): void
     {
         static::assertSame([], $this->plan(FixKind::WriteDescriptions, [3]));
@@ -72,6 +79,15 @@ final class ChangePlanTest extends TestCase
     public function showsARecordThatIsHidden(): void
     {
         static::assertSame([[3, 'visible', '0', '1']], $this->summary($this->plan(FixKind::ShowInSearch, [3])));
+    }
+
+    #[Test]
+    public function writesADescriptionFromTheSectionFieldWhenNoSummaryGivesOne(): void
+    {
+        static::assertSame(
+            [[7, 'meta_description', null, 'A studio in Fitzroy, with north light and a garden.']],
+            $this->summary($this->plan(FixKind::WriteDescriptions, [7])),
+        );
     }
 
     #[Test]
@@ -126,8 +142,28 @@ final class ChangePlanTest extends TestCase
         $this->host->block(
             self::PROJECTS,
             '<seo type="project"><discoverable>visible</discoverable></seo>',
-            ['title', 'meta_description', 'description', 'summary', 'visible'],
+            ['title', 'meta_description', 'description', 'summary', 'visible', 'section'],
         );
+        $this->host->seed(self::PROJECTS, 7, [
+            'title'   => 'Studio',
+            'visible' => '1',
+            'section' => (string) json_encode([
+                [
+                    'type'   => 'text',
+                    'status' => '1',
+                    'fields' => ['description' => '<p>A studio in Fitzroy, with north light and a garden.</p>'],
+                ],
+            ]),
+        ]);
+        $this->host->seed(self::PROJECTS, 8, [
+            'title'   => 'Loft',
+            'visible' => '1',
+            'section' => (string) json_encode([[
+                'type'   => 'text',
+                'status' => '1',
+                'fields' => ['description' => '<p>Too short.</p>'],
+            ]]),
+        ]);
         $this->host->seed(self::PROJECTS, 1, [
             'title'   => 'House',
             'summary' => '<p>A weatherboard house in Northcote, opened up to its garden.</p>',

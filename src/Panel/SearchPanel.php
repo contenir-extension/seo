@@ -27,6 +27,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
 use function array_key_exists;
+use function implode;
 use function in_array;
 use function rawurlencode;
 use function sprintf;
@@ -111,6 +112,9 @@ final readonly class SearchPanel implements RecordPanelInterface
 
         return new Panel(
             'SEO',
+            paragraphs: [] === $facts->derived
+                ? []
+                : [sprintf('Taken from the content: %s.', implode(' and ', $facts->derived))],
             image: null === $facts->image ? null : new PanelImage($facts->image, $facts->title ?? ''),
             rows: $rows,
             menu: $this->menu($context, $record),

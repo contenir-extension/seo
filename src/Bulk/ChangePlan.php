@@ -12,6 +12,7 @@ use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Listener\MetaValues;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
+use Contenir\Seo\Sections\ContentBlocks;
 use Contenir\Seo\Sections\SeoBlock;
 
 use function array_filter;
@@ -67,6 +68,7 @@ final readonly class ChangePlan
                 ...array_merge([], ...array_values($seo->roles)),
                 ...(null === $seo->advanced ? [] : [$seo->advanced]),
                 ...SeoSectionBlock::SUMMARY,
+                ContentBlocks::COLUMN,
             ]);
             $rows    = $this->sections->rows($section, $columns, $ids, count($ids));
             $found[] = array_map(fn(RecordRow $row): ?Change => $this->change($kind, $block, $seo, $row), $rows);

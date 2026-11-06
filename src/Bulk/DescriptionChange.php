@@ -15,8 +15,8 @@ use function mb_strlen;
 use function trim;
 
 /**
- * The description a record with none would get, written from its summary text into the first of the
- * description role's columns the section has.
+ * The description a record with none would get, written from its summary text, or else from the first text of its
+ * Section field, into the first of the description role's columns the section has.
  */
 final readonly class DescriptionChange
 {
@@ -39,6 +39,11 @@ final readonly class DescriptionChange
             if (null !== $written && mb_strlen($written) >= Summary::MINIMUM) {
                 return [$target[0], ColumnValue::read($row->value($target[0]), $target[1]), $written, $target[1]];
             }
+        }
+
+        $content = (new MetaValues($block, $row->values, $seo))->derivedDescription();
+        if (null !== $content && mb_strlen($content) >= Summary::MINIMUM) {
+            return [$target[0], ColumnValue::read($row->value($target[0]), $target[1]), $content, $target[1]];
         }
 
         return null;

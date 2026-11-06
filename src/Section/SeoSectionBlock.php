@@ -9,6 +9,7 @@ use Contenir\Extension\Api\Section\ImpliedListener;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Api\Section\SectionBlockInterface;
 use Contenir\Extension\Seo\Listener\CheckMeta;
+use Contenir\Seo\Sections\ContentBlocks;
 use Override;
 
 use function array_merge;
@@ -71,7 +72,11 @@ final readonly class SeoSectionBlock implements SectionBlockInterface
     #[Override]
     public function columns(SectionBlock $block): array
     {
-        return self::known($block, [...SeoDeclaration::read($block->element)->columns(), ...self::SUMMARY]);
+        return self::known($block, [
+            ...SeoDeclaration::read($block->element)->columns(),
+            ...self::SUMMARY,
+            ContentBlocks::COLUMN,
+        ]);
     }
 
     /**
