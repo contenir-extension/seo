@@ -27,6 +27,9 @@ final class Summary
     /** How long a description search results show in full, in characters. */
     public const int LENGTH = 155;
 
+    /** How short a summary can be before it is too little to describe a page, in characters. */
+    public const int MINIMUM = 50;
+
     public static function of(string $text, int $max = self::LENGTH): ?string
     {
         $plain = self::plain($text);

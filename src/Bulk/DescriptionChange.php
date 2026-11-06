@@ -11,6 +11,7 @@ use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Seo\Sections\SeoBlock;
 
 use function is_scalar;
+use function mb_strlen;
 use function trim;
 
 /**
@@ -35,7 +36,7 @@ final readonly class DescriptionChange
 
         foreach (SeoSectionBlock::SUMMARY as $column) {
             $written = Summary::of(self::text($row->value($column)) ?? '');
-            if (null !== $written) {
+            if (null !== $written && mb_strlen($written) >= Summary::MINIMUM) {
                 return [$target[0], ColumnValue::read($row->value($target[0]), $target[1]), $written, $target[1]];
             }
         }

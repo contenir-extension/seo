@@ -184,7 +184,7 @@ final class BulkScreensTest extends TestCase
         );
         $this->host->seed(self::PROJECTS, 1, [
             'title'   => 'House 1',
-            'summary' => 'A weatherboard house in Northcote.',
+            'summary' => 'A weatherboard house in Northcote, opened up to its garden.',
             'visible' => '1',
         ]);
     }

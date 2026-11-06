@@ -24,7 +24,7 @@ enum FixKind: string
     public function label(): string
     {
         return match ($this) {
-            self::WriteDescriptions => 'Write descriptions from page text',
+            self::WriteDescriptions => 'Write descriptions from summary text',
             self::HideFromSearch => 'Hide from search',
             self::ShowInSearch => 'Show in search',
         };

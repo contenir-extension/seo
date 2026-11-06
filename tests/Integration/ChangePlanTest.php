@@ -57,9 +57,15 @@ final class ChangePlanTest extends TestCase
     }
 
     #[Test]
-    public function leavesOutARecordWithNothingToWriteFrom(): void
+    public function leavesOutARecordWhoseSummaryIsTooShortToDescribeIt(): void
     {
         static::assertSame([], $this->plan(FixKind::WriteDescriptions, [3]));
+    }
+
+    #[Test]
+    public function leavesOutARecordWithNothingToWriteFrom(): void
+    {
+        static::assertSame([], $this->plan(FixKind::WriteDescriptions, [4]));
     }
 
     #[Test]
@@ -72,7 +78,7 @@ final class ChangePlanTest extends TestCase
     public function writesADescriptionFromTheSummaryIntoTheDescriptionColumn(): void
     {
         static::assertSame(
-            [[1, 'meta_description', null, 'A weatherboard house in Northcote.']],
+            [[1, 'meta_description', null, 'A weatherboard house in Northcote, opened up to its garden.']],
             $this->summary($this->plan(FixKind::WriteDescriptions, [1, 2, 3])),
         );
     }
@@ -86,7 +92,7 @@ final class ChangePlanTest extends TestCase
         );
 
         static::assertSame(
-            [[5, 'seo', 'description', null, 'A short post.']],
+            [[5, 'seo', 'description', null, 'A short post about a new kitchen and the deck out the back.']],
             array_map(
                 static fn(Change $change): array => [
                     $change->record->id,
@@ -124,7 +130,7 @@ final class ChangePlanTest extends TestCase
         );
         $this->host->seed(self::PROJECTS, 1, [
             'title'   => 'House',
-            'summary' => '<p>A weatherboard house in Northcote.</p>',
+            'summary' => '<p>A weatherboard house in Northcote, opened up to its garden.</p>',
             'visible' => '1',
         ]);
         $this->host->seed(self::PROJECTS, 2, [
@@ -133,7 +139,8 @@ final class ChangePlanTest extends TestCase
             'summary'          => 'A big shed.',
             'visible'          => '0',
         ]);
-        $this->host->seed(self::PROJECTS, 3, ['title' => 'Hut', 'visible' => '0']);
+        $this->host->seed(self::PROJECTS, 3, ['title' => 'Hut', 'summary' => 'Northcote.', 'visible' => '0']);
+        $this->host->seed(self::PROJECTS, 4, ['title' => 'Shack', 'visible' => '1']);
         $this->host->linkable(new LinkableSection(self::NEWS, 'News'));
         $this->host->block(
             self::NEWS,
@@ -142,7 +149,7 @@ final class ChangePlanTest extends TestCase
         );
         $this->host->seed(self::NEWS, 5, [
             'title'   => 'Post',
-            'summary' => 'A short post.',
+            'summary' => 'A short post about a new kitchen and the deck out the back.',
             'seo'     => '{"robots":"noindex"}',
         ]);
         $this->host->seed(self::NEWS, 6, [

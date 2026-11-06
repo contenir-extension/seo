@@ -52,9 +52,12 @@ final readonly class FixHandler implements HandlerInterface
             Selection::of($body, $sections),
         );
         if ([] === $changes) {
-            return HandlerResult::back()->withMessage(
+            return HandlerResult::redirect(Urls::to(
+                RecordsHandler::NAME,
+                RecordFilter::from($body, $sections)->query(),
+            ))->withMessage(
                 'warning',
-                "Nothing to change: no record picked needs \"{$kind->label()}\".",
+                "Nothing to change: \"{$kind->label()}\" has nothing to do for the records picked.",
             );
         }
 
