@@ -39,12 +39,10 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
                     <div class="pageheader__actions">
                         <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
                             <?= $view->token() ?>
-                            <button type="submit" class="btn btn--outline"><?= $view->icon('refresh') ?><span><?= null === $values['ago'] ? 'Check with the site' : 'Re-check now' ?></span></button>
+                            <button type="submit" class="btn btn--outline" title="Asks the site about each page again. It changes nothing, and doesn't affect Site-wide."><?= $view->icon('refresh') ?><span><?= null === $values['ago'] ? 'Check with the site' : 'Re-check now' ?></span></button>
                         </form>
                     </div>
                 </div>
-                <p class="pageheader__description">How your site reads in search. Start with Fix first, and open a section's counts for the records to fix. Re-check asks the site about each page again: it changes nothing, and doesn't affect Site-wide.</p>
-
                 <?= $view->tabs() ?>
 
                 <div class="stack stack--lg">
