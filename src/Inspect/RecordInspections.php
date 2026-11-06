@@ -13,14 +13,18 @@ use Psr\Container\ContainerExceptionInterface;
 use function array_merge;
 
 /**
- * Asks the site about the records whose answer is missing, out of date or a day
- * old, for up to a number of seconds at a time, since it renders a page for each
+ * Asks the site about the records whose answer is missing, out of date (their
+ * columns or the rendering state changed) or a day old, or on request any older than
+ * the given age, for up to a number of seconds at a time, since it renders a page for each
  * and a site that's down takes its whole timeout to say so.
  */
 final readonly class RecordInspections
 {
     /** How long an answer stands, since a page can change without its record's columns. */
     public const int MAX_AGE = 86_400;
+
+    /** How recent an answer is left alone when the editor asks for a fresh check, so a long site finishes over a few presses. */
+    public const int RECENT = 300;
 
     public function __construct(
         private ExtensionContextInterface $context,
@@ -30,16 +34,17 @@ final readonly class RecordInspections
      * @throws ContainerExceptionInterface When the host's service can't be reached.
      * @throws RowsRefusedException When a section's columns can't be read.
      */
-    public function refresh(int $seconds): Refreshed
+    public function refresh(int $seconds, int $maxAge = self::MAX_AGE): Refreshed
     {
         $store   = InspectionStore::at($this->context->sitePath());
         $kept    = $store->load();
         $started = $this->now();
+        $state   = RenderingState::of($this->context);
         $checked = 0;
         $missed  = 0;
         foreach ($this->rows() as $row) {
             $key = InspectionStore::key($row->record);
-            if (! $this->needsAsking($row, $kept[$key] ?? null)) {
+            if (! $this->needsAsking($row, $kept[$key] ?? null, $state, $maxAge)) {
                 continue;
             }
 
@@ -59,6 +64,7 @@ final readonly class RecordInspections
                 $row,
                 $head,
                 $this->now(),
+                $state,
                 (new ShareImageFile($this->context->sitePath()))->size($head->image),
             );
             ++$checked;
@@ -69,13 +75,17 @@ final readonly class RecordInspections
         return new Refreshed($checked, $missed, finished: true);
     }
 
-    private function needsAsking(RecordRow $row, ?Inspection $kept): bool
+    private function needsAsking(RecordRow $row, ?Inspection $kept, string $state, int $maxAge): bool
     {
         if (null === $this->context->urls()->url($row->record)) {
             return false;
         }
 
-        return null === $kept || ! $kept->isCurrent($row) || ($this->now() - $kept->at) >= self::MAX_AGE;
+        if (null === $kept || ! $kept->isCurrent($row, $state)) {
+            return true;
+        }
+
+        return ($this->now() - $kept->at) >= $maxAge;
     }
 
     private function now(): int

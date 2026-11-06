@@ -49,7 +49,7 @@ final readonly class CheckHandler implements HandlerInterface
             return HandlerResult::back();
         }
 
-        $refreshed = (new RecordInspections($context))->refresh(self::SECONDS);
+        $refreshed = (new RecordInspections($context))->refresh(self::SECONDS, RecordInspections::RECENT);
 
         return HandlerResult::back()->withMessage(
             0 === $refreshed->unanswered ? 'success' : 'warning',

@@ -20,6 +20,10 @@ adheres to [Semantic Versioning](https://semver.org/).
   dashboard check name sections the same way.
 - A site whose sections declare no `<seo>` block no longer has the site-wide defaults check: the check is skipped
   and left off the Overview, so such a site sees no new warning.
+- What the site last rendered for a record now goes out of date when the records switch changes, not only when the
+  record's columns do, and **Check with the site now** asks again about every record whose answer is five minutes old
+  or more (an ordinary round still waits a day). Before, a record whose row was unchanged kept its old answer, so the
+  Overview and Records went on reporting what the site had rendered under the other setting.
 - Requires `contenir/contenir-seo` ^0.8 and `contenir/contenir-extension-api` ^0.9.1.
 
 ## [0.3.0] - 2026-11-05

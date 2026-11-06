@@ -35,6 +35,6 @@ final readonly class CurrentInspection
         $columns = SeoSectionBlock::known($block, SeoDeclaration::read($block->element)->columns());
         $row     = $this->context->sections()->rows($block->section, $columns, [$record->id])[0] ?? null;
 
-        return null !== $row && $kept->isCurrent($row) ? $kept : null;
+        return null !== $row && $kept->isCurrent($row, RenderingState::of($this->context)) ? $kept : null;
     }
 }

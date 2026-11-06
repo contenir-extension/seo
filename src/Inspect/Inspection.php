@@ -13,12 +13,13 @@ use function json_encode;
 
 /**
  * What the site rendered for a record when last asked, with what the record's
- * columns held then, so a change to them is noticed before the next check.
+ * columns held then and the state the site rendered under (RenderingState), so a
+ * change to either is noticed before the next check.
  */
 final readonly class Inspection
 {
     /**
-     * @param string $stamp The record's columns when asked, as stamp() makes it
+     * @param string $stamp The record's columns and the rendering state when asked, as stamp() makes it
      * @param int $at When it was asked, as a Unix timestamp
      * @param int|null $imageWidth The width of the file its share image was made from, when known
      * @param int|null $imageHeight The height of that file, when known
@@ -58,10 +59,15 @@ final readonly class Inspection
     /**
      * @param array{int, int}|null $imageSize The size of the file its share image was made from
      */
-    public static function of(RecordRow $row, SiteHead $head, int $at, ?array $imageSize = null): self
-    {
+    public static function of(
+        RecordRow $row,
+        SiteHead $head,
+        int $at,
+        string $state = '',
+        ?array $imageSize = null,
+    ): self {
         return new self(
-            self::stamp($row),
+            self::stamp($row, $state),
             $at,
             $head->title,
             $head->description,
@@ -76,9 +82,9 @@ final readonly class Inspection
         return is_int($value) ? $value : null;
     }
 
-    private static function stamp(RecordRow $row): string
+    private static function stamp(RecordRow $row, string $state): string
     {
-        return hash('sha256', (string) json_encode($row->values));
+        return hash('sha256', (string) json_encode([$state, $row->values]));
     }
 
     private static function text(mixed $value): ?string
@@ -86,8 +92,8 @@ final readonly class Inspection
         return is_string($value) ? $value : null;
     }
 
-    public function isCurrent(RecordRow $row): bool
+    public function isCurrent(RecordRow $row, string $state = ''): bool
     {
-        return self::stamp($row) === $this->stamp;
+        return self::stamp($row, $state) === $this->stamp;
     }
 }

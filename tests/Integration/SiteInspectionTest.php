@@ -15,6 +15,7 @@ use Contenir\Extension\Seo\Inspect\Inspection;
 use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\Inspect\RecordInspections;
 use Contenir\Extension\Seo\Inspect\Refreshed;
+use Contenir\Extension\Seo\Inspect\RenderingState;
 use Contenir\Extension\Seo\Inspect\SiteInspector;
 use Contenir\Extension\Seo\Module\CheckHandler;
 use Contenir\Extension\Seo\Panel\SearchPanel;
@@ -53,16 +54,6 @@ use function trim;
 #[Group('integration')]
 final class SiteInspectionTest extends TestCase
 {
-    use TempDirectoryTrait;
-
-    private const string SECTION = 'library.projects.project';
-
-    private const string PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAAAAADRSSBWAAAAC0lEQVR4nGNgYAAAAAMAAbitOmMAAAAASUVORK5CYII=';
-
-    private const string HEAD = '{"status":200,"title":"House | Site","description":"A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.","image":"https://www.example.com/a.jpg","imageAlt":"The house","canonical":"https://www.example.com/work/house","robots":"index,follow","jsonLd":[{"@type":"CreativeWork"}]}';
-
-    private InMemoryHost $host;
-
     /**
      * @return array<string, array{int, SiteAnswer|null, string, string}>
      */
@@ -131,6 +122,28 @@ final class SiteInspectionTest extends TestCase
     }
 
     #[Test]
+    public function aFreshCheckAsksAgainWhatWasAskedFiveMinutesAgo(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->ageAnswers(RecordInspections::RECENT);
+
+        static::assertEquals(new Refreshed(1, 0, true), $this->refresh(RecordInspections::RECENT));
+    }
+
+    #[Test]
+    public function aFreshCheckLeavesAloneWhatWasJustAsked(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->ageAnswers(RecordInspections::RECENT - 1);
+
+        static::assertEquals(new Refreshed(0, 0, true), $this->refresh(RecordInspections::RECENT));
+    }
+
+    #[Test]
     public function aKeptAnswerForARecordThatIsGoneIsNotUsed(): void
     {
         $this->store()->save([self::SECTION . ':7' => new Inspection('s', 1, 'Old', null, null)]);
@@ -141,6 +154,20 @@ final class SiteInspectionTest extends TestCase
                 new RecordView(self::SECTION, 7, ['title' => 'Gone']),
                 $this->host->context('seo'),
             )->paragraphs[0] ?? null,
+        );
+    }
+
+    #[Test]
+    public function aKeptAnswerGoesBackToTheColumnsOnceTheRecordsSwitchChanges(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->host->context('seo')->settings('seo')->set(['records' => true]);
+
+        static::assertSame(
+            ['Projects', '1', '0', '0', '1', '0', '0'],
+            $this->texts($this->page('overview'), '//tbody/tr[1]/td'),
         );
     }
 
@@ -160,6 +187,17 @@ final class SiteInspectionTest extends TestCase
                 null,
             ),
         ]);
+
+        static::assertEquals(new Refreshed(0, 0, true), $this->refresh());
+    }
+
+    #[Test]
+    public function anOrdinaryRoundLeavesAFiveMinuteOldAnswerAlone(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->ageAnswers(RecordInspections::RECENT);
 
         static::assertEquals(new Refreshed(0, 0, true), $this->refresh());
     }
@@ -212,6 +250,17 @@ final class SiteInspectionTest extends TestCase
                 null,
             ),
         ]);
+
+        static::assertEquals(new Refreshed(1, 0, true), $this->refresh());
+    }
+
+    #[Test]
+    public function aRoundAsksAgainOnceTheRecordsSwitchChanges(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->host->context('seo')->settings('seo')->set(['records' => true]);
 
         static::assertEquals(new Refreshed(1, 0, true), $this->refresh());
     }
@@ -584,6 +633,16 @@ final class SiteInspectionTest extends TestCase
     }
 
     #[Test]
+    public function theRenderingStateNamesTheRecordsSwitch(): void
+    {
+        $context = $this->host->context('seo');
+        $before  = RenderingState::of($context);
+        $context->settings('seo')->set(['records' => true]);
+
+        static::assertSame(['records:off', 'records:on'], [$before, RenderingState::of($context)]);
+    }
+
+    #[Test]
     public function theReportCountsEveryRecordTheSiteAnsweredFor(): void
     {
         $this->seed(2);
@@ -698,6 +757,22 @@ final class SiteInspectionTest extends TestCase
         $this->removeTempDirectory();
     }
 
+    private function ageAnswers(int $seconds): void
+    {
+        $aged = [];
+        foreach ($this->store()->load() as $key => $kept) {
+            $aged[$key] = new Inspection(
+                $kept->stamp,
+                $kept->at - $seconds,
+                $kept->title,
+                $kept->description,
+                $kept->image,
+            );
+        }
+
+        $this->store()->save($aged);
+    }
+
     private function boot(ClockInterface $clock): void
     {
         $http       = new Psr17Factory();
@@ -777,14 +852,24 @@ final class SiteInspectionTest extends TestCase
         );
     }
 
+    use TempDirectoryTrait;
+
+    private const string SECTION = 'library.projects.project';
+
+    private const string PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAAAAADRSSBWAAAAC0lEQVR4nGNgYAAAAAMAAbitOmMAAAAASUVORK5CYII=';
+
+    private const string HEAD = '{"status":200,"title":"House | Site","description":"A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.","image":"https://www.example.com/a.jpg","imageAlt":"The house","canonical":"https://www.example.com/work/house","robots":"index,follow","jsonLd":[{"@type":"CreativeWork"}]}';
+
+    private InMemoryHost $host;
+
     private function reference(int $id): RecordReference
     {
         return new RecordReference(self::SECTION, $id);
     }
 
-    private function refresh(): Refreshed
+    private function refresh(int $maxAge = RecordInspections::MAX_AGE): Refreshed
     {
-        return (new RecordInspections($this->host->context('seo')))->refresh(50);
+        return (new RecordInspections($this->host->context('seo')))->refresh(50, $maxAge);
     }
 
     private function seed(int $count = 1): void

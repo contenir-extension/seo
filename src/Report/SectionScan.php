@@ -33,11 +33,13 @@ final readonly class SectionScan
 
     /**
      * @param array<string, Inspection> $inspections What the site last rendered, by InspectionStore::key()
+     * @param string                    $state       The rendering state those answers must have been given under
      */
     public function __construct(
         private SectionsInterface $sections,
         private TitleTemplate $template,
         private array $inspections = [],
+        private string $state = '',
     ) {}
 
     private static function hidden(?string $column, RecordRow $row): bool
@@ -65,7 +67,7 @@ final readonly class SectionScan
             $values    = new MetaValues($block, $row->values, $seo);
             $text      = $values->text('title');
             $site      = $this->inspections[InspectionStore::key($row->record)] ?? null;
-            $asked     = null !== $site && $site->isCurrent($row);
+            $asked     = null !== $site && $site->isCurrent($row, $this->state);
             $found     = $asked ? InspectionIssues::of($site) : $issues->of($values);
             $inspected += $asked ? 1 : 0;
             if ($shared->has($text)) {
