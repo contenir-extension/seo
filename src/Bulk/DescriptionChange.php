@@ -40,7 +40,7 @@ final readonly class DescriptionChange
             }
         }
 
-        $content = $values->derivedDescription();
+        $content = $values->suggestedDescription();
 
         return (
             null !== $content && mb_strlen($content) >= Summary::MINIMUM

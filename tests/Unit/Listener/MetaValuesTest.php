@@ -39,12 +39,32 @@ final class MetaValuesTest extends TestCase
      * @param list<string> $fields
      * @param array<string, mixed> $values
      */
-    private static function values(array $fields, array $values, ?string $advanced = 'seo'): MetaValues
-    {
+    private static function values(
+        array $fields,
+        array $values,
+        ?string $advanced = 'seo',
+        bool $automatic = true,
+    ): MetaValues {
         return new MetaValues(
             new SectionBlock('a.b', new Element('seo'), $fields),
             $values,
-            new SeoBlock('project', roles: self::ROLES, advanced: $advanced),
+            new SeoBlock('project', roles: self::ROLES, advanced: $advanced, automatic: $automatic),
+        );
+    }
+
+    #[Test]
+    public function aManualSectionTakesNothingFromTheSectionFieldButStillSuggestsIt(): void
+    {
+        $values = self::values(['title', 'section'], ['section' => self::content()], automatic: false);
+
+        static::assertSame(
+            [null, false, null, 'A house by the sea, opened up to the garden.'],
+            [
+                $values->derivedDescription(),
+                $values->hasDerivedImage(),
+                $values->shownDescription(),
+                $values->suggestedDescription(),
+            ],
         );
     }
 

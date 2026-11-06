@@ -157,6 +157,7 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
 <?php foreach ($values['roles'] as $label): ?>
                                     <th class="table__head"><?= $view->escape($label) ?></th>
 <?php endforeach ?>
+                                    <th class="table__head"></th>
                                 </tr>
                             </thead>
                             <tbody class="table__body">
@@ -171,6 +172,7 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
 <?php $count = $section->count($role); ?>
                                     <td class="table__cell"><?php if (0 === $count): ?><span class="text--muted">0</span><?php else: ?><a href="<?= $view->escape($view->url('records', ['section' => $section->section, 'role' => $role])) ?>"><?= $count ?></a><?php endif ?></td>
 <?php endforeach ?>
+                                    <td class="table__cell"><a class="text--sm" href="<?= $view->escape($view->url('strategy', ['section' => $section->section])) ?>">Strategy</a></td>
                                 </tr>
 <?php endforeach ?>
                             </tbody>

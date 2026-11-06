@@ -18,6 +18,8 @@ use function array_map;
  */
 final class RecordingSections implements SectionsInterface
 {
+    use SavesNoBlocksTrait;
+
     /** @var list<array{string, list<string>, list<string|int>}> */
     public array $asked = [];
 

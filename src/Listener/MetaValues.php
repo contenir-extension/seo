@@ -42,7 +42,7 @@ final readonly class MetaValues
      */
     public function derivedDescription(): ?string
     {
-        return null === $this->text('description') ? (new DerivedContent($this->values))->description() : null;
+        return $this->seo->takesContent('description') ? $this->suggestedDescription() : null;
     }
 
     public function field(string $role): string
@@ -64,7 +64,11 @@ final readonly class MetaValues
      */
     public function hasDerivedImage(): bool
     {
-        return null === $this->text('image') && (new DerivedContent($this->values))->hasImage();
+        return (
+            $this->seo->takesContent('image')
+                && null === $this->text('image')
+                && (new DerivedContent($this->values))->hasImage()
+        );
     }
 
     /**
@@ -72,7 +76,19 @@ final readonly class MetaValues
      */
     public function shownDescription(): ?string
     {
-        return $this->text('description') ?? (new DerivedContent($this->values))->description();
+        return (
+            $this->text('description')
+                ?? ($this->seo->takesContent('description') ? (new DerivedContent($this->values))->description() : null)
+        );
+    }
+
+    /**
+     * The description the record's Section field gives where its columns give none, whether or not the section
+     * lets a page take it: what a fix may write as the record's own.
+     */
+    public function suggestedDescription(): ?string
+    {
+        return null === $this->text('description') ? (new DerivedContent($this->values))->description() : null;
     }
 
     public function text(string $role): ?string

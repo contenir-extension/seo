@@ -19,6 +19,7 @@ final class Tabs
         return [
             new Tab('Overview', OverviewHandler::NAME, current: OverviewHandler::NAME === $current),
             new Tab('Records', RecordsHandler::NAME, current: RecordsHandler::NAME === $current),
+            new Tab('Strategy', StrategyHandler::NAME, current: StrategyHandler::NAME === $current),
         ];
     }
 }

@@ -112,12 +112,14 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
-    public function drawsItsAreaFromTheOverviewRecordsAndExportHandlers(): void
+    public function drawsItsAreaFromTheOverviewRecordsStrategyAndExportHandlers(): void
     {
         static::assertSame(
             [
                 'overview',
                 'records',
+                'strategy',
+                'strategy-save',
                 'records-export',
                 'preview',
                 'records-check',

@@ -361,8 +361,8 @@ final class SeoModuleTest extends TestCase
                 ['News articles', '1', '0', '0', '1', '0', '0'],
             ],
             [
-                $this->texts($xpath, '//tbody/tr[1]/td[position()!=2]'),
-                $this->texts($xpath, '//tbody/tr[2]/td[position()!=2]'),
+                $this->texts($xpath, '//tbody/tr[1]/td[position()!=2 and position()!=last()]'),
+                $this->texts($xpath, '//tbody/tr[2]/td[position()!=2 and position()!=last()]'),
             ],
         );
     }

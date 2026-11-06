@@ -22,6 +22,8 @@ use function range;
  */
 final class PagedSections implements SectionsInterface
 {
+    use SavesNoBlocksTrait;
+
     public int $calls = 0;
 
     /**

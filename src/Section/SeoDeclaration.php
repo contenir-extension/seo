@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Section;
 use Contenir\Extension\Api\Section\Element;
 use Contenir\Seo\Sections\SeoBlock;
 
+use function array_diff;
 use function array_filter;
 use function array_map;
 use function array_merge;
@@ -21,7 +22,9 @@ use function trim;
  * first non-empty first (`<description>meta_description, abstract</description>`),
  * an `alt` attribute names the columns of its alt text, `required="true"`
  * makes the role one a record must fill, and `<advanced>` names the column
- * of the record's overrides. Roles a block leaves out take the conventions.
+ * of the record's overrides. `mode="manual"` on `<seo>` makes what a record's Section field gives only a
+ * suggestion, and `content="false"` on a role stops that role taking it. Roles a block leaves out take the
+ * conventions.
  */
 final class SeoDeclaration
 {
@@ -46,6 +49,7 @@ final class SeoDeclaration
         $roles    = SeoBlock::CONVENTIONS;
         $required = [];
         $advanced = null;
+        $content  = SeoBlock::CONTENT_ROLES;
         foreach ($seo->children as $child) {
             if ('advanced' === $child->name) {
                 $advanced = self::columns($child->text)[0] ?? null;
@@ -62,6 +66,10 @@ final class SeoDeclaration
             if ('true' === $child->attribute('required')) {
                 $required[] = $child->name;
             }
+
+            if ('false' === $child->attribute('content')) {
+                $content = array_diff($content, [$child->name]);
+            }
         }
 
         $schema = trim($seo->attribute('schema', '') ?? '');
@@ -72,6 +80,8 @@ final class SeoDeclaration
             $roles,
             $required,
             $advanced,
+            'manual' !== trim($seo->attribute('mode', '') ?? ''),
+            array_values($content),
         );
     }
 

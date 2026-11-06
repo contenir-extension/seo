@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.5.0] - 2026-11-06
 
+### Added
+
+- A Strategy tab beside Overview and Records. It lists each section with its schema type, where its title, description and
+  image are read from, and whether what a record's Section field gives is taken automatically or only suggested. A
+  section's form changes the schema type, the ordered sources of each role, the alt text's source, "From content" for a
+  description or image, and the mode, and saves them into the section's `<seo>` block in admin.xml through the host
+  (extension API 0.9.3). Where the site doesn't save its configuration, the tab reads it and says where to change it.
+  Overview's section rows link to it, and the screens that save need the Update privilege.
+- `<seo mode="manual">` makes what a Section field gives only a suggestion: the checks keep asking for a description and
+  image, and the bulk "Write descriptions" can write the suggestion as the record's own. `content="false"` on a role
+  stops that role taking it. Requires `contenir-seo` ^0.9 and `contenir-seo-mezzio` ^0.12 on the site.
+- Overview's section rows link to the Strategy tab.
+
 ### Changed
 
 - Records is drawn with the host's own list (extension API 0.9.3), so its boxes, Select all, row actions and pagination
