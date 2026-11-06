@@ -257,6 +257,27 @@ final class SeoModuleTest extends TestCase
     }
 
     #[Test]
+    public function offersOnlyTheKindsOfIssueThatAreAboutARecordInTheFilter(): void
+    {
+        $this->seedRecords();
+
+        static::assertSame(
+            [
+                '',
+                'missing-title',
+                'missing-description',
+                'duplicate-title',
+                'title-length',
+                'description-length',
+                'missing-image',
+                'small-image',
+                'hidden',
+            ],
+            $this->texts($this->page('records'), '//select[@name="kind"]/option/@value'),
+        );
+    }
+
+    #[Test]
     public function onlyPublishedRecordsAreReported(): void
     {
         $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project'));

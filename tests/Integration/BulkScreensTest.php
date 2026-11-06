@@ -31,6 +31,7 @@ use function iterator_to_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
 use function mkdir;
+use function strlen;
 use function trim;
 
 #[Group('integration')]
@@ -123,6 +124,35 @@ final class BulkScreensTest extends TestCase
             array_map(static fn(RunChange $change): string => $change->status, $this->only()->changes),
             $this->host->stored(self::PROJECTS, 1)['meta_description'] ?? null,
         ]);
+    }
+
+    #[Test]
+    public function sendsThePersonBackToTheRunWhileItIsUndone(): void
+    {
+        $this->post('records-apply', [
+            'fix'   => 'write-descriptions',
+            'after' => [self::PROJECTS . '|1' => 'Edited.'],
+        ]);
+        $this->host->runQueued();
+        $id       = $this->only()->id;
+        $response = $this->post('records-undo', ['run' => $id]);
+
+        static::assertSame("/admin/extension/seo/records-run?run={$id}", $response->getHeaderLine('Location'));
+    }
+
+    #[Test]
+    public function sendsThePersonToTheRunItMadeByItsId(): void
+    {
+        $response = $this->post('records-apply', [
+            'fix'   => 'write-descriptions',
+            'after' => [self::PROJECTS . '|1' => 'A weatherboard house.'],
+        ]);
+        $id = $this->only()->id;
+
+        static::assertSame(
+            ["/admin/extension/seo/records-run?run={$id}", 12],
+            [$response->getHeaderLine('Location'), strlen($id)],
+        );
     }
 
     #[Test]

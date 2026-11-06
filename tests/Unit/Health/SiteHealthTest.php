@@ -15,15 +15,58 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
+
 #[Group('unit')]
 final class SiteHealthTest extends TestCase
 {
+    #[Test]
+    public function addsUpEverySiteCheckThatFails(): void
+    {
+        $health = SiteHealth::of([], ['sitemap-off' => true, 'defaults-not-set' => true]);
+
+        static::assertSame([0, [IssueKind::SitemapOff, IssueKind::DefaultsNotSet]], [
+            $health->score->value,
+            $health->siteIssues,
+        ]);
+    }
+
+    #[Test]
+    public function capsAHealthySiteWhileEverySiteCheckFails(): void
+    {
+        $health = SiteHealth::of(
+            [new SectionIssues('site.page', 'site.page', 1000, [], 0)],
+            ['sitemap-off' => true, 'defaults-not-set' => true],
+        );
+
+        static::assertSame(89, $health->score->value);
+    }
+
+    #[Test]
+    public function capsAHealthySiteWhileOnlyTheSecondSiteCheckFails(): void
+    {
+        $health = SiteHealth::of(
+            [new SectionIssues('site.page', 'site.page', 1000, [], 0)],
+            ['sitemap-off' => false, 'defaults-not-set' => true],
+        );
+
+        static::assertSame(89, $health->score->value);
+    }
+
     #[Test]
     public function countsASiteWideFailureAsAHighImpactIssueThatKeepsTheSiteFromGood(): void
     {
         $health = $this->site([$this->section('site.page', [])], sitemapOff: true);
 
         static::assertSame([89, [IssueKind::SitemapOff]], [$health->score->value, $health->siteIssues]);
+    }
+
+    #[Test]
+    public function goesOnToTheNextSiteCheckAfterOneThatPasses(): void
+    {
+        $health = SiteHealth::of([], ['sitemap-off' => false, 'defaults-not-set' => true]);
+
+        static::assertSame([IssueKind::DefaultsNotSet], $health->siteIssues);
     }
 
     #[Test]
@@ -38,6 +81,17 @@ final class SiteHealthTest extends TestCase
         $health = SiteHealth::of([$this->section('site.page', [])], []);
 
         static::assertSame(100, $health->score->value);
+    }
+
+    #[Test]
+    public function listsASectionAfterOneThatHasNoneOfTheIssue(): void
+    {
+        $health = $this->site([
+            $this->section('site.page', []),
+            $this->section('library.project', [$this->record('library.project', 1, [$this->absent('description')])]),
+        ]);
+
+        static::assertSame(['library.project' => 1], $health->fixFirst()[0]->sections);
     }
 
     #[Test]
@@ -76,6 +130,24 @@ final class SiteHealthTest extends TestCase
     }
 
     #[Test]
+    public function putsTheIssueThatTouchesMoreRecordsFirstWithinATier(): void
+    {
+        $health = $this->site([
+            $this->section('site.page', [
+                $this->record('site.page', 1, [new MetaIssue('title', 'title', TitleTaken::MESSAGE)]),
+                $this->record('site.page', 2, [new MetaIssue('title', 'title', TitleTaken::MESSAGE)]),
+                $this->record('site.page', 3, [new MetaIssue('title', 'title', TitleTaken::MESSAGE)]),
+                $this->record('site.page', 4, [$this->absent('description')]),
+            ]),
+        ]);
+
+        static::assertSame(
+            [IssueKind::DuplicateTitle, IssueKind::MissingDescription],
+            array_map(static fn($issue): IssueKind => $issue->kind, $health->fixFirst()),
+        );
+    }
+
+    #[Test]
     public function saysWhichSectionsHaveEachIssue(): void
     {
         $health = $this->site([
@@ -95,6 +167,14 @@ final class SiteHealthTest extends TestCase
         $health = $this->site([$this->section('site.page', [])]);
 
         static::assertSame([100, 'Good', []], [$health->score->value, $health->score->label(), $health->siteIssues]);
+    }
+
+    #[Test]
+    public function scoresASiteWhoseSiteChecksAllPassAHundred(): void
+    {
+        $health = SiteHealth::of([], ['sitemap-off' => false, 'defaults-not-set' => false]);
+
+        static::assertSame([100, []], [$health->score->value, $health->siteIssues]);
     }
 
     #[Test]

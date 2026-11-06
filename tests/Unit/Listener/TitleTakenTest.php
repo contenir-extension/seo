@@ -9,6 +9,8 @@ use Contenir\Extension\Api\Record\RecordStatus;
 use Contenir\Extension\Api\Section\SectionsInterface;
 use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Listener\TitleTaken;
+use Contenir\Extension\Seo\Tests\TestAsset\Bulk\PagedSections;
+use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -159,6 +161,28 @@ final class TitleTakenTest extends TestCase
     }
 
     #[Test]
+    public function findsATitleOnALaterPageOfRecords(): void
+    {
+        $sections = new PagedSections(total: 250);
+
+        static::assertSame(
+            self::NOTE,
+            (new TitleTaken($sections))->note(self::SECTION, ['title'], 'house 250', 9999),
+        );
+    }
+
+    #[Test]
+    public function readsNoMoreThanTheMostRecordsLookingForATitle(): void
+    {
+        $sections = new PagedSections(total: 6000);
+
+        static::assertSame(
+            [null, 50],
+            [(new TitleTaken($sections))->note(self::SECTION, ['title'], 'No such house', 9999), $sections->calls],
+        );
+    }
+
+    #[Test]
     public function theRecordItselfIsNoDuplicate(): void
     {
         static::assertNull($this->taken(self::rows(5, duplicate: 2))->note(self::SECTION, ['title'], 'House', '12'));
@@ -169,20 +193,23 @@ final class TitleTakenTest extends TestCase
      */
     private function taken(array $rows): TitleTaken
     {
+        $calls    = 0;
         $sections = $this->createStub(SectionsInterface::class);
         $sections->method('rows')
             ->willReturnCallback(
-                static fn(
+                static function (
                     string $section,
                     array $columns,
                     array $ids = [],
                     int $limit = 100,
                     int $offset = 0,
-                ): array => array_slice(
-                    $rows,
-                    $offset,
-                    $limit,
-                ),
+                ) use ($rows, &$calls): array {
+                    if (++$calls > 80) {
+                        throw new LogicException('The sections were asked for too many pages');
+                    }
+
+                    return array_slice($rows, $offset, $limit);
+                },
             );
 
         return new TitleTaken($sections);

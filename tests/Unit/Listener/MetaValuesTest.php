@@ -87,6 +87,25 @@ final class MetaValuesTest extends TestCase
     }
 
     #[Test]
+    public function showsTheRecordsOwnDescriptionBeforeTheOneItsSectionFieldGives(): void
+    {
+        $values = self::values(['description', 'section'], [
+            'description' => 'Own words.',
+            'section'     => self::content(),
+        ]);
+
+        static::assertSame('Own words.', $values->shownDescription());
+    }
+
+    #[Test]
+    public function showsTheSectionFieldsDescriptionWhereTheRecordHasNoneOfItsOwn(): void
+    {
+        $values = self::values(['description', 'section'], ['section' => self::content()]);
+
+        static::assertSame('A house by the sea, opened up to the garden.', $values->shownDescription());
+    }
+
+    #[Test]
     public function takesADescriptionAndImageFromTheSectionFieldWhereTheColumnsGiveNone(): void
     {
         $values = self::values(['title', 'section'], ['section' => self::content()]);

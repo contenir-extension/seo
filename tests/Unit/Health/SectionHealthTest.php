@@ -95,6 +95,17 @@ final class SectionHealthTest extends TestCase
     }
 
     #[Test]
+    public function leavesOutAnIssueOfAKindTheSectionDoesNotDeclare(): void
+    {
+        $health = SectionHealth::of($this->section(
+            [$this->record(1, [new MetaIssue('image', 'image', 'Add one.', missing: true)])],
+            applies: ['title', 'description'],
+        ));
+
+        static::assertSame([100, 0], [$health->score->value, $health->failing]);
+    }
+
+    #[Test]
     public function scoresACleanSectionAHundred(): void
     {
         $health = SectionHealth::of($this->section([]));

@@ -37,6 +37,17 @@ final class ChangePlanTest extends TestCase
     private InMemoryHost $host;
 
     #[Test]
+    public function goesOnToASectionAfterOneThatHasNoBlock(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::HideFromSearch,
+            [new RecordReference('no.such.section', 1), new RecordReference(self::PROJECTS, 1)],
+        );
+
+        static::assertSame([1], array_map(static fn(Change $change): string|int => $change->record->id, $changes));
+    }
+
+    #[Test]
     public function hidesOnlyTheRecordsThatAreShown(): void
     {
         static::assertSame(
@@ -58,6 +69,17 @@ final class ChangePlanTest extends TestCase
     }
 
     #[Test]
+    public function leavesOutARecordWhoseAdvancedColumnAlreadyHoldsADescription(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::WriteDescriptions,
+            [new RecordReference(self::NEWS, 9)],
+        );
+
+        static::assertSame([], $changes);
+    }
+
+    #[Test]
     public function leavesOutARecordWhoseSectionFieldIsTooShortToDescribeIt(): void
     {
         static::assertSame([], $this->plan(FixKind::WriteDescriptions, [8]));
@@ -73,6 +95,35 @@ final class ChangePlanTest extends TestCase
     public function leavesOutARecordWithNothingToWriteFrom(): void
     {
         static::assertSame([], $this->plan(FixKind::WriteDescriptions, [4]));
+    }
+
+    #[Test]
+    public function makesOneChangeForARecordAskedForTwice(): void
+    {
+        static::assertSame([[1, 'visible', '1', '0']], $this->summary($this->plan(FixKind::HideFromSearch, [1, 1])));
+    }
+
+    #[Test]
+    public function namesEachChangesSectionByItsPathWithoutATitle(): void
+    {
+        $changes = (new ChangePlan($this->host->context('seo')->sections()))->build(
+            FixKind::HideFromSearch,
+            [new RecordReference(self::PROJECTS, 1)],
+        );
+
+        static::assertSame(
+            [self::PROJECTS],
+            array_map(static fn(Change $change): string => $change->sectionTitle, $changes),
+        );
+    }
+
+    #[Test]
+    public function namesEachChangesSectionByTheTitleItWasGiven(): void
+    {
+        static::assertSame(['Projects'], array_map(
+            static fn(Change $change): string => $change->sectionTitle,
+            $this->plan(FixKind::HideFromSearch, [1]),
+        ));
     }
 
     #[Test]
@@ -183,6 +234,11 @@ final class ChangePlanTest extends TestCase
             '<seo type="news"><advanced>seo</advanced></seo>',
             ['title', 'summary', 'seo'],
         );
+        $this->host->seed(self::NEWS, 9, [
+            'title'   => 'Written',
+            'summary' => 'A short post about a new kitchen and the deck out the back.',
+            'seo'     => '{"description":"Already written."}',
+        ]);
         $this->host->seed(self::NEWS, 5, [
             'title'   => 'Post',
             'summary' => 'A short post about a new kitchen and the deck out the back.',
