@@ -39,7 +39,7 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
                     <section class="card">
                         <div class="card__header card__header--row">
                             <div>
-                                <h2 class="card__title">Overall rank<?php if (null !== $score->value): ?> <span class="badge badge--<?= $view->escape($score->tone()) ?>-muted"><?= $view->escape($score->label()) ?></span><?php endif ?></h2>
+                                <h2 class="card__title">Overall rank<?php if (null !== $score->value): ?> <span class="badge badge--<?= $view->escape($score->tone()) ?>"><?= $view->escape($score->label()) ?></span><?php endif ?></h2>
                                 <p class="card__description"><?= null === $values['ago'] ? 'Not checked with the site yet.' : 'Checked ' . $view->escape($values['ago']) . ' ago.' ?></p>
                             </div>
                             <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
