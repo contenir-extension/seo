@@ -63,4 +63,18 @@ final readonly class RunChange
             $message,
         );
     }
+
+    public function withBefore(?string $before): self
+    {
+        return new self(
+            $this->record,
+            $this->title,
+            $this->sectionTitle,
+            $this->column,
+            $before,
+            $this->after,
+            $this->status,
+            $this->message,
+        );
+    }
 }

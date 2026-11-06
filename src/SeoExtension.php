@@ -10,6 +10,8 @@ use Contenir\Extension\Api\Handler\Privilege;
 use Contenir\Extension\Api\Listener\Scope;
 use Contenir\Extension\Api\Registry;
 use Contenir\Extension\Api\Schedule\Frequency;
+use Contenir\Extension\Seo\Bulk\ApplyChanges;
+use Contenir\Extension\Seo\Bulk\UndoChanges;
 use Contenir\Extension\Seo\Check\DefaultsCheck;
 use Contenir\Extension\Seo\Check\RecordsCheck;
 use Contenir\Extension\Seo\Check\SectionsCheck;
@@ -81,6 +83,8 @@ final class SeoExtension implements ExtensionInterface
 
         $registry->module(dirname(__DIR__) . '/config/admin.xml');
         $registry->meter(DashboardMeter::class);
+        $registry->task(ApplyChanges::NAME, ApplyChanges::class);
+        $registry->task(UndoChanges::NAME, UndoChanges::class);
         $registry->templates(dirname(__DIR__) . '/templates');
         $registry->assets(dirname(__DIR__) . '/public');
         $registry->component(AdvancedField::COMPONENT, AdvancedField::SCRIPT);
