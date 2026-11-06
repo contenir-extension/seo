@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Report;
 
+use Contenir\Extension\Seo\Health\IssueKind;
+
 use function array_filter;
 use function array_values;
 use function count;
@@ -20,6 +22,10 @@ final readonly class SectionIssues
      * @param int $checked The published records read
      * @param list<RecordIssues> $records The records with at least one issue
      * @param int $inspected The records judged by what the site rendered, not their columns
+     * @param list<string> $applies The roles the section's records can be checked for: title and description
+     *                              always, image and discoverable when it declares them
+     *
+     * @mago-expect lint:excessive-parameter-list One parameter per thing a section's report says.
      */
     public function __construct(
         public string $section,
@@ -27,6 +33,7 @@ final readonly class SectionIssues
         public int $checked,
         public array $records,
         public int $inspected,
+        public array $applies = ['title', 'description', 'image', 'discoverable'],
     ) {}
 
     public function count(?string $role): int
@@ -44,6 +51,19 @@ final readonly class SectionIssues
         return array_values(array_filter(
             $this->records,
             static fn(RecordIssues $record): bool => [] !== $record->in($role),
+        ));
+    }
+
+    /**
+     * The records with an issue of this kind.
+     *
+     * @return list<RecordIssues>
+     */
+    public function ofKind(IssueKind $kind): array
+    {
+        return array_values(array_filter(
+            $this->records,
+            static fn(RecordIssues $record): bool => [] !== $record->ofKind($kind),
         ));
     }
 }

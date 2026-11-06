@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Tests\Integration;
 
+use Contenir\Extension\Api\Panel\Panel;
+use Contenir\Extension\Api\Panel\PanelRow;
 use Contenir\Extension\Api\Panel\RecordView;
 use Contenir\Extension\Api\Record\LinkableSection;
 use Contenir\Extension\Api\Site\SiteAnswer;
@@ -15,6 +17,7 @@ use Contenir\Extension\Seo\Inspect\Inspection;
 use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\Inspect\RecordInspections;
 use Contenir\Extension\Seo\Inspect\Refreshed;
+use Contenir\Extension\Seo\Inspect\RenderingState;
 use Contenir\Extension\Seo\Inspect\SiteInspector;
 use Contenir\Extension\Seo\Module\CheckHandler;
 use Contenir\Extension\Seo\Panel\SearchPanel;
@@ -53,16 +56,6 @@ use function trim;
 #[Group('integration')]
 final class SiteInspectionTest extends TestCase
 {
-    use TempDirectoryTrait;
-
-    private const string SECTION = 'library.projects.project';
-
-    private const string PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAAAAADRSSBWAAAAC0lEQVR4nGNgYAAAAAMAAbitOmMAAAAASUVORK5CYII=';
-
-    private const string HEAD = '{"status":200,"title":"House | Site","description":"A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.","image":"https://www.example.com/a.jpg","imageAlt":"The house","canonical":"https://www.example.com/work/house","robots":"index,follow","jsonLd":[{"@type":"CreativeWork"}]}';
-
-    private InMemoryHost $host;
-
     /**
      * @return array<string, array{int, SiteAnswer|null, string, string}>
      */
@@ -125,22 +118,52 @@ final class SiteInspectionTest extends TestCase
         $this->host->seed(self::SECTION, 1, ['title' => 'New title']);
 
         static::assertSame(
-            ['Project', '1', '0', '0', '1', '0', '0'],
-            $this->texts($this->page('overview'), '//tbody/tr[1]/td'),
+            ['Projects', '1', '0', '0', '1', '0', '0'],
+            $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]'),
         );
+    }
+
+    #[Test]
+    public function aFreshCheckAsksAgainWhatWasAskedFiveMinutesAgo(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->ageAnswers(RecordInspections::RECENT);
+
+        static::assertEquals(new Refreshed(1, 0, true), $this->refresh(RecordInspections::RECENT));
+    }
+
+    #[Test]
+    public function aFreshCheckLeavesAloneWhatWasJustAsked(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->ageAnswers(RecordInspections::RECENT - 1);
+
+        static::assertEquals(new Refreshed(0, 0, true), $this->refresh(RecordInspections::RECENT));
     }
 
     #[Test]
     public function aKeptAnswerForARecordThatIsGoneIsNotUsed(): void
     {
-        $this->store()->save([self::SECTION . ':7' => new Inspection('s', 1, 'Old', null, null)]);
+        $this->store()->save([self::SECTION . ':7' => new Inspection('s', 1, 'Old', null, 'https://x/old.jpg')]);
+
+        static::assertNull($this->panel(['title' => 'Gone'], 7)?->image);
+    }
+
+    #[Test]
+    public function aKeptAnswerGoesBackToTheColumnsOnceTheRecordsSwitchChanges(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->host->context('seo')->settings('seo')->set(['records' => true]);
 
         static::assertSame(
-            'Title: Gone | Site (11 of about 60 characters)',
-            (new SearchPanel())->panel(
-                new RecordView(self::SECTION, 7, ['title' => 'Gone']),
-                $this->host->context('seo'),
-            )->paragraphs[0] ?? null,
+            ['Projects', '1', '0', '0', '1', '0', '0'],
+            $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]'),
         );
     }
 
@@ -160,6 +183,17 @@ final class SiteInspectionTest extends TestCase
                 null,
             ),
         ]);
+
+        static::assertEquals(new Refreshed(0, 0, true), $this->refresh());
+    }
+
+    #[Test]
+    public function anOrdinaryRoundLeavesAFiveMinuteOldAnswerAlone(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->ageAnswers(RecordInspections::RECENT);
 
         static::assertEquals(new Refreshed(0, 0, true), $this->refresh());
     }
@@ -212,6 +246,17 @@ final class SiteInspectionTest extends TestCase
                 null,
             ),
         ]);
+
+        static::assertEquals(new Refreshed(1, 0, true), $this->refresh());
+    }
+
+    #[Test]
+    public function aRoundAsksAgainOnceTheRecordsSwitchChanges(): void
+    {
+        $this->seed();
+        $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
+        $this->refresh();
+        $this->host->context('seo')->settings('seo')->set(['records' => true]);
 
         static::assertEquals(new Refreshed(1, 0, true), $this->refresh());
     }
@@ -328,7 +373,7 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             ['The share image is 2×1, and sharing sites show about 1200×630, so it may look soft.'],
-            $this->texts($this->page('records', ['role' => 'image']), '//tbody/tr/td[3]/div'),
+            $this->texts($this->page('records', ['role' => 'image']), '//tbody/tr/td[4]/div'),
         );
     }
 
@@ -407,10 +452,7 @@ final class SiteInspectionTest extends TestCase
         $this->refresh();
         $this->host->seed(self::SECTION, 1, ['title' => 'New title']);
 
-        static::assertSame(
-            'Title: New title | Site (16 of about 60 characters)',
-            $this->panelText(['title' => 'New title'])[0] ?? null,
-        );
+        static::assertNull($this->panel(['title' => 'New title'])?->image);
     }
 
     #[Test]
@@ -418,14 +460,7 @@ final class SiteInspectionTest extends TestCase
     {
         $this->seed();
 
-        static::assertSame(
-            [
-                'Title: House | Site (12 of about 60 characters)',
-                'Description: none yet.',
-                'To fix: Add a description for search results and shared links.',
-            ],
-            $this->panelText(['title' => 'House']),
-        );
+        static::assertSame([['Description', 'Missing']], $this->panelRows(['title' => 'House']));
     }
 
     #[Test]
@@ -436,12 +471,8 @@ final class SiteInspectionTest extends TestCase
         $this->refresh();
 
         static::assertSame(
-            [
-                'Title: House | Site (12 of about 60 characters)',
-                'Description: A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.'
-                    . ' (89 of about 160 characters)',
-            ],
-            $this->panelText(['title' => 'House']),
+            [[], true],
+            [$this->panelRows(['title' => 'House']), null !== $this->panel(['title' => 'House'])?->image],
         );
     }
 
@@ -454,12 +485,10 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             [
-                'Title: House | Site (12 of about 60 characters)',
-                'Description: none yet.',
-                'To fix: Add a description for search results and shared links.',
-                'To fix: Add an image for shared links.',
+                ['Description', 'Missing'],
+                ['Share image', 'Missing'],
             ],
-            $this->panelText(['title' => 'House']),
+            $this->panelRows(['title' => 'House']),
         );
     }
 
@@ -471,11 +500,8 @@ final class SiteInspectionTest extends TestCase
         $this->refresh();
 
         static::assertSame(
-            'Title: House | Site (12 of about 60 characters)',
-            (new SearchPanel())->panel(
-                new RecordView(self::SECTION, 2, ['title' => 'House 2']),
-                $this->host->context('seo'),
-            )->paragraphs[0] ?? null,
+            [[], 'House | Site'],
+            [$this->panelRows(['title' => 'House 2'], 2), $this->panel(['title' => 'House 2'], 2)?->image?->alt],
         );
     }
 
@@ -584,13 +610,23 @@ final class SiteInspectionTest extends TestCase
     }
 
     #[Test]
+    public function theRenderingStateNamesTheRecordsSwitch(): void
+    {
+        $context = $this->host->context('seo');
+        $before  = RenderingState::of($context);
+        $context->settings('seo')->set(['records' => true]);
+
+        static::assertSame(['records:off', 'records:on'], [$before, RenderingState::of($context)]);
+    }
+
+    #[Test]
     public function theReportCountsEveryRecordTheSiteAnsweredFor(): void
     {
         $this->seed(2);
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
         $this->refresh();
 
-        static::assertSame('2', $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]')[0] ?? null);
+        static::assertSame('2', $this->texts($this->page('overview'), '//tbody/tr[1]/td[4]')[0] ?? null);
     }
 
     #[Test]
@@ -598,15 +634,15 @@ final class SiteInspectionTest extends TestCase
     {
         $this->seed();
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
-        $before = $this->texts($this->page('overview'), '//tbody/tr[1]/td');
+        $before = $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]');
         $this->refresh();
 
         static::assertSame(
             [
-                ['Project', '1', '0', '0', '1', '0', '0'],
-                ['Project', '1', '1', '0', '0', '0', '0'],
+                ['Projects', '1', '0', '0', '1', '0', '0'],
+                ['Projects', '1', '1', '0', '0', '0', '0'],
             ],
-            [$before, $this->texts($this->page('overview'), '//tbody/tr[1]/td')],
+            [$before, $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2]')],
         );
     }
 
@@ -698,6 +734,22 @@ final class SiteInspectionTest extends TestCase
         $this->removeTempDirectory();
     }
 
+    private function ageAnswers(int $seconds): void
+    {
+        $aged = [];
+        foreach ($this->store()->load() as $key => $kept) {
+            $aged[$key] = new Inspection(
+                $kept->stamp,
+                $kept->at - $seconds,
+                $kept->title,
+                $kept->description,
+                $kept->image,
+            );
+        }
+
+        $this->store()->save($aged);
+    }
+
     private function boot(ClockInterface $clock): void
     {
         $http       = new Psr17Factory();
@@ -755,14 +807,24 @@ final class SiteInspectionTest extends TestCase
 
     /**
      * @param array<string, mixed> $values
-     *
-     * @return list<string>
      */
-    private function panelText(array $values): array
+    private function panel(array $values, int $id = 1): ?Panel
     {
-        return (
-            (new SearchPanel())->panel(new RecordView(self::SECTION, 1, $values), $this->host->context('seo'))
-                ->paragraphs ?? []
+        return (new SearchPanel())->panel(new RecordView(self::SECTION, $id, $values), $this->host->context('seo'));
+    }
+
+    /**
+     * What the panel says needs fixing, as label and detail.
+     *
+     * @param array<string, mixed> $values
+     *
+     * @return list<array{string, string}>
+     */
+    private function panelRows(array $values, int $id = 1): array
+    {
+        return array_map(
+            static fn(PanelRow $row): array => [$row->label, $row->detail],
+            $this->panel($values, $id)->rows ?? [],
         );
     }
 
@@ -777,14 +839,24 @@ final class SiteInspectionTest extends TestCase
         );
     }
 
+    use TempDirectoryTrait;
+
+    private const string SECTION = 'library.projects.project';
+
+    private const string PIXEL = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAAAAADRSSBWAAAAC0lEQVR4nGNgYAAAAAMAAbitOmMAAAAASUVORK5CYII=';
+
+    private const string HEAD = '{"status":200,"title":"House | Site","description":"A weatherboard house in Northcote, opened up to its garden with a new kitchen and a deck.","image":"https://www.example.com/a.jpg","imageAlt":"The house","canonical":"https://www.example.com/work/house","robots":"index,follow","jsonLd":[{"@type":"CreativeWork"}]}';
+
+    private InMemoryHost $host;
+
     private function reference(int $id): RecordReference
     {
         return new RecordReference(self::SECTION, $id);
     }
 
-    private function refresh(): Refreshed
+    private function refresh(int $maxAge = RecordInspections::MAX_AGE): Refreshed
     {
-        return (new RecordInspections($this->host->context('seo')))->refresh(50);
+        return (new RecordInspections($this->host->context('seo')))->refresh(50, $maxAge);
     }
 
     private function seed(int $count = 1): void

@@ -1,28 +1,133 @@
 <?php
 /**
- * The SEO area's home: each section's counts per role, each leading to those
- * records, then how the site's own defaults stand.
+ * The SEO area's home: how the site reads in search as a score, what to fix first by impact, each section's
+ * score and counts per role, each leading to those records, then how the site's own defaults stand.
  *
  * @var array{
  *     sections: list<\Contenir\Extension\Seo\Report\SectionIssues>,
+ *     health: \Contenir\Extension\Seo\Health\SiteHealth,
+ *     ago: ?string,
  *     roles: array<string, string>,
  *     checks: list<array{label: string, status: string, message: string}>,
  *     settings: array<string, string>,
+ *     records: bool,
  * } $values
  * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
  */
+
+use Contenir\Extension\Seo\Health\Tier;
+use Contenir\Extension\Seo\Module\SettingsLinks;
+
+$health   = $values['health'];
+$score    = $health->score;
+$arc      = M_PI * 80;
+$groups   = [];
+$titles   = [];
+foreach ($health->fixFirst() as $issue) {
+    $groups[$issue->kind->tier()->value][] = $issue;
+}
+foreach ($values['sections'] as $each) {
+    $titles[$each->section] = $each->title;
+}
+$tones    = ['success' => 'var(--success)', 'warning' => 'var(--warning)', 'destructive' => 'var(--destructive)'];
+$badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning', Tier::Low->value => 'info'];
 ?>
                 <?= $view->tabs() ?>
 
                 <div class="stack stack--lg">
+                <div class="grid grid--2">
+                    <section class="card">
+                        <div class="card__header card__header--row">
+                            <div>
+                                <h2 class="card__title">Overall rank<?php if (null !== $score->value): ?> <span class="badge badge--<?= $view->escape($score->tone()) ?>"><?= $view->escape($score->label()) ?></span><?php endif ?></h2>
+                                <p class="card__description"><?= null === $values['ago'] ? 'Not checked with the site yet.' : 'Checked ' . $view->escape($values['ago']) . ' ago.' ?></p>
+                            </div>
+                            <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
+                                <?= $view->token() ?>
+                                <button type="submit" class="btn btn--outline btn--sm"><?= $view->icon('refresh') ?><span><?= null === $values['ago'] ? 'Check with the site' : 'Re-check now' ?></span></button>
+                            </form>
+                        </div>
+                        <div class="card__content stack stack--md" style="display: flex; flex: 1; flex-direction: column">
+<?php if (null === $score->value): ?>
+                            <p class="text--sm text--muted">Nothing to score yet. Add an &lt;seo&gt; block to a section with pages of its own in admin.xml.</p>
+<?php else: ?>
+                            <div style="display: flex; flex: 1; align-items: center; justify-content: center">
+                                <svg width="240" height="140" viewBox="0 0 200 116" role="img" aria-label="Score <?= $score->value ?> of 100">
+                                    <path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="var(--bg-muted)" stroke-width="14" stroke-linecap="round"/>
+                                    <path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="<?= $view->escape($tones[$score->tone()]) ?>" stroke-width="14" stroke-linecap="round" stroke-dasharray="<?= round($arc * $score->value / 100, 1) ?> <?= round($arc, 1) ?>"/>
+                                    <text x="100" y="92" text-anchor="middle" font-size="46" font-weight="700" fill="var(--fg)"><?= $score->value ?></text>
+                                    <text x="100" y="112" text-anchor="middle" font-size="11" fill="var(--fg-muted)">out of 100</text>
+                                </svg>
+                            </div>
+                            <div class="stack stack--sm">
+<?php foreach ($health->sections as $one): ?>
+                                <div>
+                                    <div class="cluster cluster--sm" style="justify-content: space-between">
+                                        <span class="text--sm"><?= $view->escape($one->title) ?> <span class="text--muted text--xs"><?= $one->checked ?> <?= 1 === $one->checked ? 'record' : 'records' ?></span></span>
+                                        <span class="text--medium"><?= null === $one->score->value ? '–' : $one->score->value ?></span>
+                                    </div>
+<?php if (null !== $one->score->value): ?>
+                                    <div class="progress" role="img" aria-label="<?= $view->escape($one->title) ?> scores <?= $one->score->value ?> of 100"><div class="progress__bar" style="width: <?= $one->score->value ?>%; background-color: <?= $view->escape($tones[$one->score->tone()]) ?>"></div></div>
+<?php endif ?>
+                                </div>
+<?php endforeach ?>
+                            </div>
+<?php endif ?>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="card__header">
+                            <h2 class="card__title">Fix first</h2>
+                            <p class="card__description">Ranked by impact, then by how many records are affected.</p>
+                        </div>
+                        <div class="card__content">
+<?php if ([] === $groups): ?>
+                            <p class="text--sm text--muted">Nothing to fix.</p>
+<?php endif ?>
+<?php foreach ([Tier::High, Tier::Medium, Tier::Low] as $tier): ?>
+<?php if (! isset($groups[$tier->value])): ?>
+<?php continue; ?>
+<?php endif ?>
+<?php $records = array_sum(array_map(static fn($issue): int => $issue->kind->siteWide() ? 0 : $issue->count, $groups[$tier->value])); ?>
+                            <details class="accordion-native"<?= Tier::High === $tier ? ' open' : '' ?>>
+                                <summary>
+                                    <span class="cluster cluster--sm">
+                                        <span class="badge badge--<?= $view->escape($badges[$tier->value]) ?>"><?= $view->escape($tier->label()) ?></span>
+                                        <span class="text--sm text--muted"><?= count($groups[$tier->value]) ?> <?= 1 === count($groups[$tier->value]) ? 'issue' : 'issues' ?><?= 0 < $records ? ' · ' . $records . ' ' . (1 === $records ? 'record' : 'records') . ' to fix' : '' ?></span>
+                                    </span>
+                                </summary>
+                                <div class="accordion-native__content">
+                                    <ol class="stack stack--sm" style="list-style: none; margin: 0; padding: 0">
+<?php foreach ($groups[$tier->value] as $issue): ?>
+                                        <li class="cluster cluster--sm" style="align-items: center; justify-content: space-between">
+                                            <span style="flex: 1; min-width: 0">
+                                                <span class="text--medium text--sm"><?= $view->escape($issue->kind->label()) ?></span>
+<?php if ($issue->kind->siteWide()): ?>
+                                                <span class="text--xs text--muted" style="display: block">A setting for the whole site</span>
+<?php else: ?>
+                                                <span class="text--xs text--muted" style="display: block"><?= $view->escape(implode(', ', array_map(static fn(string $key, int $count): string => ($titles[$key] ?? $key) . ' ' . $count, array_keys($issue->sections), $issue->sections))) ?></span>
+<?php endif ?>
+                                            </span>
+<?php if (! $issue->kind->siteWide()): ?>
+                                            <span class="text--sm text--medium" style="min-width: 1.5rem; text-align: right"><?= $issue->count ?></span>
+                                            <a class="btn btn--outline btn--sm" href="<?= $view->escape($view->url('records', ['kind' => $issue->kind->value])) ?>">Fix</a>
+<?php else: ?>
+                                            <a class="btn btn--outline btn--sm" href="<?= $view->escape((string) SettingsLinks::of($issue->kind)) ?>">Open</a>
+<?php endif ?>
+                                        </li>
+<?php endforeach ?>
+                                    </ol>
+                                </div>
+                            </details>
+<?php endforeach ?>
+                        </div>
+                    </section>
+                </div>
+
                 <section class="card">
                     <div class="card__header">
                         <h2 class="card__title">Sections</h2>
-                        <p class="card__description">Going by what the site renders for each record it has been asked about, and otherwise by the record's own columns, which miss anything the site builds in its code. The site is asked in the background.</p>
-                        <form method="post" action="<?= $view->escape($view->url('records-check')) ?>">
-                            <?= $view->token() ?>
-                            <button type="submit" class="btn btn--outline btn--sm"><?= $view->icon('refresh') ?><span>Check with the site now</span></button>
-                        </form>
                     </div>
 <?php if ([] === $values['sections']): ?>
                     <div class="card__content">
@@ -39,6 +144,7 @@
                             <thead class="table__header">
                                 <tr class="table__row">
                                     <th class="table__head">Section</th>
+                                    <th class="table__head">Score</th>
                                     <th class="table__head">Published</th>
                                     <th class="table__head">Checked with the site</th>
 <?php foreach ($values['roles'] as $label): ?>
@@ -47,9 +153,11 @@
                                 </tr>
                             </thead>
                             <tbody class="table__body">
-<?php foreach ($values['sections'] as $section): ?>
+<?php foreach ($values['sections'] as $index => $section): ?>
+<?php $mark = $health->sections[$index]->score; ?>
                                 <tr class="table__row">
                                     <td class="table__cell"><a class="text--medium" href="<?= $view->escape($view->url('records', ['section' => $section->section])) ?>"><?= $view->escape($section->title) ?></a></td>
+                                    <td class="table__cell"><?php if (null === $mark->value): ?><span class="text--muted">–</span><?php else: ?><span class="badge badge--<?= $view->escape($mark->tone()) ?>-muted"><?= $mark->value ?></span><?php endif ?></td>
                                     <td class="table__cell"><?= $section->checked ?></td>
                                     <td class="table__cell"><?= $section->inspected ?></td>
 <?php foreach ($values['roles'] as $role => $label): ?>
@@ -76,6 +184,10 @@
                                 <dd class="datalist__value"><span class="badge badge--<?= 'success' === $check['status'] ? 'success-muted' : 'warning-muted' ?>"><?= 'success' === $check['status'] ? 'OK' : 'Check' ?></span> <?= $view->escape($check['message']) ?></dd>
                             </div>
 <?php endforeach ?>
+                            <div class="datalist__item">
+                                <dt class="datalist__label">Each record's own search settings</dt>
+                                <dd class="datalist__value"><?php if ($values['records']): ?><span class="badge badge--success-muted">On</span> The image variants, overrides and structured data a record sets reach the site.<?php else: ?><span class="badge badge--warning-muted">Off</span> None of what records say about themselves reaches the site yet. Turn it on in <a href="<?= $view->escape(array_key_first($values['settings'])) ?>">Search Appearance</a>, under This environment, once these counts are clear.<?php endif ?></dd>
+                            </div>
                         </dl>
                     </div>
                     <nav class="card__footer card__footer--border cluster cluster--xs" aria-label="SEO settings">

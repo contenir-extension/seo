@@ -1,0 +1,72 @@
+<?php
+/**
+ * What a fix would change on the records picked, for a person to look over before anything is saved. A
+ * description can be edited here, or cleared to leave its record out; nothing is written until Apply.
+ *
+ * @var array{
+ *     kind: \Contenir\Extension\Seo\Bulk\FixKind,
+ *     changes: list<\Contenir\Extension\Seo\Bulk\Change>,
+ *     count: int,
+ * } $values
+ * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
+ */
+
+use Contenir\Extension\Seo\Bulk\Selection;
+
+$kind  = $values['kind'];
+$count = $values['count'];
+$shown = static fn(?string $value): string => match (true) {
+    null === $value, '' === $value => '–',
+    default => $value,
+};
+$switch = static fn(?string $value): string => match ($value) {
+    null, '0' => 'No',
+    default   => 'Yes',
+};
+?>
+                <?= $view->tabs() ?>
+
+                <form method="post" action="<?= $view->escape($view->url('records-apply')) ?>" class="card">
+                    <?= $view->token() ?>
+                    <input type="hidden" name="fix" value="<?= $view->escape($kind->value) ?>">
+                    <div class="card__header card__header--row">
+                        <div>
+                            <h2 class="card__title"><?= $view->escape($kind->label()) ?></h2>
+                            <p class="card__description"><?= $kind->editable() ? 'Edit any suggestion, or clear it to leave that record out. Nothing is saved until you apply.' : 'Nothing is saved until you apply.' ?></p>
+                        </div>
+                        <div class="cluster cluster--sm">
+                            <a class="btn btn--outline btn--sm" href="<?= $view->escape($view->url('records')) ?>">Cancel</a>
+                            <button type="submit" class="btn btn--primary btn--sm">Apply <?= $count ?> <?= 1 === $count ? 'change' : 'changes' ?></button>
+                        </div>
+                    </div>
+                    <div class="table__wrapper table__wrapper--borderless">
+                        <table class="table table--card">
+                            <thead class="table__header">
+                                <tr class="table__row">
+                                    <th class="table__head">Record</th>
+                                    <th class="table__head">Property</th>
+                                    <th class="table__head">Before</th>
+                                    <th class="table__head">After</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table__body">
+<?php foreach ($values['changes'] as $change): ?>
+<?php $key = Selection::key($change->record); ?>
+                                <tr class="table__row">
+                                    <td class="table__cell"><span class="text--medium"><?= $view->escape($change->title) ?></span><span class="text--sm text--muted" style="display: block"><?= $view->escape($change->sectionTitle) ?></span></td>
+                                    <td class="table__cell"><?= $view->escape($kind->property()) ?></td>
+                                    <td class="table__cell text--muted"><?= $view->escape($kind->editable() ? $shown($change->before) : $switch($change->before)) ?></td>
+                                    <td class="table__cell">
+<?php if ($kind->editable()): ?>
+                                        <textarea name="after[<?= $view->escape($key) ?>]" class="textarea" rows="3" aria-label="Description for <?= $view->escape($change->title) ?>"><?= $view->escape($change->after) ?></textarea>
+<?php else: ?>
+                                        <input type="hidden" name="after[<?= $view->escape($key) ?>]" value="<?= $view->escape($change->after) ?>">
+                                        <?= $view->escape($switch($change->after)) ?>
+<?php endif ?>
+                                    </td>
+                                </tr>
+<?php endforeach ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>

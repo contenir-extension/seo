@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Report;
 
 use Contenir\Extension\Api\Url\RecordReference;
+use Contenir\Extension\Seo\Health\IssueKind;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 
 use function array_filter;
@@ -35,6 +36,19 @@ final readonly class RecordIssues
         return array_values(array_filter(
             $this->issues,
             static fn(MetaIssue $issue): bool => null === $role || $role === $issue->role,
+        ));
+    }
+
+    /**
+     * Its issues of one kind, or all of them without one.
+     *
+     * @return list<MetaIssue>
+     */
+    public function ofKind(?IssueKind $kind): array
+    {
+        return array_values(array_filter(
+            $this->issues,
+            static fn(MetaIssue $issue): bool => null === $kind || $kind === IssueKind::of($issue),
         ));
     }
 }

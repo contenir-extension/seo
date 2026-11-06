@@ -4,7 +4,27 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.4.0] - 2026-11-06
+
+### Added
+
+- A **Use each record's search settings** checkbox in Search Appearance, under This environment. It is the master
+  switch for what the site's `<seo>` blocks drive (`extensions.seo.records`), saved for the environment only and off
+  until turned on. The Overview says when it is off, and links to it.
+
+### Changed
+
+- The Overview names each section as the site's admin.xml does ("Site Pages", "Projects"), the heading the host gives
+  through `LinkableSection::$heading`; a host that gives none gets the records' name as a plural ("Pages"). It also
+  says what to do with the counts: select one to see those records, and fix them there. The Records report and the
+  dashboard check name sections the same way.
+- A site whose sections declare no `<seo>` block no longer has the site-wide defaults check: the check is skipped
+  and left off the Overview, so such a site sees no new warning.
+- What the site last rendered for a record now goes out of date when the records switch changes, not only when the
+  record's columns do, and **Check with the site now** asks again about every record whose answer is five minutes old
+  or more (an ordinary round still waits a day). Before, a record whose row was unchanged kept its old answer, so the
+  Overview and Records went on reporting what the site had rendered under the other setting.
+- Requires `contenir/contenir-seo` ^0.8 and `contenir/contenir-extension-api` ^0.9.1.
 
 ## [0.3.0] - 2026-11-05
 

@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Record\RecordsInterface;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Inspect\InspectionStore;
+use Contenir\Extension\Seo\Inspect\RenderingState;
 use Contenir\Extension\Seo\SeoSettings;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -61,6 +62,7 @@ final readonly class SearchReport
             $this->context->sections(),
             (new SeoSettings())->config($this->context)->title,
             InspectionStore::at($this->context->sitePath())->load(),
+            RenderingState::of($this->context),
         );
         $blocks = array_filter(
             $this->context->sections()->blocks(),
@@ -77,7 +79,7 @@ final readonly class SearchReport
     }
 
     /**
-     * What the site calls each linkable section, by its key.
+     * What the report calls each linkable section, by its key: the section's own heading, or else the site's name for a record as a plural.
      *
      * @return array<string, string>
      *
@@ -87,7 +89,7 @@ final readonly class SearchReport
     {
         $titles = [];
         foreach ($this->context->services()->get(RecordsInterface::class)->sections() as $section) {
-            $titles[$section->section] = $section->title;
+            $titles[$section->section] = $section->heading ?? SectionNames::plural($section->title);
         }
 
         return $titles;

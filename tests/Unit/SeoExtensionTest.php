@@ -108,7 +108,17 @@ final class SeoExtensionTest extends TestCase
     public function drawsItsAreaFromTheOverviewRecordsAndExportHandlers(): void
     {
         static::assertSame(
-            ['overview', 'records', 'records-export', 'preview', 'records-check'],
+            [
+                'overview',
+                'records',
+                'records-export',
+                'preview',
+                'records-check',
+                'records-fix',
+                'records-apply',
+                'records-run',
+                'records-undo',
+            ],
             array_keys(self::registration()->handlers),
         );
     }

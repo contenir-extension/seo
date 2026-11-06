@@ -10,7 +10,10 @@ use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Handler\HandlerInterface;
 use Contenir\Extension\Api\Handler\HandlerResult;
+use Contenir\Extension\Api\Queue\TaskQueueInterface;
 use Contenir\Extension\Api\Record\RecordsInterface;
+use Contenir\Extension\Api\Record\RecordUpdatesInterface;
+use Contenir\Extension\Seo\Health\IssueKind;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Report\SearchReport;
 use Override;
@@ -36,6 +39,25 @@ final readonly class RecordsHandler implements HandlerInterface
     public const string NAME = 'records';
 
     public const int PER_PAGE = 50;
+
+    /**
+     * The problems a record can have, by name, for the screen's filter.
+     *
+     * @return array<string, string>
+     */
+    private static function kinds(): array
+    {
+        $kinds = [];
+        foreach (IssueKind::cases() as $kind) {
+            if ($kind->siteWide()) {
+                continue;
+            }
+
+            $kinds[$kind->value] = $kind->label();
+        }
+
+        return $kinds;
+    }
 
     /**
      * @throws ContainerExceptionInterface When the host's records can't be reached.
@@ -65,12 +87,15 @@ final readonly class RecordsHandler implements HandlerInterface
                 'page'     => $page,
                 'pages'    => $pages,
                 'from'     => (($page - 1) * self::PER_PAGE) + 1,
+                'bulk'     => $context->services()->has(RecordUpdatesInterface::class)
+                    && $context->services()->has(TaskQueueInterface::class),
+                'kinds'    => self::kinds(),
                 'rows'     => array_map(
                     static fn(ReportRow $row): RecordLine => new RecordLine(
                         $row,
                         array_map(
                             static fn(MetaIssue $issue): string => $issue->message,
-                            $row->record->in($filter->role),
+                            $filter->issuesOf($row->record),
                         ),
                         $records->describe($row->record->record)?->editUrl,
                         $context->urls()->url($row->record->record),
