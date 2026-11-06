@@ -37,7 +37,7 @@ final readonly class OverviewHandler implements HandlerInterface
      * How long ago the site was last asked what it renders for a record, as people read it ("4 minutes"), or
      * null when it never has been.
      */
-    private static function checkedAgo(ExtensionContextInterface $context): ?string
+    public static function checkedAgo(ExtensionContextInterface $context): ?string
     {
         $latest = null;
         foreach (InspectionStore::at($context->sitePath())->load() as $inspection) {

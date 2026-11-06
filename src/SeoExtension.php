@@ -25,6 +25,7 @@ use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
 use Contenir\Extension\Seo\Module\CheckHandler;
+use Contenir\Extension\Seo\Module\DashboardMeter;
 use Contenir\Extension\Seo\Module\ExportHandler;
 use Contenir\Extension\Seo\Module\OverviewHandler;
 use Contenir\Extension\Seo\Module\PreviewHandler;
@@ -79,6 +80,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->diagnostic('records', RecordsCheck::class);
 
         $registry->module(dirname(__DIR__) . '/config/admin.xml');
+        $registry->meter(DashboardMeter::class);
         $registry->templates(dirname(__DIR__) . '/templates');
         $registry->assets(dirname(__DIR__) . '/public');
         $registry->component(AdvancedField::COMPONENT, AdvancedField::SCRIPT);
