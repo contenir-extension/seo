@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.5.1] - Unreleased
+## [0.5.1] - 2026-11-07
 
 ### Added
 
@@ -12,6 +12,10 @@ adheres to [Semantic Versioning](https://semver.org/).
   Section field. It opens a page showing the text, and Save writes it into the record's own description column exactly as
   the Records screen's "Write descriptions" does, through the host's record updates. If the record's content changed
   since the page was opened, nothing is written and the new text is shown. It needs the Update privilege.
+
+### Changed
+
+- On a record's View page, a description taken from content reads "Suggested from content" in a manual section, where the page doesn't use it, rather than "From content". A section whose description role is `content="false"` shows none. This needs a host with extension API 0.9.4, which tells the field its section; with an older host the line reads as before. Requires `contenir-extension-api` ^0.9.4.
 
 ## [0.5.0] - 2026-11-06
 

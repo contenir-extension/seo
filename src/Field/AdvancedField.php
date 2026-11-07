@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Field;
 
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
-use Contenir\Extension\Api\Field\DisplayedFieldTypeInterface;
+use Contenir\Extension\Api\Field\SectionDisplayedFieldTypeInterface;
 use Contenir\Extension\Api\Form\FieldType;
+use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Seo\Sections\Overrides;
 use Override;
 
@@ -29,7 +30,7 @@ use const JSON_UNESCAPED_UNICODE;
  * The host draws a textarea, which the AdvancedField component turns into a
  * group of inputs; without the script an editor can still type the JSON.
  */
-final class AdvancedField implements DisplayedFieldTypeInterface
+final class AdvancedField implements SectionDisplayedFieldTypeInterface
 {
     public const string NAME = 'advanced';
 
@@ -67,6 +68,21 @@ final class AdvancedField implements DisplayedFieldTypeInterface
     public function display(mixed $value, array $record): array
     {
         return (new AdvancedDisplay())->of($value, $record);
+    }
+
+    /**
+     * @param array<string, mixed> $record
+     */
+    #[Override]
+    public function displayIn(string $section, mixed $value, array $record, ExtensionContextInterface $context): array
+    {
+        $block = $context->sections()->block($section);
+
+        return (new AdvancedDisplay())->of(
+            $value,
+            $record,
+            null === $block ? null : SeoDeclaration::read($block->element),
+        );
     }
 
     /**

@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Field;
 
 use Contenir\Extension\Api\Field\FieldDisplayLine;
-use Contenir\Extension\Seo\Section\DerivedContent;
 use Contenir\Seo\Sections\Overrides;
 use Contenir\Seo\Sections\SeoBlock;
 
 use function array_key_exists;
-use function is_string;
-use function trim;
 
 /**
  * How a record's own SEO values read on its View page: each by name, then a description its Section field
@@ -21,6 +18,9 @@ final readonly class AdvancedDisplay
 {
     /** The note on a description the record doesn't hold but its Section field gives. */
     public const string FROM_CONTENT = 'From content';
+
+    /** The note on the same description in a manual section, where the page doesn't use it. */
+    public const string SUGGESTED = 'Suggested from content';
 
     /** What each override is called, in the order they show. */
     private const array LABELS = [
@@ -33,42 +33,25 @@ final readonly class AdvancedDisplay
     ];
 
     /**
-     * Whether the record's own columns hold a description, as a section reads them by convention.
-     *
-     * @param array<string, mixed> $record
-     */
-    private static function holdsDescription(array $record): bool
-    {
-        foreach (SeoBlock::CONVENTIONS['description'] as $column) {
-            /** @var mixed $text */
-            $text = $record[$column] ?? null;
-            if (is_string($text) && '' !== trim($text)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param array<string, mixed> $record The record's values by column name
+     * @param array<string, mixed> $record  The record's values by column name
+     * @param ?SeoBlock            $section The record's section's block, when it is known: a manual section only suggests
+     *                                      the description, and a role that takes no content has none to take
      *
      * @return list<FieldDisplayLine>
      */
-    public function of(mixed $value, array $record): array
+    public function of(mixed $value, array $record, ?SeoBlock $section = null): array
     {
         $overrides = Overrides::from($value);
-        $derived   = array_key_exists('description', $overrides) || self::holdsDescription($record)
-            ? null
-            : (new DerivedContent($record))->description();
-        $lines = [];
+        $note      = null === $section || $section->automatic ? self::FROM_CONTENT : self::SUGGESTED;
+        $derived   = array_key_exists('description', $overrides) ? null : DescriptionFromContent::of($record, $section);
+        $lines     = [];
         foreach (self::LABELS as $name => $label) {
             $text = 'description' === $name && null !== $derived ? $derived : $overrides[$name] ?? null;
             if (null === $text) {
                 continue;
             }
 
-            $lines[] = new FieldDisplayLine($label, $text, $text === $derived ? self::FROM_CONTENT : null);
+            $lines[] = new FieldDisplayLine($label, $text, $text === $derived ? $note : null);
         }
 
         return $lines;
