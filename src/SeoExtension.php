@@ -38,6 +38,7 @@ use Contenir\Extension\Seo\Module\RunHandler;
 use Contenir\Extension\Seo\Module\StrategyHandler;
 use Contenir\Extension\Seo\Module\StrategySaveHandler;
 use Contenir\Extension\Seo\Module\UndoHandler;
+use Contenir\Extension\Seo\Module\UseHandler;
 use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
@@ -105,6 +106,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->handler(ApplyHandler::NAME, ApplyHandler::class, Privilege::Update);
         $registry->handler(RunHandler::NAME, RunHandler::class);
         $registry->handler(UndoHandler::NAME, UndoHandler::class, Privilege::Update);
+        $registry->handler(UseHandler::NAME, UseHandler::class, Privilege::Update);
         $registry->schedule(InspectRecords::NAME, InspectRecords::class, Frequency::everyMinutes(15));
     }
 }

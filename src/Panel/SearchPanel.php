@@ -117,31 +117,32 @@ final readonly class SearchPanel implements RecordPanelInterface
                 : [sprintf('Taken from the content: %s.', implode(' and ', $facts->derived))],
             image: null === $facts->image ? null : new PanelImage($facts->image, $facts->title ?? ''),
             rows: $rows,
-            menu: $this->menu($context, $record),
+            menu: $this->menu($context, $record, OwnDescription::link($context, $record, $facts->derived)),
             preview: new PanelPreview($facts->title, $facts->description),
         );
     }
 
     /**
-     * The panel's Actions menu: the record's preview in search results, and, once it has a page, the page
-     * and Google's test of its structured data.
+     * The panel's Actions menu: the record's preview in search results, $own when its content's description can be
+     * saved as its own, and, once it has a page, the page and Google's test of its structured data.
      *
      * @return list<Link>
      */
-    private function menu(ExtensionContextInterface $context, RecordView $record): array
+    private function menu(ExtensionContextInterface $context, RecordView $record, ?Link $own): array
     {
         $preview = new Link('Preview in search', sprintf(
             self::PREVIEW,
             rawurlencode($record->section),
             rawurlencode((string) $record->reference()->id),
         ));
-        $url = $context->urls()->url($record->reference());
+        $url   = $context->urls()->url($record->reference());
+        $first = null === $own ? [$preview] : [$preview, $own];
 
         return (
             null === $url
-                ? [$preview]
+                ? $first
                 : [
-                    $preview,
+                    ...$first,
                     new Link('View the page', $url),
                     new Link(
                         'Test its structured data',
