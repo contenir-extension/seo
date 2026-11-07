@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.2] - 2026-11-07
+
+### Added
+
+- The Strategy screen and its save each have a permission of their own, "SEO > Strategy > Strategy" and "SEO > Strategy > Strategy save", for a role that may read how sections are described but not change it, or the reverse. They are in `config/admin.xml` as hidden sections of the SEO area, so they don't appear in the menu. **Breaking for roles:** a role granted the SEO area no longer opens or saves a strategy until it is also granted these two (an administrator is unaffected). Needs a CMS that keeps a hidden section out of the menus (contenir-cms-legacy 2.4.3); on an older CMS the two entries show in the area's menu.
+
 ## [0.5.1] - 2026-11-07
 
 ### Added

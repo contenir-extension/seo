@@ -96,6 +96,20 @@ final class StrategyScreensTest extends TestCase
     }
 
     #[Test]
+    public function refusesASaveToARoleThatMayOnlyOpenTheStrategyScreen(): void
+    {
+        $request = (new Psr17Factory())->createServerRequest('POST', '/admin/extension/seo/strategy-save')
+            ->withParsedBody(['section' => self::PROJECTS, 'version' => '']);
+
+        static::assertSame(
+            403,
+            $this->host
+                ->handle($request, ['seo', 'seo.strategy.screen', self::PROJECTS], new Editor(7, 'Ann Editor'))
+                ->getStatusCode(),
+        );
+    }
+
+    #[Test]
     public function refusesASourceThatIsNotAFieldOfTheSectionAndChangesNothing(): void
     {
         $before = $this->version();
@@ -106,6 +120,17 @@ final class StrategyScreensTest extends TestCase
         ]);
 
         static::assertSame($before, $this->version());
+    }
+
+    #[Test]
+    public function refusesTheStrategyScreenToARoleGrantedOnlyTheSeoArea(): void
+    {
+        $request = (new Psr17Factory())->createServerRequest('GET', '/admin/extension/seo/strategy');
+
+        static::assertSame(
+            403,
+            $this->host->handle($request, ['seo', self::PROJECTS], new Editor(7, 'Ann Editor'))->getStatusCode(),
+        );
     }
 
     #[Test]
@@ -175,7 +200,11 @@ final class StrategyScreensTest extends TestCase
         $request = (new Psr17Factory())->createServerRequest('GET', '/admin/extension/seo/strategy')
             ->withQueryParams($query);
 
-        return $this->host->handle($request, ['seo', self::PROJECTS], new Editor(7, 'Ann Editor'));
+        return $this->host->handle(
+            $request,
+            ['seo', 'seo.strategy.screen', 'seo.strategy.save', self::PROJECTS],
+            new Editor(7, 'Ann Editor'),
+        );
     }
 
     private function page(ResponseInterface $response): DOMXPath
@@ -196,7 +225,11 @@ final class StrategyScreensTest extends TestCase
         $request = (new Psr17Factory())->createServerRequest('POST', '/admin/extension/seo/strategy-save')
             ->withParsedBody($body);
 
-        return $this->host->handle($request, ['seo', self::PROJECTS], new Editor(7, 'Ann Editor'));
+        return $this->host->handle(
+            $request,
+            ['seo', 'seo.strategy.screen', 'seo.strategy.save', self::PROJECTS],
+            new Editor(7, 'Ann Editor'),
+        );
     }
 
     /**
