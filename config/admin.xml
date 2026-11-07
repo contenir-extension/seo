@@ -5,5 +5,22 @@
         <icon>seo</icon>
         <description>How the site's records read in search results and shared links</description>
         <handler>overview</handler>
+        <category>
+            <strategy>
+                <title>Strategy</title>
+                <section>
+                    <screen>
+                        <title>Strategy</title>
+                        <handler>strategy</handler>
+                        <hidden>1</hidden>
+                    </screen>
+                    <save>
+                        <title>Strategy save</title>
+                        <handler>strategy-save</handler>
+                        <hidden>1</hidden>
+                    </save>
+                </section>
+            </strategy>
+        </category>
     </seo>
 </admin>
