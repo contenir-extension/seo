@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Tests\Unit;
 use Contenir\Extension\Api\Diagnostic\DiagnosticDeclaration;
 use Contenir\Extension\Api\Event\Record\RecordPreSave;
 use Contenir\Extension\Api\Field\FieldTypeDeclaration;
+use Contenir\Extension\Api\Handler\Privilege;
 use Contenir\Extension\Api\Listener\ListenerDeclaration;
 use Contenir\Extension\Api\Panel\PanelDeclaration;
 use Contenir\Extension\Api\Registration;
@@ -127,6 +128,7 @@ final class SeoExtensionTest extends TestCase
                 'records-apply',
                 'records-run',
                 'records-undo',
+                'use',
             ],
             array_keys(self::registration()->handlers),
         );
@@ -146,6 +148,15 @@ final class SeoExtensionTest extends TestCase
                 $registration->scripts,
                 $registration->icons,
             ],
+        );
+    }
+
+    #[Test]
+    public function needsTheUpdatePrivilegeToShowTheUseAsOwnPageBecauseItsLinkIsAGet(): void
+    {
+        static::assertSame(
+            Privilege::Update,
+            self::registration()->handlers['use']->privilegeFor('GET'),
         );
     }
 

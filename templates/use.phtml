@@ -1,0 +1,39 @@
+<?php
+/**
+ * The description a record's Section field gives, for a person to look over before it is saved as the record's
+ * own. Nothing is written until Save.
+ *
+ * @var array{change: \Contenir\Extension\Seo\Bulk\Change, back: string} $values
+ * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
+ */
+
+$change = $values['change'];
+?>
+                <div class="stack stack--lg">
+                    <form class="form form--record" method="post" action="<?= $view->escape($view->url('use')) ?>">
+                        <?= $view->token() ?>
+                        <input type="hidden" name="section" value="<?= $view->escape($change->record->section) ?>">
+                        <input type="hidden" name="id" value="<?= $view->escape((string) $change->record->id) ?>">
+                        <input type="hidden" name="after" value="<?= $view->escape($change->after) ?>">
+                        <fieldset class="card form__card" aria-labelledby="use-title">
+                            <h2 class="card__header form__card-title" id="use-title"><?= $view->escape($change->title) ?></h2>
+                            <div class="card__content form__card-body">
+                                <div class="form__row-group">
+                                    <div class="form__row">
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <span class="form__label">Description to save</span>
+                                                <p><?= $view->escape($change->after) ?></p>
+                                                <p class="form__description">Taken from this record's content. Saving it makes it the record's own description, which you can then edit with the record.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="form__actions form__actions--bar">
+                            <a class="btn btn--outline" href="<?= $view->escape($values['back']) ?>"><?= $view->icon('x') ?><span class="btn__label">Cancel</span></a>
+                            <button type="submit" class="btn btn--primary">Save</button>
+                        </fieldset>
+                    </form>
+                </div>

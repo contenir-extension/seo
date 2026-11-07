@@ -133,6 +133,49 @@ final class SearchPanelTest extends TestCase
     }
 
     #[Test]
+    public function offersNothingToSaveWhereThePanelIsNotTakingTheDescriptionFromContent(): void
+    {
+        $this->host->seed(self::SECTION, 5, ['title' => 'House', 'section' => self::content(self::DESCRIPTION)]);
+        $menu = $this->panel($this->ready(), 5)->menu ?? [];
+
+        static::assertSame(['Preview in search'], array_map(static fn(Link $link): string => $link->label, $menu));
+    }
+
+    #[Test]
+    public function offersNothingToSaveWhereTheRecordHasADescriptionOfItsOwn(): void
+    {
+        $this->host->seed(self::SECTION, 5, [
+            'title'            => 'House',
+            'meta_description' => self::DESCRIPTION,
+            'section'          => self::content(self::DESCRIPTION),
+        ]);
+        $menu = $this->panel($this->ready(), 5)->menu ?? [];
+
+        static::assertSame(['Preview in search'], array_map(static fn(Link $link): string => $link->label, $menu));
+    }
+
+    #[Test]
+    public function offersNothingToSaveWhereTheSavedRecordGivesNoDescription(): void
+    {
+        $this->host->seed(self::SECTION, 5, ['title' => 'House']);
+        $menu = $this->panel(['title' => 'House', 'section' => self::content(self::DESCRIPTION)], 5)->menu ?? [];
+
+        static::assertSame(['Preview in search'], array_map(static fn(Link $link): string => $link->label, $menu));
+    }
+
+    #[Test]
+    public function offersToSaveTheDescriptionItsContentGivesAsItsOwn(): void
+    {
+        $this->host->seed(self::SECTION, 5, ['title' => 'House', 'section' => self::content(self::DESCRIPTION)]);
+        $values = ['title' => 'House', 'section' => self::content(self::DESCRIPTION)];
+
+        static::assertEquals(
+            new Link('Use description as its own', '/admin/extension/seo/use?section=library.projects.project&id=5'),
+            $this->panel($values, 5)->menu[1] ?? null,
+        );
+    }
+
+    #[Test]
     public function putsTheMostImportantFirst(): void
     {
         $rows = $this->panel(['title' => 'House', 'visible' => '0'], 4)->rows ?? [];
@@ -140,6 +183,19 @@ final class SearchPanelTest extends TestCase
         static::assertSame(
             ['Description', 'Share image', 'Search'],
             array_map(static fn(PanelRow $row): string => $row->label, $rows),
+        );
+    }
+
+    #[Test]
+    public function putsTheOfferBetweenThePreviewAndThePageOfARecordWithOne(): void
+    {
+        $content = self::content(self::DESCRIPTION);
+        $this->host->seed(self::SECTION, 4, ['title' => 'House', 'section' => $content]);
+        $menu = $this->panel(['title' => 'House', 'section' => $content], 4)->menu ?? [];
+
+        static::assertSame(
+            ['Preview in search', 'Use description as its own', 'View the page', 'Test its structured data'],
+            array_map(static fn(Link $link): string => $link->label, $menu),
         );
     }
 
