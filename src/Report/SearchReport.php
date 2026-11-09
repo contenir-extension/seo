@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Inspect\InspectionStore;
 use Contenir\Extension\Seo\Inspect\RenderingState;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\SeoSettings;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -64,7 +65,7 @@ final readonly class SearchReport
             RenderingState::of($this->context),
         );
         $blocks = array_filter(
-            $this->context->sections()->blocks(),
+            SeoBlocks::of($this->context)->all(),
             static fn(SectionBlock $block): bool => $block->linkable,
         );
 

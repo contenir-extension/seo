@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Field;
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Field\SectionDisplayedFieldTypeInterface;
 use Contenir\Extension\Api\Form\FieldType;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Seo\Sections\Overrides;
 use Override;
@@ -76,7 +77,7 @@ final class AdvancedField implements SectionDisplayedFieldTypeInterface
     #[Override]
     public function displayIn(string $section, mixed $value, array $record, ExtensionContextInterface $context): array
     {
-        $block = $context->sections()->block($section);
+        $block = SeoBlocks::of($context)->one($section);
 
         return (new AdvancedDisplay())->of(
             $value,
