@@ -160,6 +160,7 @@ final class SeoModuleTest extends TestCase
         static::assertSame(
             [
                 '/admin/records/library.projects.project/3',
+                '/admin/records/library.projects.project/3',
                 '/admin/extension/seo/preview?section=library.projects.project&id=3',
                 'https://www.example.com/work/hut',
             ],
@@ -174,7 +175,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertCount(
             0,
-            $this->page('records', ['section' => self::NEWS])->query('//table/tr/td[6]'),
+            $this->page('records', ['section' => self::NEWS])->query('//table/tr/td[7]'),
         );
     }
 
