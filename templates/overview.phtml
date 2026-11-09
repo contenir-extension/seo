@@ -139,7 +139,7 @@ foreach (['title' => ['title', 'titles'], 'description' => ['description', 'desc
                                             <span class="text--xs text--muted" style="display: block"><?= $view->escape(implode(', ', array_map(static fn(string $key, int $count): string => ($titles[$key] ?? $key) . ' ' . $count, array_keys($issue->sections), $issue->sections))) ?></span>
                                         </span>
                                     </span>
-                                    <a class="btn btn--outline btn--icon btn--sm" href="<?= $view->escape($view->url('records', ['kind' => $issue->kind->value])) ?>" aria-label="Fix <?= $issue->count ?> <?= 1 === $issue->count ? 'record' : 'records' ?>: <?= $view->escape($issue->kind->label()) ?>" data-tooltip="Fix <?= $issue->count ?>"><?= $view->icon($tools[$issue->kind->tier()->value]) ?></a>
+                                    <a class="btn btn--outline btn--sm" href="<?= $view->escape($view->url('records', ['kind' => $issue->kind->value])) ?>" aria-label="Fix <?= $issue->count ?> <?= 1 === $issue->count ? 'record' : 'records' ?>: <?= $view->escape($issue->kind->label()) ?>"><?= $view->icon($tools[$issue->kind->tier()->value]) ?><span>Fix</span></a>
                                 </li>
 <?php endforeach ?>
                             </ol>
