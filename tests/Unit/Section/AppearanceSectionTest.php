@@ -100,7 +100,7 @@ final class AppearanceSectionTest extends TestCase
     {
         static::assertSame(
             [
-                ['titles', 'Titles', [['site_name'], ['title_separator', 'title_position'], ['home_title']]],
+                ['titles', 'Titles', [['site_name', 'title_separator', 'title_position'], ['home_title']]],
                 ['defaults', 'Defaults', [['description'], ['share_image'], ['share_image_alt'], ['robots']]],
                 ['organisation', 'Organisation', [['organisation_name'], ['organisation_type'], ['organisation_logo']]],
                 ['environment', 'This environment', [['visibility'], ['records']]],
@@ -178,10 +178,11 @@ final class AppearanceSectionTest extends TestCase
     }
 
     #[Test]
-    public function uploadsImagesToTheirOwnFolder(): void
+    public function setsFieldAttributesWhereTheyAreNeeded(): void
     {
         static::assertSame(
             [
+                'site_name'         => ['text', ['span' => 2]],
                 'description'       => ['textarea', ['rows' => 3, 'maxlength' => 300]],
                 'share_image'       => ['fileimage', ['path' => '/asset/img/seo']],
                 'organisation_logo' => ['fileimage', ['path' => '/asset/img/seo']],

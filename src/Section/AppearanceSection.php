@@ -94,6 +94,7 @@ final class AppearanceSection
                         label: 'Site name',
                         description: 'The name page titles and share previews give the site. Leave blank to use'
                             . ' the name under Site.',
+                        attributes: ['span' => 2],
                         setting: SettingKeys::SITE_NAME,
                     ),
                     new Field(
@@ -209,8 +210,7 @@ final class AppearanceSection
                 ],
                 [
                     new Group('titles', 'Titles', [
-                        self::SITE_NAME,
-                        [self::TITLE_SEPARATOR, self::TITLE_POSITION],
+                        [self::SITE_NAME, self::TITLE_SEPARATOR, self::TITLE_POSITION],
                         self::HOME_TITLE,
                     ]),
                     new Group('defaults', 'Defaults', [
