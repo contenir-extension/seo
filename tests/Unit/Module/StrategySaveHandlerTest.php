@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Tests\Unit\Module;
 
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
+use Contenir\Extension\Api\Event\Outcome;
 use Contenir\Extension\Api\Handler\HandlerResult;
 use Contenir\Extension\Api\Record\LinkableSection;
 use Contenir\Extension\Api\Record\RecordsInterface;
@@ -12,32 +13,24 @@ use Contenir\Extension\Api\Section\Element;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Api\Section\SectionsInterface;
 use Contenir\Extension\Seo\Module\StrategySaveHandler;
+use Contenir\Extension\Seo\Section\StrategySection;
 use Contenir\Extension\Seo\Strategy\StrategyNotSaved;
 use Contenir\Extension\Seo\Strategy\StrategyOverrides;
-use Contenir\Extension\Seo\Tests\Trait\TempDirectoryTrait;
+use Contenir\Extension\Seo\Tests\TestAsset\Settings\ArraySettings;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
-use function mkdir;
-use function rmdir;
-
 #[Group('unit')]
 final class StrategySaveHandlerTest extends TestCase
 {
-    use TempDirectoryTrait;
+    private ArraySettings $settings;
 
     protected function setUp(): void
     {
-        $this->makeTempDirectory();
-        mkdir("{$this->directory}/data", recursive: true);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->removeTempDirectory();
+        $this->settings = $this->settings();
     }
 
     private const string SECTION = 'library.projects.project';
@@ -50,7 +43,7 @@ final class StrategySaveHandlerTest extends TestCase
         $this->handle(['section' => self::SECTION, 'version' => '', 'schema' => 'Article']);
         $result = $this->handle([
             'section' => self::SECTION,
-            'version' => StrategyOverrides::at($this->directory)->version(),
+            'version' => (new StrategyOverrides($this->settings))->version(),
             'reset'   => '1',
         ]);
 
@@ -60,7 +53,7 @@ final class StrategySaveHandlerTest extends TestCase
                 [['level' => 'success', 'text' => 'Projects are described as the site\'s defaults say again.']],
                 false,
             ],
-            [$result->url, $result->messages, StrategyOverrides::at($this->directory)->customised(self::SECTION)],
+            [$result->url, $result->messages, (new StrategyOverrides($this->settings))->customised(self::SECTION)],
         );
     }
 
@@ -88,14 +81,14 @@ final class StrategySaveHandlerTest extends TestCase
     }
 
     #[Test]
-    public function sendsTheEditorBackToTheFormWhenTheDataFolderCannotBeWrittenTo(): void
+    public function sendsTheEditorBackToTheFormWhenTheSettingsCannotBeSaved(): void
     {
-        rmdir("{$this->directory}/data");
+        $this->settings = $this->settings(Outcome::Failed);
 
         $result = $this->handle(['section' => self::SECTION, 'version' => '', 'schema' => 'Article']);
 
         static::assertSame(
-            [self::BACK, [['level' => 'danger', 'text' => StrategyNotSaved::notWritable()->getMessage()]]],
+            [self::BACK, [['level' => 'danger', 'text' => StrategyNotSaved::notWritable('Not now.')->getMessage()]]],
             [$result->url, $result->messages],
         );
     }
@@ -143,12 +136,17 @@ final class StrategySaveHandlerTest extends TestCase
         $context = $this->createStub(ExtensionContextInterface::class);
         $context->method('sections')->willReturn($sections);
         $context->method('services')->willReturn($services);
-        $context->method('sitePath')->willReturn($this->directory);
+        $context->method('settings')->willReturn($this->settings);
 
         return (new StrategySaveHandler())->handle(
             (new Psr17Factory())->createServerRequest('POST', '/admin/extension/seo/strategy-save')
                 ->withParsedBody($body),
             $context,
         );
+    }
+
+    private function settings(Outcome $outcome = Outcome::Done): ArraySettings
+    {
+        return new ArraySettings(StrategySection::define(), [], $outcome, 'Not now.');
     }
 }

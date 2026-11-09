@@ -68,6 +68,15 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
+    public function declaresFourSettingsSections(): void
+    {
+        static::assertSame(
+            ['seo', 'seo-verification', 'seo-sitemap', 'seo-strategy'],
+            array_keys(self::registration()->settingsSections),
+        );
+    }
+
+    #[Test]
     public function declaresItsChecks(): void
     {
         static::assertSame(
@@ -101,15 +110,6 @@ final class SeoExtensionTest extends TestCase
     public function declaresTheDashboardMeter(): void
     {
         static::assertSame(DashboardMeter::class, self::registration()->module->meter);
-    }
-
-    #[Test]
-    public function declaresThreeSettingsSections(): void
-    {
-        static::assertSame(
-            ['seo', 'seo-verification', 'seo-sitemap'],
-            array_keys(self::registration()->settingsSections),
-        );
     }
 
     #[Test]

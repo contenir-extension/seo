@@ -47,7 +47,7 @@ final readonly class StrategySaveHandler implements HandlerInterface
 
         $back      = Urls::to(StrategyHandler::NAME, ['section' => $section]);
         $current   = SectionStrategy::of($block, SectionHeadings::of($context)[$section] ?? $section);
-        $overrides = StrategyOverrides::at($context->sitePath());
+        $overrides = StrategyOverrides::of($context);
 
         try {
             if ('1' === ($body['reset'] ?? null)) {

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- The Strategy screen's saved Sections are kept in the site's local settings file, in a hidden `seo-strategy` settings section, instead of `data/seo-strategy.json`. A save the settings can't accept is reported on the form with the reason given. Needs extension API 0.9.5. Anything saved to the old file is not carried over (nothing was released with it).
+
 ## [0.5.2] - 2026-11-07
 
 ### Added

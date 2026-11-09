@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace Contenir\Extension\Seo\Tests\Unit\Strategy;
 
+use Contenir\Extension\Api\Event\Outcome;
 use Contenir\Extension\Api\Section\Element;
+use Contenir\Extension\Seo\Section\StrategySection;
 use Contenir\Extension\Seo\Strategy\StrategyNotSaved;
 use Contenir\Extension\Seo\Strategy\StrategyOverrides;
-use Contenir\Extension\Seo\Tests\Trait\TempDirectoryTrait;
+use Contenir\Extension\Seo\Tests\TestAsset\Settings\ArraySettings;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-use function file_put_contents;
-use function mkdir;
-
 /**
- * What a site saves about how a section is described, kept in its data folder.
+ * What a site saves about how a section is described, kept in the local settings file.
  */
 #[Group('unit')]
 final class StrategyOverridesTest extends TestCase
 {
-    use TempDirectoryTrait;
+    private ?ArraySettings $settings = null;
 
     #[Test]
     public function changesItsVersionWithWhatIsSaved(): void
@@ -35,13 +34,9 @@ final class StrategyOverridesTest extends TestCase
     }
 
     #[Test]
-    public function ignoresAFileThatIsNotWhatItWrote(): void
+    public function ignoresStoredTextThatIsNotWhatItWrote(): void
     {
-        file_put_contents(
-            "{$this->directory}/data/seo-strategy.json",
-            data: '{"library.a.b": 5, "x": "<seo", "ok": "<seo type=\"t\"/>"}',
-        );
-        $overrides = $this->overrides();
+        $overrides = $this->overrides(['sections' => '{"library.a.b": 5, "x": "<seo", "ok": "<seo type=\"t\"/>"}']);
 
         static::assertSame([null, null, 't'], [
             $overrides->for('library.a.b'),
@@ -99,25 +94,15 @@ final class StrategyOverridesTest extends TestCase
     }
 
     #[Test]
-    public function refusesASaveWhereTheDataFolderIsMissing(): void
+    public function refusesASaveTheSettingsDidNotAccept(): void
     {
-        $this->expectExceptionObject(StrategyNotSaved::notWritable());
+        $this->expectExceptionObject(StrategyNotSaved::notWritable('Held by a listener.'));
 
-        (new StrategyOverrides("{$this->directory}/nowhere/seo.json"))->save(
+        $this->overrides([], Outcome::Failed, 'Held by a listener.')->save(
             'library.a.b',
             Element::parse('<seo/>'),
             '',
         );
-    }
-
-    #[Test]
-    public function removesItsFileWhenNothingIsLeftToKeep(): void
-    {
-        $overrides = $this->overrides();
-        $overrides->save('library.a.b', Element::parse('<seo/>'), '');
-        $overrides->reset('library.a.b', $overrides->version());
-
-        static::assertSame('', $overrides->version());
     }
 
     #[Test]
@@ -142,19 +127,32 @@ final class StrategyOverridesTest extends TestCase
         ]);
     }
 
-    protected function setUp(): void
+    #[Test]
+    public function storesNothingWhenNothingIsLeftToKeep(): void
     {
-        $this->makeTempDirectory();
-        mkdir("{$this->directory}/data", recursive: true);
+        $overrides = $this->overrides();
+        $overrides->save('library.a.b', Element::parse('<seo/>'), '');
+        $overrides->reset('library.a.b', $overrides->version());
+
+        static::assertSame('', $overrides->version());
     }
 
-    protected function tearDown(): void
+    #[Test]
+    public function treatsAValueThatIsNotTextAsNothingSaved(): void
     {
-        $this->removeTempDirectory();
+        static::assertSame('', $this->overrides(['sections' => 5])->version());
     }
 
-    private function overrides(): StrategyOverrides
-    {
-        return StrategyOverrides::at($this->directory);
+    /**
+     * @param array<string, mixed> $values
+     */
+    private function overrides(
+        array $values = [],
+        Outcome $outcome = Outcome::Done,
+        string $message = '',
+    ): StrategyOverrides {
+        $this->settings ??= new ArraySettings(StrategySection::define(), $values, $outcome, $message);
+
+        return new StrategyOverrides($this->settings);
     }
 }

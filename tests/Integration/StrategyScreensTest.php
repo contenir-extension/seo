@@ -196,7 +196,7 @@ final class StrategyScreensTest extends TestCase
             ['CreativeWork', false],
             [
                 SeoBlocks::of($this->host->context('seo'))->one(self::PROJECTS)?->element->attribute('schema'),
-                StrategyOverrides::at($this->directory)->customised(self::PROJECTS),
+                StrategyOverrides::of($this->host->context('seo'))->customised(self::PROJECTS),
             ],
         );
     }
@@ -313,6 +313,6 @@ final class StrategyScreensTest extends TestCase
 
     private function version(): string
     {
-        return StrategyOverrides::at($this->directory)->version();
+        return StrategyOverrides::of($this->host->context('seo'))->version();
     }
 }

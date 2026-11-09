@@ -38,7 +38,7 @@ final readonly class StrategyHandler implements HandlerInterface
     public function handle(ServerRequestInterface $request, ExtensionContextInterface $context): HandlerResult
     {
         $titles     = SectionHeadings::of($context);
-        $overrides  = StrategyOverrides::at($context->sitePath());
+        $overrides  = StrategyOverrides::of($context);
         $strategies = [];
         foreach (SeoBlocks::of($context)->all() as $block) {
             $strategies[] = SectionStrategy::of($block, $titles[$block->section] ?? $block->section);

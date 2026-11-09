@@ -23,7 +23,7 @@ final readonly class SeoBlocks
 
     public static function of(ExtensionContextInterface $context): self
     {
-        return new self($context, StrategyOverrides::at($context->sitePath()));
+        return new self($context, StrategyOverrides::of($context));
     }
 
     /**

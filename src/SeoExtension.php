@@ -45,6 +45,7 @@ use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\Section\SitemapSection;
+use Contenir\Extension\Seo\Section\StrategySection;
 use Contenir\Extension\Seo\Section\VerificationSection;
 use Contenir\Extension\Seo\Task\InspectRecords;
 use Override;
@@ -77,6 +78,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->settingsSection(AppearanceSection::define());
         $registry->settingsSection(VerificationSection::define($registry->handle()));
         $registry->settingsSection(SitemapSection::define($registry->handle()));
+        $registry->settingsSection(StrategySection::define());
 
         $registry->sectionBlock(SeoSectionBlock::class);
         $registry->listen(CheckMeta::NAME, RecordPreSave::class, CheckMeta::class, Scope::all());
