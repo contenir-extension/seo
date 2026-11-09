@@ -24,7 +24,6 @@ use Psr\Http\Message\ResponseInterface;
 
 use function array_map;
 use function http_build_query;
-use function implode;
 use function iterator_to_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
@@ -108,7 +107,10 @@ final class SeoModuleTest extends TestCase
     public function aCountLeadsToThoseRecords(): void
     {
         $this->seedRecords();
-        $hrefs = $this->texts($this->page('overview'), '//tbody/tr[1]/td[8]/a/@href');
+        $hrefs = $this->texts(
+            $this->page('overview'),
+            '(//li[@data-section])[1]//a[contains(@href, "role=discoverable")]/@href',
+        );
 
         static::assertSame(
             ['/admin/extension/seo/records?section=library.projects.project&role=discoverable'],
@@ -146,7 +148,10 @@ final class SeoModuleTest extends TestCase
             $this->host->seed(self::PROJECTS, $id, ['title' => "House {$id}", 'description' => self::DESCRIPTION]);
         }
 
-        static::assertSame('5000', $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]')[0] ?? null);
+        static::assertSame(
+            '5000',
+            $this->texts($this->page('overview'), '(//li[@data-section])[1]//span[@data-role="records"]')[0] ?? null,
+        );
     }
 
     #[Test]
@@ -201,7 +206,7 @@ final class SeoModuleTest extends TestCase
         $this->seedRecords();
         $this->host->block('library.press.item', '<seo type="press"/>', ['title']);
 
-        static::assertCount(2, $this->page('overview')->query('//tbody/tr'));
+        static::assertCount(2, $this->page('overview')->query('//li[@data-section]'));
     }
 
     #[Test]
@@ -289,7 +294,7 @@ final class SeoModuleTest extends TestCase
         static::assertSame(
             [['1'], ['Live']],
             [
-                $this->texts($this->page('overview'), '//tbody/tr[1]/td[3]'),
+                $this->texts($this->page('overview'), '(//li[@data-section])[1]//span[@data-role="records"]'),
                 $this->texts($this->page('records'), '//table/tr/td[2]'),
             ],
         );
@@ -360,19 +365,16 @@ final class SeoModuleTest extends TestCase
                 ['Projects',      '3', '0', '2', '1', '1', '1'],
                 ['News articles', '1', '0', '0', '1', '0', '0'],
             ],
-            [
-                $this->texts($xpath, '//tbody/tr[1]/td[position()!=2 and position()!=last()]'),
-                $this->texts($xpath, '//tbody/tr[2]/td[position()!=2 and position()!=last()]'),
-            ],
+            [$this->sectionRow($xpath, 1), $this->sectionRow($xpath, 2)],
         );
     }
 
     #[Test]
-    public function theOverviewExplainsWhatToDoWithTheCounts(): void
+    public function theOverviewKeepsItsHeadingsToTheirNames(): void
     {
-        static::assertStringContainsString(
-            'Ranked by impact, then by how many records are affected.',
-            implode(' ', $this->texts($this->page('overview'), '//p[@class="card__description"]')),
+        static::assertSame(
+            ['Overall rank', 'To do', 'Site setup'],
+            array_map('trim', $this->texts($this->page('overview'), '//h2[@class="card__title"]/text()')),
         );
     }
 
@@ -383,10 +385,10 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             [
-                'Check The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
+                'The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
                     . ' Settings, under Sitemap.',
             ],
-            $this->texts($this->page('overview'), '//dt[not(starts-with(., "Each record"))]/following-sibling::dd'),
+            $this->texts($this->page('overview'), '//li[@data-setup and @data-setup="sitemap"]//p[@data-note]'),
         );
     }
 
@@ -407,11 +409,8 @@ final class SeoModuleTest extends TestCase
     public function theOverviewMarksSoundDefaultsOk(): void
     {
         static::assertSame(
-            ['badge badge--success-muted'],
-            $this->texts(
-                $this->page('overview'),
-                '//dt[.="Sitemap"]/following-sibling::dd/span/@class',
-            ),
+            ['ok'],
+            $this->texts($this->page('overview'), '//li[@data-setup="sitemap"]/@data-status'),
         );
     }
 
@@ -422,7 +421,7 @@ final class SeoModuleTest extends TestCase
         $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
         $this->host->seed(self::PROJECTS, 1, ['title' => 'House']);
 
-        static::assertSame(['Our Projects'], $this->texts($this->page('overview'), '//tbody/tr/td[1]'));
+        static::assertSame(['Our Projects'], $this->texts($this->page('overview'), '//a[@data-role="name"]'));
     }
 
     #[Test]
@@ -437,8 +436,8 @@ final class SeoModuleTest extends TestCase
     public function theOverviewSaysWhenRecordsDoNotYetReachTheSite(): void
     {
         static::assertSame(
-            ['/admin/settings/common/view/category/seo/section/seo'],
-            $this->texts($this->page('overview'), '//dt[starts-with(., "Each record")]/following-sibling::dd/a/@href'),
+            ['/admin/settings/common/update/category/seo/section/seo'],
+            $this->texts($this->page('overview'), '//li[@data-setup="records"]//a/@href'),
         );
     }
 
@@ -450,12 +449,12 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             [
-                'Check The site has no description, share image or organisation logo, so pages without their own have'
+                'The site has no description, share image or organisation logo, so pages without their own have'
                     . ' nothing to fall back on. Add them in Site Settings, under Search Appearance.',
-                'Check The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
+                'The sitemap is off, so search engines only find pages by following links. Turn it on in Site'
                     . ' Settings, under Sitemap.',
             ],
-            $this->texts($this->page('overview'), '//dt[not(starts-with(., "Each record"))]/following-sibling::dd'),
+            $this->texts($this->page('overview'), '//li[@data-setup and @data-setup!="records"]//p[@data-note]'),
         );
     }
 
@@ -510,9 +509,6 @@ final class SeoModuleTest extends TestCase
         return $this->host->handle($request, $grants);
     }
 
-    /**
-     * @param array<string, string|int> $query
-     */
     private function page(string $handler, array $query = []): DOMXPath
     {
         $document = new DOMDocument();
@@ -522,6 +518,31 @@ final class SeoModuleTest extends TestCase
         libxml_clear_errors();
 
         return new DOMXPath($document);
+    }
+
+    /**
+     * @param array<string, string|int> $query
+     */
+    /**
+     * A section's row on the Overview as its name, published and checked counts, then how many records have
+     * a title, description, image and hidden problem.
+     *
+     * @return list<string>
+     */
+    private function sectionRow(DOMXPath $xpath, int $position): array
+    {
+        $row  = "(//li[@data-section])[{$position}]";
+        $role = static fn(string $name): string => "{$row}/@data-n-{$name}";
+
+        return [
+            ...$this->texts($xpath, "{$row}//a[@data-role=\"name\"]"),
+            ...$this->texts($xpath, "{$row}//span[@data-role=\"records\"]"),
+            ...$this->texts($xpath, "{$row}//span[@data-role=\"inspected\"]"),
+            ...$this->texts($xpath, $role('title')),
+            ...$this->texts($xpath, $role('description')),
+            ...$this->texts($xpath, $role('image')),
+            ...$this->texts($xpath, $role('discoverable')),
+        ];
     }
 
     private function seedLong(int $count): void

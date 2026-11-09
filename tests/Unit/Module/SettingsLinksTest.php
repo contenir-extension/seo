@@ -43,7 +43,7 @@ final class SettingsLinksTest extends TestCase
     public function sendsASitemapIssueToTheSitemapScreen(): void
     {
         static::assertSame(
-            '/admin/settings/common/view/category/seo/section/seo-sitemap',
+            '/admin/settings/common/update/category/seo/section/seo-sitemap',
             SettingsLinks::of(IssueKind::SitemapOff),
         );
     }
@@ -52,7 +52,7 @@ final class SettingsLinksTest extends TestCase
     public function sendsASitewideDefaultsIssueToTheSearchAppearanceScreen(): void
     {
         static::assertSame(
-            '/admin/settings/common/view/category/seo/section/seo',
+            '/admin/settings/common/update/category/seo/section/seo',
             SettingsLinks::of(IssueKind::DefaultsNotSet),
         );
     }
@@ -62,5 +62,14 @@ final class SettingsLinksTest extends TestCase
     public function sendsNoRecordIssueToASettingsScreen(IssueKind $kind): void
     {
         static::assertNull(SettingsLinks::of($kind));
+    }
+
+    #[Test]
+    public function turnsAViewAddressIntoItsEditForm(): void
+    {
+        static::assertSame(
+            '/admin/settings/common/update/category/seo/section/seo',
+            SettingsLinks::editing('/admin/settings/common/view/category/seo/section/seo'),
+        );
     }
 }
