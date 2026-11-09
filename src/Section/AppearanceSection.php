@@ -187,12 +187,16 @@ final class AppearanceSection
                         name: self::VISIBILITY,
                         label: 'Search engines',
                         type: FieldType::Select,
-                        description: 'Saved for this environment only. Automatic hides every copy of the site'
-                            . ' that isn\'t at the site URL, such as staging, so it never appears in search'
-                            . ' results.',
+                        description: 'Saved for this environment only. Automatic keeps any copy of the site that'
+                            . ' isn\'t at the Site URL, such as staging, out of search results.',
                         setting: SettingKeys::VISIBILITY,
                         default: Visibility::Automatic->value,
-                        options: Visibility::options(),
+                        options: [
+                            ...Visibility::options(),
+                            Visibility::Automatic->value =>
+                                'Automatic: only the live site (at the Site URL) is shown to'
+                                    . ' search engines',
+                        ],
                         local: true,
                     ),
                     new Field(

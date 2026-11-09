@@ -81,8 +81,8 @@ final class AppearanceSectionTest extends TestCase
                 'organisation_logo' => ['Logo', 'A square logo of at least 112 × 112 pixels, on a plain background.'],
                 'visibility'        => [
                     'Search engines',
-                    'Saved for this environment only. Automatic hides every copy of the site that isn\'t at the site'
-                        . ' URL, such as staging, so it never appears in search results.',
+                    'Saved for this environment only. Automatic keeps any copy of the site that isn\'t at the Site URL,'
+                        . ' such as staging, out of search results.',
                 ],
                 'records'           => [
                     'Use each record\'s search settings',
@@ -161,20 +161,25 @@ final class AppearanceSectionTest extends TestCase
     }
 
     #[Test]
-    public function storesEachValueUnderItsKey(): void
+    public function saysInPlainWordsWhatAutomaticVisibilityDoes(): void
     {
+        $options = [];
+        foreach (AppearanceSection::define()->form->fields as $field) {
+            if ('visibility' !== $field->name) {
+                continue;
+            }
+
+            $options = $field->options;
+        }
+
         static::assertSame(
-            AppearanceSection::KEYS,
-            self::byName(static fn(Field $field): ?string => $field->setting),
+            [
+                'auto' => 'Automatic: only the live site (at the Site URL) is shown to search engines',
+                'hide' => 'Hide this copy from search engines',
+                'show' => 'Show this copy to search engines',
+            ],
+            $options,
         );
-    }
-
-    #[Test]
-    public function theRecordsSwitchIsACheckboxThatStartsOff(): void
-    {
-        $field = self::byName(static fn(Field $field): array => [$field->type, $field->default])['records'];
-
-        static::assertSame(['checkbox', false], $field);
     }
 
     #[Test]
@@ -193,5 +198,22 @@ final class AppearanceSectionTest extends TestCase
                     : [$field->type, $field->attributes]
             ))),
         );
+    }
+
+    #[Test]
+    public function storesEachValueUnderItsKey(): void
+    {
+        static::assertSame(
+            AppearanceSection::KEYS,
+            self::byName(static fn(Field $field): ?string => $field->setting),
+        );
+    }
+
+    #[Test]
+    public function theRecordsSwitchIsACheckboxThatStartsOff(): void
+    {
+        $field = self::byName(static fn(Field $field): array => [$field->type, $field->default])['records'];
+
+        static::assertSame(['checkbox', false], $field);
     }
 }
