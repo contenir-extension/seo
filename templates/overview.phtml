@@ -131,7 +131,7 @@ foreach (['title' => ['title', 'titles'], 'description' => ['description', 'desc
                             <ol class="stack stack--md" style="list-style: none; margin: 0; padding: 0">
 <?php foreach ($todo as $issue): ?>
                                 <li class="cluster cluster--sm" style="align-items: center; justify-content: space-between">
-                                    <span class="cluster cluster--sm" style="flex: 1; min-width: 0; align-items: center">
+                                    <span class="cluster cluster--sm" style="flex: 1; min-width: 0; align-items: flex-start; flex-wrap: nowrap">
                                         <span class="badge badge--<?= $view->escape($badges[$issue->kind->tier()->value]) ?>"><?= $view->escape($issue->kind->tier()->label()) ?></span>
                                         <span style="min-width: 0">
                                             <span class="text--medium text--sm" style="display: block"><?= $view->escape($issue->kind->label()) ?></span>
