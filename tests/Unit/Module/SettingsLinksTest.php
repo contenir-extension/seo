@@ -27,6 +27,25 @@ final class SettingsLinksTest extends TestCase
     }
 
     #[Test]
+    public function leadsEachSettingsNameToItsEditForm(): void
+    {
+        static::assertSame(
+            [
+                '/admin/settings/common/update/category/seo/section/seo',
+                '/admin/settings/common/update/category/seo/section/seo-verification',
+                '/admin/settings/common/update/category/seo/section/seo-sitemap',
+                null,
+            ],
+            [
+                SettingsLinks::edit('appearance'),
+                SettingsLinks::edit('verification'),
+                SettingsLinks::edit('sitemap'),
+                SettingsLinks::edit('nope'),
+            ],
+        );
+    }
+
+    #[Test]
     public function listsTheThreeScreensByTheirAddresses(): void
     {
         static::assertSame(

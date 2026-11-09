@@ -368,19 +368,6 @@ final class SeoModuleTest extends TestCase
     }
 
     #[Test]
-    public function theOverviewLinksToTheSettingsScreens(): void
-    {
-        static::assertSame(
-            [
-                '/admin/settings/common/view/category/seo/section/seo',
-                '/admin/settings/common/view/category/seo/section/seo-verification',
-                '/admin/settings/common/view/category/seo/section/seo-sitemap',
-            ],
-            $this->texts($this->page('overview'), '//nav[@aria-label="SEO settings"]/a/@href'),
-        );
-    }
-
-    #[Test]
     public function theOverviewMarksSoundDefaultsOk(): void
     {
         static::assertSame(

@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
 
 use function array_filter;
 use function array_map;
-use function array_values;
 
 /**
  * The SEO area's section menu: the Overview, Records and Strategy, with the one being drawn current.
@@ -30,23 +29,40 @@ final class SeoMenuTest extends TestCase
         return [
             'the Overview' => ['/admin/extension/seo/overview', 'Overview'],
             'the Records'  => ['/admin/extension/seo/records', 'Records'],
-            'the Strategy' => ['/admin/extension/seo/strategy/', 'Strategy'],
+            'the Sections' => ['/admin/extension/seo/strategy/', 'Sections'],
         ];
     }
 
     #[Test]
-    public function listsTheThreeScreensInOneUntitledGroup(): void
+    public function leadsEachSettingThroughTheSettingsHandler(): void
     {
-        $groups = $this->menuFor('/admin/extension/seo/overview');
+        $items = $this->menuFor('/admin/extension/seo/overview')[1]->items;
 
         static::assertSame(
-            [[null, ['Overview', 'Records', 'Strategy']]],
+            [
+                ['settings', ['screen' => 'appearance']],
+                ['strategy', []],
+                ['settings', ['screen' => 'verification']],
+                ['settings', ['screen' => 'sitemap']],
+            ],
+            array_map(static fn($item): array => [$item->handler, $item->query], $items),
+        );
+    }
+
+    #[Test]
+    public function listsTheScreensThenTheSettings(): void
+    {
+        static::assertSame(
+            [
+                [null, ['Overview', 'Records']],
+                ['Settings', ['Search appearance', 'Sections', 'Site verification', 'Sitemap']],
+            ],
             array_map(
                 static fn($group): array => [
                     $group->title,
                     array_map(static fn($item): string => $item->label, $group->items),
                 ],
-                $groups,
+                $this->menuFor('/admin/extension/seo/overview'),
             ),
         );
     }
@@ -67,10 +83,16 @@ final class SeoMenuTest extends TestCase
     #[DataProvider('screens')]
     public function marksTheScreenBeingDrawnCurrent(string $path, string $label): void
     {
-        $current = array_values(array_map(
-            static fn($item): string => $item->label,
-            array_filter($this->menuFor($path)[0]->items, static fn($item): bool => $item->current),
-        ));
+        $current = [];
+        foreach ($this->menuFor($path) as $group) {
+            foreach ($group->items as $item) {
+                if (! $item->current) {
+                    continue;
+                }
+
+                $current[] = $item->label;
+            }
+        }
 
         static::assertSame([$label], $current);
     }

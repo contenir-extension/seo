@@ -36,6 +36,7 @@ use Contenir\Extension\Seo\Module\PreviewHandler;
 use Contenir\Extension\Seo\Module\RecordsHandler;
 use Contenir\Extension\Seo\Module\RunHandler;
 use Contenir\Extension\Seo\Module\SeoMenu;
+use Contenir\Extension\Seo\Module\SettingsHandler;
 use Contenir\Extension\Seo\Module\StrategyHandler;
 use Contenir\Extension\Seo\Module\StrategySaveHandler;
 use Contenir\Extension\Seo\Module\UndoHandler;
@@ -100,6 +101,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->handler(OverviewHandler::NAME, OverviewHandler::class);
         $registry->handler(RecordsHandler::NAME, RecordsHandler::class);
         $registry->handler(StrategyHandler::NAME, StrategyHandler::class);
+        $registry->handler(SettingsHandler::NAME, SettingsHandler::class);
         $registry->handler(StrategySaveHandler::NAME, StrategySaveHandler::class, Privilege::Update);
         $registry->handler(ExportHandler::NAME, ExportHandler::class);
         $registry->handler(PreviewHandler::NAME, PreviewHandler::class);

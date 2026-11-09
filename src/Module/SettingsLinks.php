@@ -9,6 +9,7 @@ use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SitemapSection;
 use Contenir\Extension\Seo\Section\VerificationSection;
 
+use function array_key_exists;
 use function str_replace;
 
 /**
@@ -20,6 +21,13 @@ final class SettingsLinks
 {
     private const string PATH = '/admin/settings/common/view/category/seo/section/';
 
+    /** The settings screens the SEO menu leads to, by the name its link gives. */
+    public const array SCREENS = [
+        'appearance'   => AppearanceSection::NAME,
+        'verification' => VerificationSection::NAME,
+        'sitemap'      => SitemapSection::NAME,
+    ];
+
     /**
      * @return array<string, string> The section's title, by the address of its screen
      */
@@ -30,6 +38,14 @@ final class SettingsLinks
             self::PATH . VerificationSection::NAME => 'Site Verification',
             self::PATH . SitemapSection::NAME      => 'Sitemap',
         ];
+    }
+
+    /**
+     * The edit form of one of the settings screens, or null for a name that is none of them.
+     */
+    public static function edit(string $screen): ?string
+    {
+        return array_key_exists($screen, self::SCREENS) ? self::editing(self::PATH . self::SCREENS[$screen]) : null;
     }
 
     /**

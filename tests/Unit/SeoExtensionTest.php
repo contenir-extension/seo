@@ -120,6 +120,7 @@ final class SeoExtensionTest extends TestCase
                 'overview',
                 'records',
                 'strategy',
+                'settings',
                 'strategy-save',
                 'records-export',
                 'preview',
