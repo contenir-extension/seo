@@ -157,9 +157,17 @@ describe('AdvancedField', () => {
             input('title').tagName,
             input('description').value,
             input('description').tagName,
+        ]).toEqual(['House', 'INPUT', 'A house.', 'TEXTAREA'])
+    })
+
+    it('lets the meta description grow with its text from one line', () => {
+        mount(draw('{"title":"House","description":"A house."}'))
+
+        expect([
             input('description').rows,
             input('description').className,
-        ]).toEqual(['House', 'INPUT', 'A house.', 'TEXTAREA', 3, 'textarea'])
+            input('description').hasAttribute('data-autogrow'),
+        ]).toEqual([1, 'textarea textarea--grow', true])
     })
 
     it('writes what is typed back as JSON', () => {

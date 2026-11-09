@@ -67,8 +67,9 @@ function control(field, value) {
 
     if (field.multiline) {
         const textarea = document.createElement('textarea')
-        textarea.rows = 3
-        textarea.className = 'textarea'
+        textarea.rows = 1
+        textarea.className = 'textarea textarea--grow'
+        textarea.setAttribute('data-autogrow', '')
         textarea.value = value
         return textarea
     }
