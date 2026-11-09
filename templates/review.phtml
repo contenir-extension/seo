@@ -24,7 +24,6 @@ $switch = static fn(?string $value): string => match ($value) {
     default   => 'Yes',
 };
 ?>
-                <?= $view->tabs() ?>
 
                 <form method="post" action="<?= $view->escape($view->url('records-apply')) ?>" class="card">
                     <?= $view->token() ?>

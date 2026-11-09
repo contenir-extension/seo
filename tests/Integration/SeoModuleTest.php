@@ -92,17 +92,6 @@ final class SeoModuleTest extends TestCase
         ];
     }
 
-    /**
-     * @return array<string, array{string, string}>
-     */
-    public static function tabProvider(): array
-    {
-        return [
-            'the Overview' => ['overview', 'Overview'],
-            'the Records'  => ['records', 'Records'],
-        ];
-    }
-
     #[Test]
     public function aCountLeadsToThoseRecords(): void
     {
@@ -223,21 +212,6 @@ final class SeoModuleTest extends TestCase
         static::assertSame(
             ['No sections described yet'],
             $this->texts($this->page('overview'), '//h3[@class="empty__title"]'),
-        );
-    }
-
-    #[Test]
-    #[DataProvider('tabProvider')]
-    public function eachScreenMarksItsOwnTab(string $handler, string $tab): void
-    {
-        $xpath = $this->page($handler);
-
-        static::assertSame(
-            [['Overview', 'Records'], [$tab]],
-            [
-                $this->texts($xpath, '//a[contains(@href, "/admin/extension/seo/") and (.="Overview" or .="Records")]'),
-                $this->texts($xpath, '//a[@aria-current="page"]'),
-            ],
         );
     }
 

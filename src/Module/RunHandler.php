@@ -43,7 +43,6 @@ final readonly class RunHandler implements HandlerInterface
             'run',
             $run->kind->label(),
             ['run' => $run, 'undoable' => $run->undoable($now), 'now' => $now],
-            Tabs::of(RecordsHandler::NAME),
         );
     }
 }

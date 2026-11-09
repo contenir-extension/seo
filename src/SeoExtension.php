@@ -35,6 +35,7 @@ use Contenir\Extension\Seo\Module\OverviewHandler;
 use Contenir\Extension\Seo\Module\PreviewHandler;
 use Contenir\Extension\Seo\Module\RecordsHandler;
 use Contenir\Extension\Seo\Module\RunHandler;
+use Contenir\Extension\Seo\Module\SeoMenu;
 use Contenir\Extension\Seo\Module\StrategyHandler;
 use Contenir\Extension\Seo\Module\StrategySaveHandler;
 use Contenir\Extension\Seo\Module\UndoHandler;
@@ -89,6 +90,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->diagnostic('records', RecordsCheck::class);
 
         $registry->module(dirname(__DIR__) . '/config/admin.xml');
+        $registry->menu(SeoMenu::class);
         $registry->meter(DashboardMeter::class);
         $registry->task(ApplyChanges::NAME, ApplyChanges::class);
         $registry->task(UndoChanges::NAME, UndoChanges::class);

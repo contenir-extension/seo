@@ -57,7 +57,6 @@ final readonly class StrategyHandler implements HandlerInterface
                 'version'    => $context->sections()->version(),
                 'roles'      => SectionStrategy::ROLES,
             ],
-            Tabs::of(self::NAME),
         );
     }
 }

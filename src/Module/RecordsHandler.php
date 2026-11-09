@@ -107,7 +107,6 @@ final readonly class RecordsHandler implements HandlerInterface
                     array_slice($rows, ($page - 1) * self::PER_PAGE, length: self::PER_PAGE),
                 ),
             ],
-            Tabs::of(self::NAME),
         );
     }
 }
