@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Event\Record\AbstractRecordPreEvent;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Listener\ListenerInterface;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoSettings;
@@ -40,7 +41,7 @@ final readonly class CheckMeta implements ListenerInterface
             return;
         }
 
-        $block = $context->sections()->block($event->section);
+        $block = SeoBlocks::of($context)->one($event->section);
         if (null === $block) {
             return;
         }

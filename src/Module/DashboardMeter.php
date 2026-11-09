@@ -78,7 +78,7 @@ final readonly class DashboardMeter implements MeterInterface
                 continue;
             }
 
-            $segments[] = new MeterSegment($tier->label(), $count, match ($tier) {
+            $segments[] = new MeterSegment("{$tier->label()} impact", $count, match ($tier) {
                 Tier::High   => MeterTone::Poor,
                 Tier::Medium => MeterTone::Warning,
                 Tier::Low    => MeterTone::Neutral,

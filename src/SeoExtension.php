@@ -35,6 +35,8 @@ use Contenir\Extension\Seo\Module\OverviewHandler;
 use Contenir\Extension\Seo\Module\PreviewHandler;
 use Contenir\Extension\Seo\Module\RecordsHandler;
 use Contenir\Extension\Seo\Module\RunHandler;
+use Contenir\Extension\Seo\Module\SeoMenu;
+use Contenir\Extension\Seo\Module\SettingsHandler;
 use Contenir\Extension\Seo\Module\StrategyHandler;
 use Contenir\Extension\Seo\Module\StrategySaveHandler;
 use Contenir\Extension\Seo\Module\UndoHandler;
@@ -43,6 +45,7 @@ use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\AppearanceSection;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\Section\SitemapSection;
+use Contenir\Extension\Seo\Section\StrategySection;
 use Contenir\Extension\Seo\Section\VerificationSection;
 use Contenir\Extension\Seo\Task\InspectRecords;
 use Override;
@@ -75,6 +78,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->settingsSection(AppearanceSection::define());
         $registry->settingsSection(VerificationSection::define($registry->handle()));
         $registry->settingsSection(SitemapSection::define($registry->handle()));
+        $registry->settingsSection(StrategySection::define());
 
         $registry->sectionBlock(SeoSectionBlock::class);
         $registry->listen(CheckMeta::NAME, RecordPreSave::class, CheckMeta::class, Scope::all());
@@ -89,6 +93,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->diagnostic('records', RecordsCheck::class);
 
         $registry->module(dirname(__DIR__) . '/config/admin.xml');
+        $registry->menu(SeoMenu::class);
         $registry->meter(DashboardMeter::class);
         $registry->task(ApplyChanges::NAME, ApplyChanges::class);
         $registry->task(UndoChanges::NAME, UndoChanges::class);
@@ -98,6 +103,7 @@ final class SeoExtension implements ExtensionInterface
         $registry->handler(OverviewHandler::NAME, OverviewHandler::class);
         $registry->handler(RecordsHandler::NAME, RecordsHandler::class);
         $registry->handler(StrategyHandler::NAME, StrategyHandler::class);
+        $registry->handler(SettingsHandler::NAME, SettingsHandler::class);
         $registry->handler(StrategySaveHandler::NAME, StrategySaveHandler::class, Privilege::Update);
         $registry->handler(ExportHandler::NAME, ExportHandler::class);
         $registry->handler(PreviewHandler::NAME, PreviewHandler::class);

@@ -14,6 +14,7 @@ use Contenir\Extension\Api\Queue\TaskQueueInterface;
 use Contenir\Extension\Api\Record\RecordsInterface;
 use Contenir\Extension\Api\Record\RecordUpdatesInterface;
 use Contenir\Extension\Seo\Health\IssueKind;
+use Contenir\Extension\Seo\Health\Tier;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Report\SearchReport;
 use Override;
@@ -101,13 +102,16 @@ final readonly class RecordsHandler implements HandlerInterface
                             static fn(MetaIssue $issue): string => $issue->message,
                             $filter->issuesOf($row->record),
                         ),
+                        array_map(
+                            static fn(MetaIssue $issue): Tier => IssueKind::of($issue)->tier(),
+                            $filter->issuesOf($row->record),
+                        ),
                         $records->describe($row->record->record)?->editUrl,
                         $context->urls()->url($row->record->record),
                     ),
                     array_slice($rows, ($page - 1) * self::PER_PAGE, length: self::PER_PAGE),
                 ),
             ],
-            Tabs::of(self::NAME),
         );
     }
 }

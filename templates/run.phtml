@@ -27,7 +27,6 @@ $results = [
 $shown  = static fn(?string $value): string => null === $value || '' === $value ? '–' : $value;
 $switch = static fn(?string $value): string => null === $value || '0' === $value ? 'No' : 'Yes';
 ?>
-                <?= $view->tabs() ?>
 
                 <div class="card">
                     <div class="card__header card__header--row">

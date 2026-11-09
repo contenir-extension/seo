@@ -39,7 +39,7 @@ final class SectionStrategyTest extends TestCase
     public function aManualSectionDoesNotListContentAmongTheSources(): void
     {
         static::assertSame(
-            'meta_description, description',
+            'Meta description, Description',
             self::strategy('<seo type="page" mode="manual"/>')->sourcesLine('description'),
         );
     }
@@ -48,7 +48,7 @@ final class SectionStrategyTest extends TestCase
     public function aRoleThatTakesContentSaysSoAfterItsSourcesWhereTheSectionIsAutomatic(): void
     {
         static::assertSame(
-            ['meta_description, description, From content', 'From content'],
+            ['Meta description, Description, From content', 'From content'],
             [
                 self::strategy('<seo type="page"/>')->sourcesLine('description'),
                 self::strategy('<seo type="page"/>')->sourcesLine('image'),

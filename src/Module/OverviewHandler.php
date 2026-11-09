@@ -94,7 +94,6 @@ final readonly class OverviewHandler implements HandlerInterface
                 'records'  => (new SeoSettings())->config($context)->records,
                 'checks'   => self::checks($context),
             ],
-            Tabs::of(self::NAME),
         );
     }
 }

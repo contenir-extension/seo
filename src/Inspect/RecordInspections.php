@@ -8,6 +8,7 @@ use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Record\RecordRow;
 use Contenir\Extension\Seo\Report\SectionRows;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Psr\Container\ContainerExceptionInterface;
 
 use function array_merge;
@@ -104,7 +105,7 @@ final readonly class RecordInspections
     {
         $rows  = new SectionRows($this->context->sections());
         $found = [];
-        foreach ($this->context->sections()->blocks() as $block) {
+        foreach (SeoBlocks::of($this->context)->all() as $block) {
             $found[] = $block->linkable ? $rows->of($block) : [];
         }
 

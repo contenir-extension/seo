@@ -7,12 +7,15 @@ namespace Contenir\Extension\Seo\Module;
 use Contenir\Extension\Api\Module\TemplateHelpersInterface;
 use Contenir\Extension\Api\RecordList\RecordList;
 use Contenir\Extension\Api\RecordList\RecordListAction;
+use Contenir\Extension\Api\RecordList\RecordListBadge;
 use Contenir\Extension\Api\RecordList\RecordListCell;
 use Contenir\Extension\Api\RecordList\RecordListLink;
 use Contenir\Extension\Api\RecordList\RecordListPager;
 use Contenir\Extension\Api\RecordList\RecordListRow;
+use Contenir\Extension\Api\RecordList\RecordListTone;
 use Contenir\Extension\Seo\Bulk\FixKind;
 use Contenir\Extension\Seo\Bulk\Selection;
+use Contenir\Extension\Seo\Health\Tier;
 
 use function array_map;
 
@@ -32,6 +35,15 @@ final readonly class RecordsList
         private int $total,
         private bool $bulk,
     ) {}
+
+    private static function tone(Tier $tier): RecordListTone
+    {
+        return match ($tier) {
+            Tier::High   => RecordListTone::Danger,
+            Tier::Medium => RecordListTone::Warning,
+            Tier::Low    => RecordListTone::Info,
+        };
+    }
 
     public function of(TemplateHelpersInterface $view): RecordList
     {
@@ -75,17 +87,28 @@ final readonly class RecordsList
             'eye',
         );
 
+        $edit = null === $line->edit ? [] : [new RecordListLink('Edit', $line->edit, 'pencil')];
+
         return new RecordListRow(
             Selection::key($record->record),
             $record->title,
             [
                 RecordListCell::of($record->title, $line->edit),
                 RecordListCell::of($line->row->section->title, muted: true),
-                new RecordListCell($line->issues),
+                new RecordListCell(
+                    $line->issues,
+                    badges: array_map(
+                        static fn(Tier $tier): RecordListBadge => new RecordListBadge(
+                            $tier->label(),
+                            self::tone($tier),
+                        ),
+                        $line->tiers,
+                    ),
+                ),
             ],
             null === $line->view
-                ? [$preview]
-                : [$preview, new RecordListLink('View the page', $line->view, 'external-link', newTab: true)],
+                ? [...$edit, $preview]
+                : [...$edit, $preview, new RecordListLink('View the page', $line->view, 'external-link', newTab: true)],
         );
     }
 }

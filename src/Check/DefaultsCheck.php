@@ -8,6 +8,7 @@ use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Diagnostic\CheckInterface;
 use Contenir\Extension\Api\Diagnostic\CheckResult;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\SeoSettings;
 use Override;
 
@@ -32,7 +33,7 @@ final readonly class DefaultsCheck implements CheckInterface
     #[Override]
     public function check(ExtensionContextInterface $context): CheckResult
     {
-        if ([] === $context->sections()->blocks()) {
+        if ([] === SeoBlocks::of($context)->all()) {
             return CheckResult::skipped(
                 'No section declares an <seo> block in admin.xml, so no page falls back on these.',
             );

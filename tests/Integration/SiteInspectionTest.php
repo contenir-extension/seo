@@ -119,7 +119,7 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             ['Projects', '1', '0', '0', '1', '0', '0'],
-            $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2 and position()!=last()]'),
+            $this->sectionRow($this->page('overview'), 1),
         );
     }
 
@@ -163,7 +163,7 @@ final class SiteInspectionTest extends TestCase
 
         static::assertSame(
             ['Projects', '1', '0', '0', '1', '0', '0'],
-            $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2 and position()!=last()]'),
+            $this->sectionRow($this->page('overview'), 1),
         );
     }
 
@@ -626,7 +626,7 @@ final class SiteInspectionTest extends TestCase
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
         $this->refresh();
 
-        static::assertSame('2', $this->texts($this->page('overview'), '//tbody/tr[1]/td[4]')[0] ?? null);
+        static::assertSame('2', $this->sectionRow($this->page('overview'), 1)[2] ?? null);
     }
 
     #[Test]
@@ -634,7 +634,7 @@ final class SiteInspectionTest extends TestCase
     {
         $this->seed();
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, self::HEAD));
-        $before = $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2 and position()!=last()]');
+        $before = $this->sectionRow($this->page('overview'), 1);
         $this->refresh();
 
         static::assertSame(
@@ -642,7 +642,7 @@ final class SiteInspectionTest extends TestCase
                 ['Projects', '1', '0', '0', '1', '0', '0'],
                 ['Projects', '1', '1', '0', '0', '0', '0'],
             ],
-            [$before, $this->texts($this->page('overview'), '//tbody/tr[1]/td[position()!=2 and position()!=last()]')],
+            [$before, $this->sectionRow($this->page('overview'), 1)],
         );
     }
 
@@ -791,9 +791,6 @@ final class SiteInspectionTest extends TestCase
         );
     }
 
-    /**
-     * @param array<string, string> $query
-     */
     private function page(string $handler, array $query = []): DOMXPath
     {
         $document = new DOMDocument();
@@ -857,6 +854,31 @@ final class SiteInspectionTest extends TestCase
     private function refresh(int $maxAge = RecordInspections::MAX_AGE): Refreshed
     {
         return (new RecordInspections($this->host->context('seo')))->refresh(50, $maxAge);
+    }
+
+    /**
+     * @param array<string, string> $query
+     */
+    /**
+     * A section's row on the Overview as its name, published and checked counts, then how many records have
+     * a title, description, image and hidden problem.
+     *
+     * @return list<string>
+     */
+    private function sectionRow(DOMXPath $xpath, int $position): array
+    {
+        $row  = "(//li[@data-section])[{$position}]";
+        $role = static fn(string $name): string => "{$row}/@data-n-{$name}";
+
+        return [
+            ...$this->texts($xpath, "{$row}//a[@data-role=\"name\"]"),
+            ...$this->texts($xpath, "{$row}//span[@data-role=\"records\"]"),
+            ...$this->texts($xpath, "{$row}//span[@data-role=\"inspected\"]"),
+            ...$this->texts($xpath, $role('title')),
+            ...$this->texts($xpath, $role('description')),
+            ...$this->texts($xpath, $role('image')),
+            ...$this->texts($xpath, $role('discoverable')),
+        ];
     }
 
     private function seed(int $count = 1): void

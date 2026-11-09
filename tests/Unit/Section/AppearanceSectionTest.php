@@ -81,8 +81,8 @@ final class AppearanceSectionTest extends TestCase
                 'organisation_logo' => ['Logo', 'A square logo of at least 112 × 112 pixels, on a plain background.'],
                 'visibility'        => [
                     'Search engines',
-                    'Saved for this environment only. Automatic hides every copy of the site that isn\'t at the site'
-                        . ' URL, such as staging, so it never appears in search results.',
+                    'Saved for this environment only. Automatic keeps any copy of the site that isn\'t at the Site URL,'
+                        . ' such as staging, out of search results.',
                 ],
                 'records'           => [
                     'Use each record\'s search settings',
@@ -100,7 +100,7 @@ final class AppearanceSectionTest extends TestCase
     {
         static::assertSame(
             [
-                ['titles', 'Titles', [['site_name'], ['title_separator', 'title_position'], ['home_title']]],
+                ['titles', 'Titles', [['site_name', 'title_separator', 'title_position'], ['home_title']]],
                 ['defaults', 'Defaults', [['description'], ['share_image'], ['share_image_alt'], ['robots']]],
                 ['organisation', 'Organisation', [['organisation_name'], ['organisation_type'], ['organisation_logo']]],
                 ['environment', 'This environment', [['visibility'], ['records']]],
@@ -161,6 +161,46 @@ final class AppearanceSectionTest extends TestCase
     }
 
     #[Test]
+    public function saysInPlainWordsWhatAutomaticVisibilityDoes(): void
+    {
+        $options = [];
+        foreach (AppearanceSection::define()->form->fields as $field) {
+            if ('visibility' !== $field->name) {
+                continue;
+            }
+
+            $options = $field->options;
+        }
+
+        static::assertSame(
+            [
+                'auto' => 'Automatic: only the live site (at the Site URL) is shown to search engines',
+                'hide' => 'Hide this copy from search engines',
+                'show' => 'Show this copy to search engines',
+            ],
+            $options,
+        );
+    }
+
+    #[Test]
+    public function setsFieldAttributesWhereTheyAreNeeded(): void
+    {
+        static::assertSame(
+            [
+                'site_name'         => ['text', ['span' => 2]],
+                'description'       => ['textarea', ['rows' => 3, 'maxlength' => 300]],
+                'share_image'       => ['fileimage', ['path' => '/asset/img/seo']],
+                'organisation_logo' => ['fileimage', ['path' => '/asset/img/seo']],
+            ],
+            array_filter(self::byName(static fn(Field $field): ?array => (
+                [] === $field->attributes
+                    ? null
+                    : [$field->type, $field->attributes]
+            ))),
+        );
+    }
+
+    #[Test]
     public function storesEachValueUnderItsKey(): void
     {
         static::assertSame(
@@ -175,22 +215,5 @@ final class AppearanceSectionTest extends TestCase
         $field = self::byName(static fn(Field $field): array => [$field->type, $field->default])['records'];
 
         static::assertSame(['checkbox', false], $field);
-    }
-
-    #[Test]
-    public function uploadsImagesToTheirOwnFolder(): void
-    {
-        static::assertSame(
-            [
-                'description'       => ['textarea', ['rows' => 3, 'maxlength' => 300]],
-                'share_image'       => ['fileimage', ['path' => '/asset/img/seo']],
-                'organisation_logo' => ['fileimage', ['path' => '/asset/img/seo']],
-            ],
-            array_filter(self::byName(static fn(Field $field): ?array => (
-                [] === $field->attributes
-                    ? null
-                    : [$field->type, $field->attributes]
-            ))),
-        );
     }
 }

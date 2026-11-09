@@ -8,6 +8,7 @@ use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Diagnostic\CheckInterface;
 use Contenir\Extension\Api\Diagnostic\CheckResult;
 use Contenir\Extension\Api\Section\SectionBlock;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Seo\Sections\LinkedValue;
 use Override;
@@ -55,7 +56,7 @@ final readonly class SectionsCheck implements CheckInterface
     #[Override]
     public function check(ExtensionContextInterface $context): CheckResult
     {
-        $blocks   = $context->sections()->blocks();
+        $blocks   = SeoBlocks::of($context)->all();
         $problems = [];
         foreach ($blocks as $block) {
             $problems[] = self::problems($block);

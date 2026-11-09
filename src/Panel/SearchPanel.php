@@ -19,6 +19,7 @@ use Contenir\Extension\Seo\Inspect\CurrentInspection;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Listener\MetaValues;
 use Contenir\Extension\Seo\Report\SearchReport;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\SeoSettings;
 use Contenir\Seo\Sections\SeoBlock;
@@ -93,7 +94,7 @@ final readonly class SearchPanel implements RecordPanelInterface
     #[Override]
     public function panel(RecordView $record, ExtensionContextInterface $context): ?Panel
     {
-        $block = $context->sections()->block($record->section);
+        $block = SeoBlocks::of($context)->one($record->section);
         if (null === $block) {
             return null;
         }

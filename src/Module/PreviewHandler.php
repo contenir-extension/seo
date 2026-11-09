@@ -14,6 +14,7 @@ use Contenir\Extension\Api\Record\RecordRow;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Inspect\SiteInspector;
 use Contenir\Extension\Seo\Listener\MetaValues;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Override;
@@ -59,7 +60,7 @@ final readonly class PreviewHandler implements HandlerInterface
     {
         $query   = $request->getQueryParams();
         $section = self::text($query, 'section');
-        $block   = null === $section ? null : $context->sections()->block($section);
+        $block   = null === $section ? null : SeoBlocks::of($context)->one($section);
         $row     = null === $block ? null : self::row($context, $block, self::text($query, 'id'));
         if (null === $block || null === $row) {
             return HandlerResult::back()->withMessage('warning', 'That record can\'t be previewed.');

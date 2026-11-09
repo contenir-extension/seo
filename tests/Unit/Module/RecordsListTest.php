@@ -6,10 +6,13 @@ namespace Contenir\Extension\Seo\Tests\Unit\Module;
 
 use Contenir\Extension\Api\Handle;
 use Contenir\Extension\Api\RecordList\RecordList;
+use Contenir\Extension\Api\RecordList\RecordListBadge;
 use Contenir\Extension\Api\RecordList\RecordListLink;
+use Contenir\Extension\Api\RecordList\RecordListTone;
 use Contenir\Extension\Api\Testing\InMemoryTemplates;
 use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Bulk\FixKind;
+use Contenir\Extension\Seo\Health\Tier;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Module\RecordFilter;
 use Contenir\Extension\Seo\Module\RecordLine;
@@ -39,10 +42,27 @@ final class RecordsListTest extends TestCase
             'House',
             [new MetaIssue('title', 'title', 'Add a title.', missing: true)],
         );
-        $line = new RecordLine(new ReportRow($section, $record), ['Add a title.'], '/admin/records/7', $view);
+        $line = new RecordLine(
+            new ReportRow($section, $record),
+            ['Add a title.'],
+            [Tier::High],
+            '/admin/records/7',
+            $view,
+        );
 
         return (new RecordsList($filter ?? RecordFilter::from([], []), [$line], $page, $total, $bulk))->of(
             new InMemoryTemplates(new Handle('seo'), '/nowhere'),
+        );
+    }
+
+    #[Test]
+    public function badgesEachIssueWithHowMuchItMatters(): void
+    {
+        $badges = self::list(view: null)->rows[0]->cells[2]->badges;
+
+        static::assertSame(
+            [['High', RecordListTone::Danger]],
+            array_map(static fn(?RecordListBadge $badge): array => [$badge?->label, $badge?->tone], $badges),
         );
     }
 
@@ -62,12 +82,20 @@ final class RecordsListTest extends TestCase
     }
 
     #[Test]
+    public function leadsFirstToWhereTheRecordIsEdited(): void
+    {
+        $edit = self::list(view: null)->rows[0]->actions[0];
+
+        static::assertSame(['Edit', '/admin/records/7', 'pencil'], [$edit->label, $edit->url, $edit->icon]);
+    }
+
+    #[Test]
     public function leadsOnlyToThePreviewWhereTheRecordHasNoPage(): void
     {
         $links = self::list(view: null)->rows[0]->actions;
 
         static::assertSame(
-            ['Preview in search'],
+            ['Edit', 'Preview in search'],
             array_map(static fn(RecordListLink $link): string => $link->label, $links),
         );
     }
@@ -79,6 +107,7 @@ final class RecordsListTest extends TestCase
 
         static::assertSame(
             [
+                ['Edit',              false],
                 ['Preview in search', false],
                 ['View the page',     true],
             ],
@@ -91,7 +120,7 @@ final class RecordsListTest extends TestCase
     {
         static::assertSame(
             '/admin/extension/seo/preview?section=library.projects.project&id=7',
-            self::list(view: null)->rows[0]->actions[0]->url,
+            self::list(view: null)->rows[0]->actions[1]->url,
         );
     }
 

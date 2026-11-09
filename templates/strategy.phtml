@@ -8,29 +8,26 @@
  *     editing: ?\Contenir\Extension\Seo\Strategy\SectionStrategy,
  *     saves: bool,
  *     version: string,
+ *     customised: list<string>,
  *     roles: list<string>,
  * } $values
  * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
  */
+
+use Contenir\Extension\Seo\Strategy\FieldLabel;
 
 $labels  = ['title' => 'Title', 'description' => 'Description', 'image' => 'Image'];
 $editing = $values['editing'];
 ?>
                 <div class="pageheader pageheader--row pageheader--sticky">
                     <div class="pageheader__content">
-                        <h1 class="pageheader__title">SEO</h1>
+                        <h1 class="pageheader__title">Sections</h1>
                     </div>
                 </div>
-                <?= $view->tabs() ?>
 
                 <div class="stack stack--lg">
-<?php if (! $values['saves']): ?>
-                    <div class="alert alert--info" role="note">
-                        <p class="alert__text">This site saves its configuration where it is developed, not here. To change how a section is described, change its &lt;seo&gt; block in admin.xml and deploy.</p>
-                    </div>
-<?php endif ?>
 <?php if (null !== $editing): ?>
-<?php $off = $values['saves'] ? '' : ' disabled'; ?>
+<?php $off = ''; ?>
                     <form class="form form--record" method="post" action="<?= $view->escape($view->url('strategy-save')) ?>">
                         <?= $view->token() ?>
                         <input type="hidden" name="section" value="<?= $view->escape($editing->section) ?>">
@@ -39,6 +36,20 @@ $editing = $values['editing'];
                             <h2 class="card__header form__card-title" id="strategy-type"><?= $view->escape($editing->title) ?></h2>
                             <div class="card__content form__card-body">
                                 <div class="form__row-group">
+                                    <div class="form__row">
+                                        <div class="form__col">
+                                            <div class="form__field">
+                                                <span class="form__label" id="strategy-mode-label">What is taken from content</span>
+                                                <div class="radio-group" role="radiogroup" aria-labelledby="strategy-mode-label">
+                                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="automatic"<?= $editing->automatic ? ' checked' : '' ?><?= $off ?>><span class="radio-group__label">Automatic</span></label>
+                                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="manual"<?= $editing->automatic ? '' : ' checked' ?><?= $off ?>><span class="radio-group__label">Manual</span></label>
+                                                </div>
+                                                <p class="form__description">Automatic: the page uses it, and the record shows "Taken from content" with nothing to fix. Manual: it is only a suggestion, and the record keeps its warning until you use it as the record's own.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <details class="stack stack--sm">
+                                        <summary class="text--sm text--muted">Advanced</summary>
                                     <div class="form__row">
                                         <div class="form__col">
                                             <div class="form__field">
@@ -53,18 +64,7 @@ $editing = $values['editing'];
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form__row">
-                                        <div class="form__col">
-                                            <div class="form__field">
-                                                <span class="form__label" id="strategy-mode-label">What is taken from content</span>
-                                                <div class="radio-group" role="radiogroup" aria-labelledby="strategy-mode-label">
-                                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="automatic"<?= $editing->automatic ? ' checked' : '' ?><?= $off ?>><span class="radio-group__label">Automatic</span></label>
-                                                    <label class="radio-group__item"><input type="radio" class="radio-group__input" name="mode" value="manual"<?= $editing->automatic ? '' : ' checked' ?><?= $off ?>><span class="radio-group__label">Manual</span></label>
-                                                </div>
-                                                <p class="form__description">Automatic: the page uses it, and the record shows "Taken from content" with nothing to fix. Manual: it is only a suggestion, and the record keeps its warning until you use it as the record's own.</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    </details>
                                 </div>
                             </div>
                         </fieldset>
@@ -82,7 +82,7 @@ $editing = $values['editing'];
                                                 <select class="select" id="strategy-<?= $view->escape($role) ?>-<?= $slot ?>" name="sources[<?= $view->escape($role) ?>][]"<?= $off ?>>
                                                     <option value="">–</option>
 <?php foreach ($options as $field): ?>
-                                                    <option value="<?= $view->escape($field) ?>"<?= ($chosen[$slot] ?? null) === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
+                                                    <option value="<?= $view->escape($field) ?>"<?= ($chosen[$slot] ?? null) === $field ? ' selected' : '' ?>><?= $view->escape(FieldLabel::of($field)) ?></option>
 <?php endforeach ?>
                                                 </select>
                                             </div>
@@ -107,7 +107,7 @@ $editing = $values['editing'];
                                                 <select class="select" id="strategy-alt" name="alt"<?= $off ?>>
                                                     <option value="">The title</option>
 <?php foreach (array_values(array_unique([...$editing->fields, ...('' === $editing->altSource() ? [] : [$editing->altSource()])])) as $field): ?>
-                                                    <option value="<?= $view->escape($field) ?>"<?= $editing->altSource() === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
+                                                    <option value="<?= $view->escape($field) ?>"<?= $editing->altSource() === $field ? ' selected' : '' ?>><?= $view->escape(FieldLabel::of($field)) ?></option>
 <?php endforeach ?>
                                                 </select>
                                             </div>
@@ -119,10 +119,11 @@ $editing = $values['editing'];
                         </fieldset>
 <?php endforeach ?>
                         <fieldset class="form__actions form__actions--bar">
-                            <a class="btn btn--outline" href="<?= $view->escape($view->url('strategy')) ?>"><?= $view->icon('x') ?><span class="btn__label"><?= $values['saves'] ? 'Cancel' : 'Back' ?></span></a>
-<?php if ($values['saves']): ?>
-                            <button type="submit" class="btn btn--primary">Save</button>
+                            <a class="btn btn--outline" href="<?= $view->escape($view->url('strategy')) ?>"><?= $view->icon('x') ?><span class="btn__label">Cancel</span></a>
+<?php if (in_array($editing->section, $values['customised'], true)): ?>
+                            <button type="submit" class="btn btn--ghost" name="reset" value="1">Use the site's defaults</button>
 <?php endif ?>
+                            <button type="submit" class="btn btn--primary">Save</button>
                         </fieldset>
                     </form>
 <?php else: ?>
@@ -148,13 +149,13 @@ $editing = $values['editing'];
                                 <tbody class="table__body">
 <?php foreach ($values['strategies'] as $strategy): ?>
                                     <tr class="table__row">
-                                        <td class="table__cell"><a class="text--medium" href="<?= $view->escape($view->url('strategy', ['section' => $strategy->section])) ?>"><?= $view->escape($strategy->title) ?></a></td>
-                                        <td class="table__cell"><?= '' === $strategy->schema ? '<span class="text--muted">–</span>' : $view->escape($strategy->schema) ?></td>
+                                        <td class="table__cell"><a class="text--medium" href="<?= $view->escape($view->url('strategy', ['section' => $strategy->section])) ?>"><?= $view->escape($strategy->title) ?></a><?php if (in_array($strategy->section, $values['customised'], true)): ?> <span class="badge badge--secondary">Changed here</span><?php endif ?></td>
+                                        <td class="table__cell"><?= '' === $strategy->schema ? '<span class="text--muted">–</span>' : $view->escape(FieldLabel::of($strategy->schema)) ?></td>
 <?php foreach ($values['roles'] as $role): ?>
                                         <td class="table__cell"><?= $view->escape($strategy->sourcesLine($role)) ?></td>
 <?php endforeach ?>
                                         <td class="table__cell"><?= $strategy->automatic ? 'Automatic' : 'Manual' ?></td>
-                                        <td class="table__cell"><a class="btn btn--outline btn--sm" href="<?= $view->escape($view->url('strategy', ['section' => $strategy->section])) ?>"><?= $values['saves'] ? 'Change' : 'View' ?></a></td>
+                                        <td class="table__cell"><a class="btn btn--outline btn--sm" href="<?= $view->escape($view->url('strategy', ['section' => $strategy->section])) ?>">Change</a></td>
                                     </tr>
 <?php endforeach ?>
                                 </tbody>

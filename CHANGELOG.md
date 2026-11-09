@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-11-09
+
+Needs `contenir/contenir-extension-api` 0.9.5.
+
+### Added
+
+- Records lists each issue with a coloured High, Medium or Low badge, and Edit comes first among a row's actions. Needs a host that draws record list badges (extension API 0.9.5); on an older host the lines show plain.
+- A Settings group in the SEO menu leading to Search appearance, Site verification, Sitemap and Sections.
+- A site can change how a section is described on any environment, with the schema type under Advanced and a "Use the site's defaults" way back. A section changed this way is marked "Changed here".
+
+### Changed
+
+- The Overview is redone: the overall rank across the top with each section beneath, a To do list with a Fix button beside each item that opens its edit form, and Site setup. The dashboard meter's legend names each count by impact, so "Low 2" reads as two low-impact issues.
+- Overview, Records and Sections are in the SEO section menu in place of the tab row, and Strategy is called Sections, with its columns and schema types in plain words.
+- Site name, Separator and Site name position share one row. The meta description grows with its text. Automatic is described plainly as showing only the live site to search engines.
+- The Sections a site has changed are kept in its local settings file, in a hidden `seo-strategy` settings section, instead of `data/seo-strategy.json`. A save the settings can't accept is reported on the form with the reason given. Anything saved to the old file is not carried over (nothing was released with it).
+
 ## [0.5.2] - 2026-11-07
 
 ### Added

@@ -65,7 +65,6 @@ final readonly class FixHandler implements HandlerInterface
             'review',
             $kind->label(),
             ['kind' => $kind, 'changes' => $changes, 'count' => count($changes)],
-            Tabs::of(RecordsHandler::NAME),
         );
     }
 }

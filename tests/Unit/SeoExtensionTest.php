@@ -68,6 +68,15 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
+    public function declaresFourSettingsSections(): void
+    {
+        static::assertSame(
+            ['seo', 'seo-verification', 'seo-sitemap', 'seo-strategy'],
+            array_keys(self::registration()->settingsSections),
+        );
+    }
+
+    #[Test]
     public function declaresItsChecks(): void
     {
         static::assertSame(
@@ -104,15 +113,6 @@ final class SeoExtensionTest extends TestCase
     }
 
     #[Test]
-    public function declaresThreeSettingsSections(): void
-    {
-        static::assertSame(
-            ['seo', 'seo-verification', 'seo-sitemap'],
-            array_keys(self::registration()->settingsSections),
-        );
-    }
-
-    #[Test]
     public function drawsItsAreaFromTheOverviewRecordsStrategyAndExportHandlers(): void
     {
         static::assertSame(
@@ -120,6 +120,7 @@ final class SeoExtensionTest extends TestCase
                 'overview',
                 'records',
                 'strategy',
+                'settings',
                 'strategy-save',
                 'records-export',
                 'preview',

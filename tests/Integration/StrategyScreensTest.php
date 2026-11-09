@@ -9,7 +9,9 @@ use Contenir\Extension\Api\Record\LinkableSection;
 use Contenir\Extension\Api\Testing\FrozenClock;
 use Contenir\Extension\Api\Testing\InMemoryHost;
 use Contenir\Extension\Api\Testing\MapUrlResolver;
+use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\SeoExtension;
+use Contenir\Extension\Seo\Strategy\StrategyOverrides;
 use Contenir\Extension\Seo\Tests\Trait\TempDirectoryTrait;
 use DateTimeImmutable;
 use DOMDocument;
@@ -41,6 +43,28 @@ final class StrategyScreensTest extends TestCase
     private InMemoryHost $host;
 
     #[Test]
+    public function keepsTheSchemaTypeUnderAdvanced(): void
+    {
+        static::assertSame(
+            ['Advanced'],
+            $this->texts($this->page($this->get(['section' => self::PROJECTS])), '//details/summary'),
+        );
+    }
+
+    #[Test]
+    public function leavesTheSitesOwnAdminXmlAsItWas(): void
+    {
+        $this->post(['section' => self::PROJECTS, 'version' => $this->version(), 'schema' => 'Article']);
+
+        static::assertSame(
+            'CreativeWork',
+            $this
+                ->host->context('seo')->sections()->block(self::PROJECTS)
+                ?->element->attribute('schema'),
+        );
+    }
+
+    #[Test]
     public function listsEachSectionWithItsSchemaTypeAndWhereItsRolesAreRead(): void
     {
         $page = $this->page($this->get());
@@ -48,13 +72,42 @@ final class StrategyScreensTest extends TestCase
         static::assertSame(
             [
                 'Projects',
-                'CreativeWork',
-                'meta_title, title',
-                'meta_description, description, From content',
+                'Creative work',
+                'Meta title, Title',
+                'Meta description, Description, From content',
                 'From content',
                 'Automatic',
             ],
             array_slice($this->texts($page, '//tbody/tr[1]/td'), offset: 0, length: 6),
+        );
+    }
+
+    #[Test]
+    public function marksASectionChangedHereOnceItIs(): void
+    {
+        $this->post(['section' => self::PROJECTS, 'version' => $this->version(), 'schema' => 'Article']);
+
+        static::assertSame(
+            ['Changed here'],
+            $this->texts($this->page($this->get()), '//span[@class="badge badge--secondary"]'),
+        );
+    }
+
+    #[Test]
+    public function marksNoSectionChangedHereBeforeAnyIs(): void
+    {
+        static::assertSame([], $this->texts($this->page($this->get()), '//span[@class="badge badge--secondary"]'));
+    }
+
+    #[Test]
+    public function offersTheSitesDefaultsOnlyForASectionThatWasChanged(): void
+    {
+        $before = $this->texts($this->page($this->get(['section' => self::PROJECTS])), '//button[@name="reset"]');
+        $this->post(['section' => self::PROJECTS, 'version' => $this->version(), 'schema' => 'Article']);
+
+        static::assertSame(
+            [[], ["Use the site's defaults"]],
+            [$before, $this->texts($this->page($this->get(['section' => self::PROJECTS])), '//button[@name="reset"]')],
         );
     }
 
@@ -134,6 +187,21 @@ final class StrategyScreensTest extends TestCase
     }
 
     #[Test]
+    public function returnsASectionToTheSitesDefaultsOnRequest(): void
+    {
+        $this->post(['section' => self::PROJECTS, 'version' => $this->version(), 'schema' => 'Article']);
+        $this->post(['section' => self::PROJECTS, 'version' => $this->version(), 'reset' => '1']);
+
+        static::assertSame(
+            ['CreativeWork', false],
+            [
+                SeoBlocks::of($this->host->context('seo'))->one(self::PROJECTS)?->element->attribute('schema'),
+                StrategyOverrides::of($this->host->context('seo'))->customised(self::PROJECTS),
+            ],
+        );
+    }
+
+    #[Test]
     public function savesWhatTheFormSaysIntoTheSectionsBlock(): void
     {
         $response = $this->post([
@@ -144,7 +212,7 @@ final class StrategyScreensTest extends TestCase
             'sources' => ['title' => ['title'], 'description' => ['summary', 'description'], 'image' => ['image_lg']],
             'content' => ['description' => '1'],
         ]);
-        $block = $this->host->context('seo')->sections()->block(self::PROJECTS)?->element;
+        $block = SeoBlocks::of($this->host->context('seo'))->one(self::PROJECTS)?->element;
 
         static::assertSame(
             [302, 'Article', 'manual', ['title', 'summary, description', 'image_lg']],
@@ -245,6 +313,6 @@ final class StrategyScreensTest extends TestCase
 
     private function version(): string
     {
-        return $this->host->context('seo')->sections()->version();
+        return StrategyOverrides::of($this->host->context('seo'))->version();
     }
 }
