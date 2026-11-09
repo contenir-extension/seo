@@ -13,6 +13,8 @@
  * @var \Contenir\Extension\Api\Module\TemplateHelpersInterface $view
  */
 
+use Contenir\Extension\Seo\Strategy\FieldLabel;
+
 $labels  = ['title' => 'Title', 'description' => 'Description', 'image' => 'Image'];
 $editing = $values['editing'];
 ?>
@@ -81,7 +83,7 @@ $editing = $values['editing'];
                                                 <select class="select" id="strategy-<?= $view->escape($role) ?>-<?= $slot ?>" name="sources[<?= $view->escape($role) ?>][]"<?= $off ?>>
                                                     <option value="">–</option>
 <?php foreach ($options as $field): ?>
-                                                    <option value="<?= $view->escape($field) ?>"<?= ($chosen[$slot] ?? null) === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
+                                                    <option value="<?= $view->escape($field) ?>"<?= ($chosen[$slot] ?? null) === $field ? ' selected' : '' ?>><?= $view->escape(FieldLabel::of($field)) ?></option>
 <?php endforeach ?>
                                                 </select>
                                             </div>
@@ -106,7 +108,7 @@ $editing = $values['editing'];
                                                 <select class="select" id="strategy-alt" name="alt"<?= $off ?>>
                                                     <option value="">The title</option>
 <?php foreach (array_values(array_unique([...$editing->fields, ...('' === $editing->altSource() ? [] : [$editing->altSource()])])) as $field): ?>
-                                                    <option value="<?= $view->escape($field) ?>"<?= $editing->altSource() === $field ? ' selected' : '' ?>><?= $view->escape($field) ?></option>
+                                                    <option value="<?= $view->escape($field) ?>"<?= $editing->altSource() === $field ? ' selected' : '' ?>><?= $view->escape(FieldLabel::of($field)) ?></option>
 <?php endforeach ?>
                                                 </select>
                                             </div>
@@ -148,7 +150,7 @@ $editing = $values['editing'];
 <?php foreach ($values['strategies'] as $strategy): ?>
                                     <tr class="table__row">
                                         <td class="table__cell"><a class="text--medium" href="<?= $view->escape($view->url('strategy', ['section' => $strategy->section])) ?>"><?= $view->escape($strategy->title) ?></a></td>
-                                        <td class="table__cell"><?= '' === $strategy->schema ? '<span class="text--muted">–</span>' : $view->escape($strategy->schema) ?></td>
+                                        <td class="table__cell"><?= '' === $strategy->schema ? '<span class="text--muted">–</span>' : $view->escape(FieldLabel::of($strategy->schema)) ?></td>
 <?php foreach ($values['roles'] as $role): ?>
                                         <td class="table__cell"><?= $view->escape($strategy->sourcesLine($role)) ?></td>
 <?php endforeach ?>

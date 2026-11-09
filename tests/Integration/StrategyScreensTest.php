@@ -48,9 +48,9 @@ final class StrategyScreensTest extends TestCase
         static::assertSame(
             [
                 'Projects',
-                'CreativeWork',
-                'meta_title, title',
-                'meta_description, description, From content',
+                'Creative work',
+                'Meta title, Title',
+                'Meta description, Description, From content',
                 'From content',
                 'Automatic',
             ],

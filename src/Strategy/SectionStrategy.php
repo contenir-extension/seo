@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Strategy;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 
+use function array_map;
 use function implode;
 use function in_array;
 
@@ -62,7 +63,7 @@ final readonly class SectionStrategy
      */
     public function sourcesLine(string $role): string
     {
-        $parts = $this->sourcesOf($role);
+        $parts = array_map(FieldLabel::of(...), $this->sourcesOf($role));
         if ($this->automatic && $this->takesContent($role)) {
             $parts[] = 'From content';
         }
