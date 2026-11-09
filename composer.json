@@ -17,7 +17,7 @@
     },
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
-        "contenir/contenir-extension-api": "^0.9.4",
+        "contenir/contenir-extension-api": "^0.9.5",
         "contenir/contenir-seo": "^0.9"
     },
     "require-dev": {
