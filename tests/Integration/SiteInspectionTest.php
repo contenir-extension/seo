@@ -354,6 +354,7 @@ final class SiteInspectionTest extends TestCase
     #[Test]
     public function aSmallSourceImageIsReported(): void
     {
+        $this->keepAShareImage();
         $this->seed();
         mkdir("{$this->directory}/public/asset", recursive: true);
         file_put_contents("{$this->directory}/public/asset/a.png", (string) base64_decode(self::PIXEL, strict: true));
@@ -479,6 +480,7 @@ final class SiteInspectionTest extends TestCase
     #[Test]
     public function thePanelListsWhatTheSiteLeftOut(): void
     {
+        $this->keepAShareImage();
         $this->seed();
         $this->host->answerSite(SiteInspector::ENDPOINT, new SiteAnswer(200, '{"status":200,"title":"House | Site"}'));
         $this->refresh();
@@ -788,6 +790,18 @@ final class SiteInspectionTest extends TestCase
             (new Psr17Factory())->createServerRequest('GET', "/admin/extension/seo/{$handler}")
                 ->withQueryParams($query),
             $grants,
+        );
+    }
+
+    /**
+     * Gives the section a share image column, so its records are asked for an image.
+     */
+    private function keepAShareImage(): void
+    {
+        $this->host->block(
+            self::SECTION,
+            '<seo type="project"><image>image_lg</image></seo>',
+            ['title', 'meta_title', 'meta_description', 'description', 'image_lg'],
         );
     }
 

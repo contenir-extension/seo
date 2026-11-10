@@ -23,6 +23,8 @@ final readonly class Inspection
      * @param int $at When it was asked, as a Unix timestamp
      * @param int|null $imageWidth The width of the file its share image was made from, when known
      * @param int|null $imageHeight The height of that file, when known
+     * @param string|null $robots What the page's robots meta tag held
+     * @param string|null $robotsHeader What its X-Robots-Tag header held
      *
      * @mago-expect lint:excessive-parameter-list One value per thing kept of the site's answer.
      */
@@ -34,6 +36,8 @@ final readonly class Inspection
         public ?string $image,
         public ?int $imageWidth = null,
         public ?int $imageHeight = null,
+        public ?string $robots = null,
+        public ?string $robotsHeader = null,
     ) {}
 
     /**
@@ -52,6 +56,8 @@ final readonly class Inspection
                 self::text($entry['image'] ?? null),
                 self::number($entry['imageWidth'] ?? null),
                 self::number($entry['imageHeight'] ?? null),
+                self::text($entry['robots'] ?? null),
+                self::text($entry['robotsHeader'] ?? null),
             )
             : null;
     }
@@ -74,6 +80,8 @@ final readonly class Inspection
             $head->image,
             $imageSize[0] ?? null,
             $imageSize[1] ?? null,
+            $head->robots,
+            $head->robotsHeader,
         );
     }
 

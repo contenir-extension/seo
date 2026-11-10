@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Api\Section\SectionsInterface;
 use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Listener\MetaValues;
+use Contenir\Extension\Seo\Section\Hidden;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Seo\Sections\ContentBlocks;
@@ -67,6 +68,7 @@ final readonly class ChangePlan
             $columns = SeoSectionBlock::known($block, [
                 ...array_merge([], ...array_values($seo->roles)),
                 ...(null === $seo->advanced ? [] : [$seo->advanced]),
+                Hidden::column($seo),
                 ...SeoSectionBlock::SUMMARY,
                 ContentBlocks::COLUMN,
             ]);

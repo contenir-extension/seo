@@ -73,13 +73,12 @@ $badges   = [Tier::High->value => 'destructive', Tier::Medium->value => 'warning
 <?php
 $one    = $health->sections[$index];
 $fixes  = [];
-$total  = 0;
+$total  = count($section->attention());
 $counts = [];
 foreach (['title' => ['title', 'titles'], 'description' => ['description', 'descriptions'], 'image' => ['image', 'images'], 'discoverable' => ['hidden', 'hidden']] as $role => [$single, $many]) {
     $count          = $section->count($role);
     $counts[$role]  = $count;
     if (0 < $count) {
-        $total += 'discoverable' === $role ? 0 : $count;
         $fixes[] = ['role' => $role, 'text' => $count . ' ' . (1 === $count ? $single : $many)];
     }
 }

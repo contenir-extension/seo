@@ -16,7 +16,9 @@ use function is_string;
 
 /**
  * Which of the report's records a screen asks for: one section's, one role's, those with one kind of
- * issue, or all of them. A section, role or kind the report doesn't know is ignored.
+ * issue, or, with no role or kind, those that need acting on. Records with only advice, and those hidden
+ * from search, are reached by asking for their role or kind. A section, role or kind the report doesn't
+ * know is ignored.
  */
 final readonly class RecordFilter
 {
@@ -88,12 +90,26 @@ final readonly class RecordFilter
                 continue;
             }
 
-            $records = null === $this->kind ? $section->in($this->role) : $section->ofKind($this->kind);
-            foreach ($records as $record) {
+            foreach ($this->recordsOf($section) as $record) {
                 $rows[] = new ReportRow($section, $record);
             }
         }
 
         return $rows;
+    }
+
+    /**
+     * The section's records it asks for: those of the kind, else those of the role, else, with neither, the
+     * ones that need acting on, so the list opens on what the alert counts.
+     *
+     * @return list<RecordIssues>
+     */
+    private function recordsOf(SectionIssues $section): array
+    {
+        return match (true) {
+            null !== $this->kind => $section->ofKind($this->kind),
+            null !== $this->role => $section->in($this->role),
+            default => $section->attention(),
+        };
     }
 }

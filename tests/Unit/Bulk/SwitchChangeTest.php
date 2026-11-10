@@ -29,10 +29,10 @@ final class SwitchChangeTest extends TestCase
         return [
             'hide what is on'             => [FixKind::HideFromSearch, '1', ['visible', '1', '0', null]],
             'hide what is off'            => [FixKind::HideFromSearch, '0', null],
-            'hide what holds nothing'     => [FixKind::HideFromSearch, null, null],
+            'hide what holds nothing'     => [FixKind::HideFromSearch, null, ['visible', null, '0', null]],
             'show what is off'            => [FixKind::ShowInSearch, '0', ['visible', '0', '1', null]],
             'show what is on'             => [FixKind::ShowInSearch, '1', null],
-            'show what holds nothing'     => [FixKind::ShowInSearch, null, ['visible', null, '1', null]],
+            'show what holds nothing'     => [FixKind::ShowInSearch, null, null],
             'show what holds only space'  => [FixKind::ShowInSearch, '  ', ['visible', null, '1', null]],
             'hide what holds only space'  => [FixKind::HideFromSearch, '  ', null],
             'a number counts as its text' => [FixKind::HideFromSearch, 1, ['visible', '1', '0', null]],
@@ -60,14 +60,6 @@ final class SwitchChangeTest extends TestCase
     }
 
     #[Test]
-    public function doesNothingForASectionWithNoDiscoverableRole(): void
-    {
-        $seo = new SeoBlock('project');
-
-        static::assertNull(SwitchChange::of(FixKind::HideFromSearch, self::block(['visible']), $seo, self::row('1')));
-    }
-
-    #[Test]
     public function doesNothingForASectionWithoutTheSwitchColumn(): void
     {
         static::assertNull(SwitchChange::of(
@@ -76,6 +68,20 @@ final class SwitchChangeTest extends TestCase
             self::seo(),
             self::row('1'),
         ));
+    }
+
+    #[Test]
+    public function takesVisibleAsTheSwitchOfASectionWithNoDiscoverableRole(): void
+    {
+        static::assertSame(
+            ['visible', '1', '0', null],
+            SwitchChange::of(
+                FixKind::HideFromSearch,
+                self::block(['visible']),
+                new SeoBlock('project'),
+                self::row('1'),
+            ),
+        );
     }
 
     /**

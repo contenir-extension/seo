@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Tests\Unit\Inspect;
 use Contenir\Extension\Seo\Inspect\Inspection;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Report\InspectionIssues;
+use Contenir\Seo\Sections\SeoBlock;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
@@ -93,6 +94,26 @@ final class InspectionIssuesTest extends TestCase
     }
 
     /**
+     * A section whose block names an image column, so its records are asked for a share image.
+     */
+    private static function withImage(): SeoBlock
+    {
+        return new SeoBlock('project', roles: ['image' => ['image']]);
+    }
+
+    #[Test]
+    public function asksNoShareImageOfASectionWithNoImageColumn(): void
+    {
+        static::assertSame(
+            [],
+            InspectionIssues::of(
+                new Inspection('s', 0, 'House | Site', self::DESCRIPTION, null),
+                new SeoBlock('project'),
+            ),
+        );
+    }
+
+    /**
      * @param list<array{string, string, bool}> $issues
      */
     #[Test]
@@ -101,7 +122,16 @@ final class InspectionIssuesTest extends TestCase
     {
         static::assertSame($issues, array_map(
             static fn(MetaIssue $issue): array => [$issue->role, $issue->message, $issue->missing],
-            InspectionIssues::of(new Inspection('s', 0, $title, $description, $image)),
+            InspectionIssues::of(new Inspection('s', 0, $title, $description, $image), self::withImage()),
+        ));
+    }
+
+    #[Test]
+    public function saysNothingOfASmallImageInASectionWithNoImageColumn(): void
+    {
+        static::assertSame([], InspectionIssues::of(
+            new Inspection('s', 0, 'House | Site', self::DESCRIPTION, '/a.jpg', 600, 315),
+            new SeoBlock('project'),
         ));
     }
 
@@ -114,7 +144,10 @@ final class InspectionIssuesTest extends TestCase
     {
         static::assertSame($issues, array_map(
             static fn(MetaIssue $issue): string => $issue->message,
-            InspectionIssues::of(new Inspection('s', 0, 'House | Site', self::DESCRIPTION, '/a.jpg', $width, $height)),
+            InspectionIssues::of(
+                new Inspection('s', 0, 'House | Site', self::DESCRIPTION, '/a.jpg', $width, $height),
+                self::withImage(),
+            ),
         ));
     }
 }

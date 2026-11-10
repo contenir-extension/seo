@@ -11,6 +11,7 @@ use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Listener\TitleTaken;
 use Contenir\Extension\Seo\Panel\PanelFacts;
 use Contenir\Extension\Seo\Panel\PanelRows;
+use Contenir\Seo\Sections\SeoBlock;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -21,10 +22,18 @@ use function str_repeat;
 #[Group('unit')]
 final class PanelRowsTest extends TestCase
 {
+    /**
+     * What the panel says of a record the site rendered, in a section that keeps a share image.
+     */
+    private static function facts(Inspection $site): PanelFacts
+    {
+        return PanelFacts::ofSite($site, new SeoBlock('project', roles: ['image' => ['image']]));
+    }
+
     #[Test]
     public function countsADescriptionInCharactersNotBytes(): void
     {
-        $facts = PanelFacts::ofSite(
+        $facts = self::facts(
             new Inspection(
                 's',
                 1,
@@ -46,7 +55,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function countsATitleInCharactersNotBytes(): void
     {
-        $facts = PanelFacts::ofSite(
+        $facts = self::facts(
             new Inspection(
                 's',
                 1,
@@ -69,7 +78,7 @@ final class PanelRowsTest extends TestCase
     public function givesEveryRowTheFixLinkItWasGiven(): void
     {
         $fix   = new Link('Fix', '/admin/records/4');
-        $facts = PanelFacts::ofSite(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg'));
+        $facts = self::facts(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg'));
 
         static::assertSame(
             [$fix],
@@ -83,7 +92,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function saysADescriptionOfExactlyTheShortestGoodLengthIsTooLong(): void
     {
-        $facts = PanelFacts::ofSite(
+        $facts = self::facts(
             new Inspection(
                 's',
                 1,
@@ -105,7 +114,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function saysAShortDescriptionByItsLength(): void
     {
-        $facts = PanelFacts::ofSite(new Inspection('s', 1, 'House', str_repeat('a', times: 40), 'https://x/a.jpg'));
+        $facts = self::facts(new Inspection('s', 1, 'House', str_repeat('a', times: 40), 'https://x/a.jpg'));
 
         static::assertSame(
             [['Description', 'Short (40 characters)']],
@@ -116,7 +125,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function saysASmallShareImageWithItsSizeWhenTheSiteSaidIt(): void
     {
-        $facts = PanelFacts::ofSite(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg', 600, 315));
+        $facts = self::facts(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg', 600, 315));
 
         static::assertSame(
             [['Share image', 'Small (600×315)']],
@@ -127,7 +136,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function saysASmallShareImageWithoutItsSizeWhenTheSiteDidNot(): void
     {
-        $facts = PanelFacts::ofSite(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg'));
+        $facts = self::facts(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg'));
 
         static::assertSame(
             [['Share image', 'Small']],
@@ -138,7 +147,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function saysATitleAnotherRecordHas(): void
     {
-        $facts = PanelFacts::ofSite(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg'));
+        $facts = self::facts(new Inspection('s', 1, 'House', 'A description.', 'https://x/a.jpg'));
 
         static::assertSame(
             [['Title', 'Another record has it']],
@@ -149,7 +158,7 @@ final class PanelRowsTest extends TestCase
     #[Test]
     public function saysATitleTooLongByItsLength(): void
     {
-        $facts = PanelFacts::ofSite(
+        $facts = self::facts(
             new Inspection('s', 1, str_repeat('t', times: 72), 'A description.', 'https://x/a.jpg'),
         );
 

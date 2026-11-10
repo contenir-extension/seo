@@ -67,13 +67,26 @@ final readonly class SeoSectionBlock implements SectionBlockInterface
     }
 
     /**
+     * The columns the report, and what it keeps of the site's answers, read of each record: those the block
+     * names and the section's Discoverable switch.
+     *
+     * @return list<string>
+     */
+    public static function reported(SectionBlock $block): array
+    {
+        $seo = SeoDeclaration::read($block->element);
+
+        return self::known($block, [...$seo->columns(), Hidden::column($seo)]);
+    }
+
+    /**
      * @return list<string>
      */
     #[Override]
     public function columns(SectionBlock $block): array
     {
         return self::known($block, [
-            ...SeoDeclaration::read($block->element)->columns(),
+            ...self::reported($block),
             ...self::SUMMARY,
             ContentBlocks::COLUMN,
         ]);

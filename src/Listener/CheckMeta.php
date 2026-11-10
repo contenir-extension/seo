@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Event\Record\AbstractRecordPreEvent;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Listener\ListenerInterface;
+use Contenir\Extension\Seo\Section\Hidden;
 use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
@@ -21,7 +22,7 @@ use Override;
  * missing title, description or image, a title longer than search results
  * show once the site's title template adds the site name, a description
  * outside the length they show, and a title another record of the section
- * already has. A note is a warning, and the save goes ahead, unless the
+ * already has, unless either of the two is hidden from search. A note is a warning, and the save goes ahead, unless the
  * block marks the role `required`, when a missing value holds the save.
  * It reads the values as they are about to be written, so it never waits on
  * the site.
@@ -56,10 +57,14 @@ final readonly class CheckMeta implements ListenerInterface
         }
 
         $title = $values->text('title');
-        if (null !== $title) {
+        if (null !== $title && null === Hidden::reason($seo, $event->values())) {
             $notes->warn(
                 $values->field('title'),
-                (new TitleTaken($context->sections()))->note(
+                (new TitleTaken(
+                    $context->sections(),
+                    $seo,
+                    SeoSectionBlock::known($block, [Hidden::column($seo)]),
+                ))->note(
                     $event->section,
                     SeoSectionBlock::known($block, [
                         ...(null === $seo->advanced ? [] : [$seo->advanced]),

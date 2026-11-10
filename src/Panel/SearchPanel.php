@@ -18,18 +18,16 @@ use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Inspect\CurrentInspection;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Listener\MetaValues;
-use Contenir\Extension\Seo\Report\SearchReport;
+use Contenir\Extension\Seo\Section\Hidden;
+use Contenir\Extension\Seo\Section\Noindex;
 use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\SeoSettings;
-use Contenir\Seo\Sections\SeoBlock;
 use Override;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-use function array_key_exists;
 use function implode;
-use function in_array;
 use function rawurlencode;
 use function sprintf;
 
@@ -47,8 +45,6 @@ final readonly class SearchPanel implements RecordPanelInterface
 
     /** The SEO area's Preview screen for a record, where the site is asked what it renders. */
     private const string PREVIEW = '/admin/extension/seo/preview?section=%s&id=%s';
-
-    private const array OFF = ['0', 0, false, ''];
 
     /**
      * The record's edit screen, which the Fix buttons go to, or null when the host can't say where it is.
@@ -69,23 +65,6 @@ final readonly class SearchPanel implements RecordPanelInterface
     }
 
     /**
-     * Whether the record's Discoverable switch, the first column of its block's `discoverable`
-     * role (`visible` by convention), is off.
-     *
-     * @param array<string, mixed> $values
-     */
-    private static function hidden(SeoBlock $seo, array $values): bool
-    {
-        $column = ($seo->roles['discoverable'] ?? ['visible'])[0] ?? null;
-
-        return (
-            null !== $column
-                && array_key_exists($column, $values)
-                && in_array($values[$column], self::OFF, strict: true)
-        );
-    }
-
-    /**
      * @throws ContainerExceptionInterface When the host's services can't be reached.
      * @throws NotFoundExceptionInterface When the host's records can't be found.
      * @throws RowsRefusedException When the section's columns can't be read.
@@ -99,14 +78,21 @@ final readonly class SearchPanel implements RecordPanelInterface
             return null;
         }
 
-        $seo      = SeoDeclaration::read($block->element);
-        $values   = new MetaValues($block, $record->values, $seo);
-        $template = (new SeoSettings())->config($context)->title;
-        $site     = (new CurrentInspection($context))->of($record->reference(), $block);
-        $facts    = null === $site ? PanelFacts::ofColumns($seo, $values, $template) : PanelFacts::ofSite($site);
-        $issues   = $facts->issues;
-        if (self::hidden($seo, $record->values)) {
-            $issues[] = new MetaIssue('discoverable', 'discoverable', SearchReport::HIDDEN);
+        $seo    = SeoDeclaration::read($block->element);
+        $values = new MetaValues($block, $record->values, $seo);
+        $config = (new SeoSettings())->config($context);
+        $site   = (new CurrentInspection($context))->of($record->reference(), $block);
+        $facts  = null === $site
+            ? PanelFacts::ofColumns($seo, $values, $config->title)
+            : PanelFacts::ofSite($site, $seo);
+        $issues = $facts->issues;
+        $hidden = Hidden::reason(
+            $seo,
+            $record->values,
+            null !== $site && Noindex::onPage($site->robots, $site->robotsHeader, $config->robots->value),
+        );
+        if (null !== $hidden) {
+            $issues[] = new MetaIssue('discoverable', 'discoverable', $hidden);
         }
 
         $rows = PanelRows::of($facts, $issues, self::editLink($context, $record->reference()));

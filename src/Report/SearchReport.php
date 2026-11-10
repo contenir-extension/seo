@@ -23,7 +23,8 @@ use function array_values;
  * the site last rendered for it where it has been asked, and otherwise checked
  * as a save checks one, from its columns, where what a site builds in its own
  * code isn't seen. It also finds what only shows across a section: titles two
- * records share, and published records hidden from search.
+ * records shown to search share, and published records hidden from it, which
+ * are noted as hidden and asked for nothing else.
  */
 final readonly class SearchReport
 {
@@ -39,8 +40,6 @@ final readonly class SearchReport
 
     /** The most records read from a section, so a report never waits on a very long one. */
     public const int MAX_ROWS = 5000;
-
-    public const string HIDDEN = 'Hidden from search: its Discoverable switch is off.';
 
     public function __construct(
         private ExtensionContextInterface $context,
@@ -58,11 +57,13 @@ final readonly class SearchReport
     public function sections(): array
     {
         $titles = $this->titles();
+        $config = (new SeoSettings())->config($this->context);
         $scan   = new SectionScan(
             $this->context->sections(),
-            (new SeoSettings())->config($this->context)->title,
+            $config->title,
             InspectionStore::at($this->context->sitePath())->load(),
             RenderingState::of($this->context),
+            $config->robots->value,
         );
         $blocks = array_filter(
             SeoBlocks::of($this->context)->all(),

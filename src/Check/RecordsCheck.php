@@ -21,7 +21,8 @@ use function implode;
 use function sprintf;
 
 /**
- * How many records of the sections described for search still need something.
+ * How many records of the sections described for search need acting on: those shown to search with a
+ * high or medium issue. Advice, and records hidden from search, never raise it.
  */
 final readonly class RecordsCheck implements CheckInterface
 {
@@ -38,7 +39,7 @@ final readonly class RecordsCheck implements CheckInterface
             return CheckResult::skipped('No section with pages of its own declares an <seo> block in admin.xml.');
         }
 
-        $flagged = array_filter($sections, static fn(SectionIssues $section): bool => [] !== $section->records);
+        $flagged = array_filter($sections, static fn(SectionIssues $section): bool => [] !== $section->attention());
 
         return [] === $flagged
             ? CheckResult::success(sprintf(
@@ -52,7 +53,7 @@ final readonly class RecordsCheck implements CheckInterface
                     static fn(SectionIssues $section): string => sprintf(
                         '%s: %d',
                         $section->title,
-                        count($section->records),
+                        count($section->attention()),
                     ),
                     $flagged,
                 )),

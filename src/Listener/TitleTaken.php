@@ -6,7 +6,9 @@ namespace Contenir\Extension\Seo\Listener;
 
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Section\SectionsInterface;
+use Contenir\Extension\Seo\Section\Hidden;
 use Contenir\Seo\Sections\Overrides;
+use Contenir\Seo\Sections\SeoBlock;
 
 use function array_diff;
 use function count;
@@ -17,7 +19,10 @@ use function trim;
 /**
  * Whether another record of a section already has a title: its first title
  * column that holds text, compared without case or surrounding space. The
- * section is read a page at a time, up to MAX_ROWS records.
+ * section is read a page at a time, up to MAX_ROWS records. Drafts count, as
+ * they are on their way to being published; records hidden from search don't.
+ *
+ * @mago-expect lint:cyclomatic-complexity One walk over the section's pages, each record asked three things.
  */
 final readonly class TitleTaken
 {
@@ -28,8 +33,15 @@ final readonly class TitleTaken
 
     public const string MESSAGE = 'Another record in this section has the same title, so search results can\'t tell them apart.';
 
+    /**
+     * @param SeoBlock     $seo    The section's block, to leave its records hidden from search out of the
+     *                             comparison: search results never show them beside the record
+     * @param list<string> $switch The section's Discoverable column, where it has one, to read with the titles
+     */
     public function __construct(
         private SectionsInterface $sections,
+        private SeoBlock $seo = new SeoBlock(''),
+        private array $switch = [],
     ) {}
 
     /**
@@ -95,11 +107,17 @@ final readonly class TitleTaken
     ): bool {
         $wanted = mb_strtolower(trim($title));
         for ($offset = 0; $offset < self::MAX_ROWS; $offset += self::PAGE) {
-            $rows = $this->sections->rows($section, $columns, limit: self::PAGE, offset: $offset);
+            $rows = $this->sections->rows(
+                $section,
+                [...$columns, ...$this->switch],
+                limit: self::PAGE,
+                offset: $offset,
+            );
             foreach ($rows as $row) {
                 if (
                     (string) $row->record->id !== (string) $id
                     && $wanted === self::title($row->values, $columns, $advanced)
+                    && null === Hidden::reason($this->seo, $row->values)
                 ) {
                     return true;
                 }

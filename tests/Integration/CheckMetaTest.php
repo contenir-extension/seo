@@ -204,6 +204,19 @@ final class CheckMetaTest extends TestCase
     }
 
     #[Test]
+    public function aTitleAHiddenRecordHasIsNotNoted(): void
+    {
+        $this->host->block(self::SECTION, self::BLOCK, [...self::FIELDS, 'visible']);
+        $this->host->seed(self::SECTION, 2, ['title' => 'House', 'visible' => '0']);
+
+        static::assertSame(
+            [],
+            $this->save(['title' => 'House', 'description' => self::DESCRIPTION, 'image_lg' => '/asset/house.jpg'])
+                ->warnings,
+        );
+    }
+
+    #[Test]
     public function aTitleAndDescriptionInTheAdvancedFieldAreCheckedThere(): void
     {
         $this->host->block('library.news.article', self::ADVANCED, ['title', 'description', 'seo']);
@@ -245,6 +258,23 @@ final class CheckMetaTest extends TestCase
             ]],
             $this->save(['title' => 'House', 'description' => self::DESCRIPTION, 'image_lg' => '/asset/house.jpg'])
                 ->warnings,
+        );
+    }
+
+    #[Test]
+    public function aTitleAnotherRecordHasIsNotNotedOnARecordBeingHidden(): void
+    {
+        $this->host->block(self::SECTION, self::BLOCK, [...self::FIELDS, 'visible']);
+        $this->host->seed(self::SECTION, 2, ['title' => 'House', 'visible' => '1']);
+
+        static::assertSame(
+            [],
+            $this->save([
+                'title'       => 'House',
+                'description' => self::DESCRIPTION,
+                'image_lg'    => '/asset/house.jpg',
+                'visible'     => '0',
+            ])->warnings,
         );
     }
 

@@ -252,6 +252,36 @@ final class SearchPanelTest extends TestCase
     }
 
     #[Test]
+    public function saysWhenTheRecordsOwnRobotsSettingHidesIt(): void
+    {
+        $this->host->block(
+            self::SECTION,
+            '<seo type="project"><image>image_lg</image><advanced>seo</advanced></seo>',
+            ['title', 'description', 'image_lg', 'visible', 'seo'],
+        );
+        $panel = $this->panel([...$this->ready(), 'seo' => '{"robots":"noindex, follow"}']);
+
+        static::assertSame(
+            [['Search', 'Hidden']],
+            array_map(static fn(PanelRow $row): array => [$row->label, $row->detail], $panel->rows ?? []),
+        );
+    }
+
+    #[Test]
+    public function showsAHiddenRecordsGapsAsWellAsThatItIsHidden(): void
+    {
+        $panel = $this->panel(['title' => 'House', 'image_lg' => '/a.jpg', 'visible' => '0']);
+
+        static::assertSame(
+            [
+                ['Description', 'Missing'],
+                ['Search',      'Hidden'],
+            ],
+            array_map(static fn(PanelRow $row): array => [$row->label, $row->detail], $panel->rows ?? []),
+        );
+    }
+
+    #[Test]
     public function showsHowARecordReadsInSearch(): void
     {
         $panel = $this->panel($this->ready());

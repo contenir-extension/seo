@@ -4,6 +4,30 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-11-11
+
+### Changed
+
+- The "Records need attention for search" alert counts only records that are shown to search and have a High or Medium issue: a missing title or description, a title another record has, a title too long, or no share image. Advice graded Low (description length, a small share image) no longer raises it, and neither does a record hidden from search. Each record counts once, however many issues it has. (contenir/contenir-cms-legacy#425)
+- Records opens on the records the alert counts, so the list, "Fix all" and the alert give the same number. Records with only advice, and hidden records, are reached through the Issue and Problem filters, and "Fix all" and Export CSV then act on what is filtered.
+- On the Overview, each section's "Fix" count is the number of its records the alert counts; it used to add the title, description and image counts, so a record with two issues was counted twice.
+- A record hidden from search is listed only as hidden. Its other gaps leave the To do list, the meter and the score, and still show in the record's own SEO panel.
+- A title is a duplicate only when another record shown to search has it. Hidden records are left out of the comparison in the report and in the warning on save, and saving a hidden record raises no duplicate warning. Drafts still count on save.
+- A section whose `<seo>` block names no image column is not asked for a share image when the site's page is checked, as it already wasn't when its columns are.
+
+### Added
+
+- A record counts as hidden from search when its Discoverable switch is off, when its own robots setting holds `noindex` or `none`, or when the page the site last rendered for it sent `noindex` in its robots tag or `X-Robots-Tag` header. The message names which. A copy of the site hidden as a whole, or a robots tag that only repeats the site's own setting, does not hide its records.
+- A section whose block names no `<discoverable>` column takes `visible` as its switch where it has that field, in the report, the record's panel, the save check and the "Hide from search" and "Show in search" fixes alike.
+
+### Fixed
+
+- "Hide from search" and "Show in search" read the switch as the report does: a record that holds nothing in it is shown, so Hide now turns it off and Show leaves it alone. They used to treat it as already hidden.
+
+### Upgrading
+
+- The report now reads each section's switch column, so what the site last rendered is asked for again once for the sections that gained it.
+
 ## [0.6.0] - 2026-11-09
 
 Needs `contenir/contenir-extension-api` 0.9.5.

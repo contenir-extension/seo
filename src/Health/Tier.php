@@ -23,6 +23,15 @@ enum Tier: string
         };
     }
 
+    /**
+     * Whether an issue of this tier is one to act on, and so raises the "Records need attention" alert and
+     * puts its record in the Records list as it opens. A low one is advice, which the editor may leave.
+     */
+    public function needsAttention(): bool
+    {
+        return self::Low !== $this;
+    }
+
     public function weight(): int
     {
         return match ($this) {

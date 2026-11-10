@@ -10,6 +10,7 @@ use Contenir\Extension\Api\Section\SectionsInterface;
 use Contenir\Extension\Api\Url\RecordReference;
 use Contenir\Extension\Seo\Listener\TitleTaken;
 use Contenir\Extension\Seo\Tests\TestAsset\Bulk\PagedSections;
+use Contenir\Seo\Sections\SeoBlock;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -35,6 +36,25 @@ final class TitleTakenTest extends TestCase
         return [
             'the other in capitals' => [" CAFÉ \n", 'café'],
             'this one in capitals'  => [' café ', ' CAFÉ '],
+        ];
+    }
+
+    /**
+     * @return array<string, array{array<string, scalar|null>, RecordStatus, ?string}>
+     */
+    public static function otherProvider(): array
+    {
+        return [
+            'shown to search'               => [['visible' => '1'], RecordStatus::Published, self::NOTE],
+            'a draft'                       => [['visible' => '1'], RecordStatus::Draft, self::NOTE],
+            'with nothing in its switch'    => [['visible' => null], RecordStatus::Published, self::NOTE],
+            'its switch off'                => [['visible' => '0'], RecordStatus::Published, null],
+            'kept out by its own robots'    => [['seo' => '{"robots":"noindex"}'], RecordStatus::Published, null],
+            'its links unfollowed, no more' => [
+                ['seo' => '{"robots":"nofollow"}'],
+                RecordStatus::Published,
+                self::NOTE,
+            ],
         ];
     }
 
@@ -180,6 +200,38 @@ final class TitleTakenTest extends TestCase
             [null, 50],
             [(new TitleTaken($sections))->note(self::SECTION, ['title'], 'No such house', 9999), $sections->calls],
         );
+    }
+
+    #[Test]
+    public function readsTheSwitchColumnWithTheTitles(): void
+    {
+        $sections = $this->createMock(SectionsInterface::class);
+        $sections->expects(static::once())
+            ->method('rows')
+            ->with(self::SECTION, ['title', 'visible'])
+            ->willReturn([]);
+
+        (new TitleTaken($sections, new SeoBlock('project'), ['visible']))->note(self::SECTION, ['title'], 'House', 1);
+    }
+
+    /**
+     * @param array<string, scalar|null> $values
+     */
+    #[Test]
+    #[DataProvider('otherProvider')]
+    public function theOtherRecordCountsUnlessItIsHiddenFromSearch(
+        array $values,
+        RecordStatus $status,
+        ?string $note,
+    ): void {
+        $sections = $this->createStub(SectionsInterface::class);
+        $sections->method('rows')
+            ->willReturn([
+                new RecordRow(new RecordReference(self::SECTION, 2), $status, ['title' => 'House', ...$values]),
+            ]);
+        $taken = new TitleTaken($sections, new SeoBlock('project', advanced: 'seo'), ['visible']);
+
+        static::assertSame($note, $taken->note(self::SECTION, ['seo', 'title'], 'House', 1, 'seo'));
     }
 
     #[Test]
