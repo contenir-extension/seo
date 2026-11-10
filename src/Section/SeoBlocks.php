@@ -6,24 +6,23 @@ namespace Contenir\Extension\Seo\Section;
 
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Section\SectionBlock;
-use Contenir\Extension\Seo\Strategy\StrategyOverrides;
-
-use function array_map;
+use Contenir\Extension\Seo\Strategy\SettingsStrategies;
 
 /**
  * The sections' `<seo>` blocks as this site describes them: as admin.xml says, except where the site has
- * changed a section's strategy on this environment, whose saved block takes the place of admin.xml's.
+ * changed a section's strategy on this environment, which the host keeps and gives in the block's place.
+ * Strategies saved before the host kept them are handed to it first.
  */
 final readonly class SeoBlocks
 {
     public function __construct(
         private ExtensionContextInterface $context,
-        private StrategyOverrides $overrides,
+        private SettingsStrategies $earlier,
     ) {}
 
     public static function of(ExtensionContextInterface $context): self
     {
-        return new self($context, StrategyOverrides::of($context));
+        return new self($context, new SettingsStrategies($context));
     }
 
     /**
@@ -31,23 +30,15 @@ final readonly class SeoBlocks
      */
     public function all(): array
     {
-        return array_map($this->with(...), $this->context->sections()->blocks());
+        $this->earlier->move();
+
+        return $this->context->sections()->blocks();
     }
 
     public function one(string $section): ?SectionBlock
     {
-        $block = $this->context->sections()->block($section);
+        $this->earlier->move();
 
-        return null === $block ? null : $this->with($block);
-    }
-
-    /**
-     * The block as admin.xml gives it, with the site's own `<seo>` block in its place where it has one.
-     */
-    private function with(SectionBlock $block): SectionBlock
-    {
-        $saved = $this->overrides->for($block->section);
-
-        return null === $saved ? $block : new SectionBlock($block->section, $saved, $block->fields, $block->linkable);
+        return $this->context->sections()->block($section);
     }
 }

@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- A strategy saved from the Strategy screen that named a field the section's `<seo>` block in admin.xml did not, such as a page's linked `images`, made the site refuse every read of the section, so the dashboard meter, the Overview and the `inspect-records` schedule failed until the strategy was reset. The site now keeps the strategy itself, as an override of the section's block, and reads the fields it names. (contenir/contenir-cms-legacy#426)
+
+### Changed
+
+- The Strategy screen saves and resets through the site (`SectionsInterface::override()` and `restore()`), and no longer writes the hidden `seo-strategy` setting. Strategies already saved there are handed to the site the first time the add-on reads its blocks, and the setting is emptied; one the site won't take stays in the setting, is logged, and is tried again. Needs a host and `contenir/contenir-extension-api` with block overrides.
+- A section the site won't lend the columns of reads as having no records, so the other sections are still reported, and the "Sections described for search" check names it and why. Saving a record goes ahead without the duplicate-title warning where the other records' titles can't be read.
+
+### Removed
+
+- `StrategyOverrides`, `StrategyXml` and `StrategyNotSaved`.
+
 ## [0.7.0] - 2026-11-11
 
 ### Changed
