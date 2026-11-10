@@ -52,12 +52,12 @@ final readonly class PanelFacts
         );
     }
 
-    public static function ofSite(Inspection $site): self
+    public static function ofSite(Inspection $site, SeoBlock $seo): self
     {
         return new self(
             $site->title,
             $site->description,
-            InspectionIssues::of($site),
+            InspectionIssues::of($site, $seo),
             $site->image,
             null === $site->imageWidth || null === $site->imageHeight ? null : [$site->imageWidth, $site->imageHeight],
         );

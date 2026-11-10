@@ -7,6 +7,7 @@ namespace Contenir\Extension\Seo\Report;
 use Contenir\Extension\Seo\Inspect\Inspection;
 use Contenir\Extension\Seo\Listener\MetaIssue;
 use Contenir\Extension\Seo\Listener\MetaLengths;
+use Contenir\Seo\Sections\SeoBlock;
 
 use function array_filter;
 use function array_values;
@@ -14,7 +15,8 @@ use function sprintf;
 
 /**
  * What a record needs, going by what the site rendered for it, where the title
- * already has the site's name in it.
+ * already has the site's name in it. A share image is only asked of a section
+ * whose block names an image column, as it is when a record is judged by its columns.
  */
 final class InspectionIssues
 {
@@ -24,14 +26,16 @@ final class InspectionIssues
     public const int IMAGE_HEIGHT = 630;
 
     /**
+     * @param SeoBlock $seo The section's block: a section that names no image column isn't asked for an image
+     *
      * @return list<MetaIssue>
      */
-    public static function of(Inspection $inspection): array
+    public static function of(Inspection $inspection, SeoBlock $seo): array
     {
         return array_values(array_filter([
             self::title($inspection->title),
             self::description($inspection->description),
-            self::image($inspection),
+            [] === ($seo->roles['image'] ?? []) ? null : self::image($inspection),
         ]));
     }
 

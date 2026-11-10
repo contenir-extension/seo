@@ -9,7 +9,6 @@ use Contenir\Extension\Api\Record\RecordRow;
 use Contenir\Extension\Api\Record\RecordStatus;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Api\Section\SectionsInterface;
-use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 
 use function array_filter;
@@ -35,7 +34,7 @@ final readonly class SectionRows
      */
     public function of(SectionBlock $block): array
     {
-        $columns = SeoSectionBlock::known($block, SeoDeclaration::read($block->element)->columns());
+        $columns = SeoSectionBlock::reported($block);
         $pages   = [];
         for ($offset = 0; $offset < SearchReport::MAX_ROWS; $offset += SearchReport::PAGE) {
             $page    = $this->sections->rows($block->section, $columns, limit: SearchReport::PAGE, offset: $offset);

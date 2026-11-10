@@ -40,6 +40,19 @@ final readonly class RecordIssues
     }
 
     /**
+     * Whether any of its issues is one to act on, and not only advice.
+     */
+    public function needsAttention(): bool
+    {
+        return (
+            [] !== array_filter(
+                $this->issues,
+                static fn(MetaIssue $issue): bool => IssueKind::of($issue)->tier()->needsAttention(),
+            )
+        );
+    }
+
+    /**
      * Its issues of one kind, or all of them without one.
      *
      * @return list<MetaIssue>

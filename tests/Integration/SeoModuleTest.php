@@ -27,7 +27,6 @@ use function http_build_query;
 use function iterator_to_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
-use function str_repeat;
 use function trim;
 
 /**
@@ -54,12 +53,16 @@ final class SeoModuleTest extends TestCase
     public static function filterProvider(): array
     {
         return [
-            'everything'             => [[], ['House', 'house', 'Hut', 'Fish & chips']],
-            'one section'            => [['section' => self::NEWS], ['Fish & chips']],
-            'one role'               => [['role' => 'discoverable'], ['Hut']],
-            'a section and role'     => [['section' => self::PROJECTS, 'role' => 'title'], ['House', 'house']],
-            'a section nobody knows' => [['section' => 'nope'], ['House', 'house', 'Hut', 'Fish & chips']],
-            'a role nobody knows'    => [['role' => 'nope'], ['House', 'house', 'Hut', 'Fish & chips']],
+            'what needs acting on'     => [[], ['House', 'house']],
+            'one section'              => [['section' => self::PROJECTS], ['House', 'house']],
+            'a section of advice only' => [['section' => self::NEWS], []],
+            'the hidden, by role'      => [['role' => 'discoverable'], ['Hut']],
+            'the hidden, by kind'      => [['kind' => 'hidden'], ['Hut']],
+            'advice, by role'          => [['role' => 'description'], ['house', 'Fish & chips']],
+            'advice, by kind'          => [['kind' => 'description-length'], ['Fish & chips']],
+            'a section and role'       => [['section' => self::PROJECTS, 'role' => 'title'], ['House', 'house']],
+            'a section nobody knows'   => [['section' => 'nope'], ['House', 'house']],
+            'a role nobody knows'      => [['role' => 'nope'], ['House', 'house']],
         ];
     }
 
@@ -294,7 +297,7 @@ final class SeoModuleTest extends TestCase
     {
         $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project'));
         $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
-        $this->host->seed(self::PROJECTS, 1, ['title' => '=HYPERLINK("x")', 'description' => 'Short.']);
+        $this->host->seed(self::PROJECTS, 1, ['title' => '=HYPERLINK("x")']);
 
         static::assertStringContainsString(
             "Projects,\"'=HYPERLINK(\"\"x\"\")\",Description",
@@ -337,7 +340,7 @@ final class SeoModuleTest extends TestCase
 
         static::assertSame(
             [
-                ['Projects',      '3', '0', '2', '1', '1', '1'],
+                ['Projects',      '3', '0', '2', '1', '0', '1'],
                 ['News articles', '1', '0', '0', '1', '0', '0'],
             ],
             [$this->sectionRow($xpath, 1), $this->sectionRow($xpath, 2)],
@@ -384,6 +387,17 @@ final class SeoModuleTest extends TestCase
         $this->host->seed(self::PROJECTS, 1, ['title' => 'House']);
 
         static::assertSame(['Our Projects'], $this->texts($this->page('overview'), '//a[@data-role="name"]'));
+    }
+
+    #[Test]
+    public function theOverviewOffersToFixTheRecordsTheAlertCounts(): void
+    {
+        $this->seedRecords();
+
+        static::assertSame(
+            ['Fix 2'],
+            $this->texts($this->page('overview'), '//li[@data-section]//a[starts-with(normalize-space(), "Fix ")]'),
+        );
     }
 
     #[Test]
@@ -512,10 +526,7 @@ final class SeoModuleTest extends TestCase
         $this->host->linkable(new LinkableSection(self::PROJECTS, 'Project'));
         $this->host->block(self::PROJECTS, '<seo type="project"/>', ['title', 'meta_title', 'description']);
         for ($id = 1; $id <= $count; ++$id) {
-            $this->host->seed(self::PROJECTS, $id, [
-                'title'       => "House {$id}",
-                'description' => str_repeat('a', times: 5),
-            ]);
+            $this->host->seed(self::PROJECTS, $id, ['title' => "House {$id}"]);
         }
     }
 

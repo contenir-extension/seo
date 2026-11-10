@@ -46,12 +46,29 @@ final class SearchReportAppliesTest extends TestCase
                 ['title', 'description', 'discoverable'],
                 ['title', 'description', 'visible'],
             ],
+            'a visible field and no role'    => [
+                '<seo type="project"/>',
+                ['title', 'description', 'discoverable'],
+                ['title', 'description', 'visible'],
+            ],
             'both'                           => [
                 '<seo type="project"><image>image_lg</image><discoverable>visible</discoverable></seo>',
                 ['title', 'description', 'image', 'discoverable'],
                 ['title', 'description', 'image_lg', 'visible'],
             ],
         ];
+    }
+
+    #[Test]
+    public function checksForHiddenRecordsOnceARecordIsHiddenWithoutASwitch(): void
+    {
+        $this->host->block(self::PROJECTS, '<seo type="project"><advanced>seo</advanced></seo>', ['title', 'seo']);
+        $this->host->seed(self::PROJECTS, 1, ['title' => 'Privacy', 'seo' => '{"robots":"noindex"}']);
+
+        static::assertSame(
+            ['title', 'description', 'discoverable'],
+            (new SearchReport($this->host->context('seo')))->sections()[0]->applies,
+        );
     }
 
     /**
@@ -65,6 +82,18 @@ final class SearchReportAppliesTest extends TestCase
         $this->host->block(self::PROJECTS, $xml, $fields);
 
         static::assertSame($applies, (new SearchReport($this->host->context('seo')))->sections()[0]->applies);
+    }
+
+    #[Test]
+    public function doesNotCheckForHiddenRecordsWhereNoSwitchExistsAndNoRecordIsHidden(): void
+    {
+        $this->host->block(self::PROJECTS, '<seo type="project"><advanced>seo</advanced></seo>', ['title', 'seo']);
+        $this->host->seed(self::PROJECTS, 1, ['title' => 'House']);
+
+        static::assertSame(
+            ['title', 'description'],
+            (new SearchReport($this->host->context('seo')))->sections()[0]->applies,
+        );
     }
 
     #[Override]

@@ -6,13 +6,14 @@ namespace Contenir\Extension\Seo\Bulk;
 
 use Contenir\Extension\Api\Record\RecordRow;
 use Contenir\Extension\Api\Section\SectionBlock;
+use Contenir\Extension\Seo\Section\Hidden;
 use Contenir\Seo\Sections\SeoBlock;
 
 use function is_scalar;
 use function trim;
 
 /**
- * Turning a record's Discoverable switch on or off, the first column of the block's `discoverable` role.
+ * Turning a record's Discoverable switch on or off: the column Hidden names, and off as Hidden reads it.
  */
 final readonly class SwitchChange
 {
@@ -28,14 +29,14 @@ final readonly class SwitchChange
      */
     public static function of(FixKind $kind, SectionBlock $block, SeoBlock $seo, RecordRow $row): ?array
     {
-        $switch = $seo->roles['discoverable'][0] ?? null;
-        if (null === $switch || ! $block->hasField($switch)) {
+        $switch = Hidden::column($seo);
+        if (! $block->hasField($switch)) {
             return null;
         }
 
         $value = $row->value($switch);
         $now   = is_scalar($value) && '' !== trim((string) $value) ? (string) $value : null;
-        $on    = null !== $now && self::OFF !== $now;
+        $on    = ! Hidden::off($seo, $row->values);
         $after = FixKind::ShowInSearch === $kind ? self::ON : self::OFF;
 
         return $on === (self::ON === $after) ? null : [$switch, $now, $after, null];

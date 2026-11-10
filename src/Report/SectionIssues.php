@@ -20,7 +20,7 @@ final readonly class SectionIssues
      * @param string $section The section's key, such as "library.projects.project"
      * @param string $title What the site calls the section
      * @param int $checked The published records read
-     * @param list<RecordIssues> $records The records with at least one issue
+     * @param list<RecordIssues> $records The records with at least one issue, advice and hidden ones included
      * @param int $inspected The records judged by what the site rendered, not their columns
      * @param list<string> $applies The roles the section's records can be checked for: title and description
      *                              always, image and discoverable when it declares them
@@ -35,6 +35,19 @@ final readonly class SectionIssues
         public int $inspected,
         public array $applies = ['title', 'description', 'image', 'discoverable'],
     ) {}
+
+    /**
+     * The records with something to act on: what the alert counts, and what the Records list opens on.
+     *
+     * @return list<RecordIssues>
+     */
+    public function attention(): array
+    {
+        return array_values(array_filter(
+            $this->records,
+            static fn(RecordIssues $record): bool => $record->needsAttention(),
+        ));
+    }
 
     public function count(?string $role): int
     {

@@ -8,7 +8,6 @@ use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Api\Url\RecordReference;
-use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 
 /**
@@ -32,8 +31,9 @@ final readonly class CurrentInspection
             return null;
         }
 
-        $columns = SeoSectionBlock::known($block, SeoDeclaration::read($block->element)->columns());
-        $row     = $this->context->sections()->rows($block->section, $columns, [$record->id])[0] ?? null;
+        $row = $this->context->sections()->rows($block->section, SeoSectionBlock::reported($block), [
+            $record->id,
+        ])[0] ?? null;
 
         return null !== $row && $kept->isCurrent($row, RenderingState::of($this->context)) ? $kept : null;
     }
