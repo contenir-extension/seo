@@ -74,7 +74,7 @@ final readonly class SettingsStrategies
         }
 
         $settings->set([
-            StrategySection::SECTIONS => [] === $left ? '' : (string) json_encode($left, JSON_UNESCAPED_SLASHES),
+            StrategySection::SECTIONS => [] === $left ? '' : json_encode($left, JSON_UNESCAPED_SLASHES),
         ]);
     }
 
@@ -90,6 +90,8 @@ final readonly class SettingsStrategies
 
         try {
             $sections->override($section, Element::parse($xml), $sections->overridesVersion());
+
+            return true;
         } catch (InvalidDeclarationException) {
             return true;
         } catch (BlockNotSavedException $refused) {
@@ -100,7 +102,5 @@ final readonly class SettingsStrategies
 
             return false;
         }
-
-        return true;
     }
 }

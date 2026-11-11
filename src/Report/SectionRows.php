@@ -34,23 +34,33 @@ final readonly class SectionRows
      */
     public function of(SectionBlock $block): array
     {
-        $columns = SeoSectionBlock::reported($block);
-        $pages   = [];
         try {
-            for ($offset = 0; $offset < SearchReport::MAX_ROWS; $offset += SearchReport::PAGE) {
-                $page    = $this->sections->rows($block->section, $columns, limit: SearchReport::PAGE, offset: $offset);
-                $pages[] = $page;
-                if (SearchReport::PAGE !== count($page)) {
-                    break;
-                }
-            }
+            return array_values(array_filter(
+                $this->all($block),
+                static fn(RecordRow $row): bool => RecordStatus::Published === $row->status,
+            ));
         } catch (RowsRefusedException) {
             return [];
         }
+    }
 
-        return array_values(array_filter(
-            array_merge([], ...$pages),
-            static fn(RecordRow $row): bool => RecordStatus::Published === $row->status,
-        ));
+    /**
+     * @return list<RecordRow>
+     *
+     * @throws RowsRefusedException When the section's columns can't be read.
+     */
+    private function all(SectionBlock $block): array
+    {
+        $columns = SeoSectionBlock::reported($block);
+        $pages   = [];
+        for ($offset = 0; $offset < SearchReport::MAX_ROWS; $offset += SearchReport::PAGE) {
+            $page    = $this->sections->rows($block->section, $columns, limit: SearchReport::PAGE, offset: $offset);
+            $pages[] = $page;
+            if (SearchReport::PAGE !== count($page)) {
+                break;
+            }
+        }
+
+        return array_merge([], ...$pages);
     }
 }
