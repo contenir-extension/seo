@@ -11,10 +11,11 @@ use Contenir\Extension\Api\Settings\SettingsCategory;
 use Contenir\Extension\Api\Settings\SettingsSection;
 
 /**
- * Holds how the site has changed the way its sections are described for search, in the local settings file.
+ * Where a site's changes to how its sections are described for search were kept, in the local settings file,
+ * before the host kept them as overrides of the sections' blocks.
  *
- * It has no screen or menu entry: the Strategy screen is its only editor, and writes the one field through
- * StrategyOverrides.
+ * It has no screen or menu entry, and nothing writes to it but SettingsStrategies, which hands what it
+ * holds to the host and empties it.
  *
  * @api
  */

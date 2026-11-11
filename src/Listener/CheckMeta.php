@@ -10,11 +10,13 @@ use Contenir\Extension\Api\Event\Record\AbstractRecordPreEvent;
 use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Exception\UnknownSettingException;
 use Contenir\Extension\Api\Listener\ListenerInterface;
+use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Section\Hidden;
 use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoSettings;
+use Contenir\Seo\Sections\SeoBlock;
 use Override;
 
 /**
@@ -25,14 +27,46 @@ use Override;
  * already has, unless either of the two is hidden from search. A note is a warning, and the save goes ahead, unless the
  * block marks the role `required`, when a missing value holds the save.
  * It reads the values as they are about to be written, so it never waits on
- * the site.
+ * the site. Where the site won't lend the title columns of the other records,
+ * the title goes unchecked against them and the save goes ahead; the sections
+ * check says so.
  */
 final readonly class CheckMeta implements ListenerInterface
 {
     public const string NAME = 'check-meta';
 
     /**
-     * @throws RowsRefusedException When the section's title columns can't be read for duplicates.
+     * A note when another record of the section has $title, or none: also none where the site won't lend the
+     * title columns of the other records.
+     */
+    private static function taken(
+        ExtensionContextInterface $context,
+        SectionBlock $block,
+        SeoBlock $seo,
+        AbstractRecordPreEvent $event,
+        string $title,
+    ): ?string {
+        try {
+            return (new TitleTaken(
+                $context->sections(),
+                $seo,
+                SeoSectionBlock::known($block, [Hidden::column($seo)]),
+            ))->note(
+                $event->section,
+                SeoSectionBlock::known($block, [
+                    ...(null === $seo->advanced ? [] : [$seo->advanced]),
+                    ...($seo->roles['title'] ?? []),
+                ]),
+                $title,
+                $event->id,
+                $seo->advanced,
+            );
+        } catch (RowsRefusedException) {
+            return null;
+        }
+    }
+
+    /**
      * @throws UnknownSettingException When the host has no Search Appearance settings.
      */
     #[Override]
@@ -58,23 +92,7 @@ final readonly class CheckMeta implements ListenerInterface
 
         $title = $values->text('title');
         if (null !== $title && null === Hidden::reason($seo, $event->values())) {
-            $notes->warn(
-                $values->field('title'),
-                (new TitleTaken(
-                    $context->sections(),
-                    $seo,
-                    SeoSectionBlock::known($block, [Hidden::column($seo)]),
-                ))->note(
-                    $event->section,
-                    SeoSectionBlock::known($block, [
-                        ...(null === $seo->advanced ? [] : [$seo->advanced]),
-                        ...($seo->roles['title'] ?? []),
-                    ]),
-                    $title,
-                    $event->id,
-                    $seo->advanced,
-                ),
-            );
+            $notes->warn($values->field('title'), self::taken($context, $block, $seo, $event, $title));
         }
     }
 }

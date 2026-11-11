@@ -10,8 +10,8 @@ use Contenir\Extension\Api\Testing\FrozenClock;
 use Contenir\Extension\Api\Testing\InMemoryHost;
 use Contenir\Extension\Api\Testing\MapUrlResolver;
 use Contenir\Extension\Seo\Section\SeoBlocks;
+use Contenir\Extension\Seo\Section\StrategySection;
 use Contenir\Extension\Seo\SeoExtension;
-use Contenir\Extension\Seo\Strategy\StrategyOverrides;
 use Contenir\Extension\Seo\Tests\Trait\TempDirectoryTrait;
 use DateTimeImmutable;
 use DOMDocument;
@@ -42,6 +42,48 @@ final class StrategyScreensTest extends TestCase
 
     private InMemoryHost $host;
 
+    /**
+     * A strategy that names a field admin.xml's block does not, as contenir-cms-legacy#426 reports.
+     */
+    #[Test]
+    public function aStrategyNamingAFieldAdminXmlDoesNotIsStillRead(): void
+    {
+        $this->host->seed(self::PROJECTS, 1, ['title' => 'House', 'image_lg' => '/asset/house.jpg']);
+        $this->post([
+            'section' => self::PROJECTS,
+            'version' => $this->version(),
+            'sources' => ['image' => ['image_lg']],
+        ]);
+        $context = $this->host->context('seo');
+        $block   = SeoBlocks::of($context)->one(self::PROJECTS);
+
+        static::assertSame(
+            ['image_lg', ['image_lg' => '/asset/house.jpg']],
+            [
+                $block?->element->child('image')?->text,
+                $context->sections()->rows(self::PROJECTS, ['image_lg'])[0]->values,
+            ],
+        );
+    }
+
+    #[Test]
+    public function aStrategySavedInTheSettingsBeforeIsHandedToTheSite(): void
+    {
+        $context = $this->host->context('seo');
+        $context->settings(StrategySection::NAME)->set([
+            StrategySection::SECTIONS => '{"library.projects.project": "<seo type=\"project\" schema=\"Article\"/>"}',
+        ]);
+
+        static::assertSame(
+            [['Changed here'], true, ''],
+            [
+                $this->texts($this->page($this->get()), '//span[@class="badge badge--secondary"]'),
+                $context->sections()->overridden(self::PROJECTS),
+                $context->settings(StrategySection::NAME)->get(StrategySection::SECTIONS, ''),
+            ],
+        );
+    }
+
     #[Test]
     public function keepsTheSchemaTypeUnderAdvanced(): void
     {
@@ -59,7 +101,7 @@ final class StrategyScreensTest extends TestCase
         static::assertSame(
             'CreativeWork',
             $this
-                ->host->context('seo')->sections()->block(self::PROJECTS)
+                ->host->context('seo')->sections()->declared(self::PROJECTS)
                 ?->element->attribute('schema'),
         );
     }
@@ -196,7 +238,7 @@ final class StrategyScreensTest extends TestCase
             ['CreativeWork', false],
             [
                 SeoBlocks::of($this->host->context('seo'))->one(self::PROJECTS)?->element->attribute('schema'),
-                StrategyOverrides::of($this->host->context('seo'))->customised(self::PROJECTS),
+                $this->host->context('seo')->sections()->overridden(self::PROJECTS),
             ],
         );
     }
@@ -313,6 +355,6 @@ final class StrategyScreensTest extends TestCase
 
     private function version(): string
     {
-        return StrategyOverrides::of($this->host->context('seo'))->version();
+        return $this->host->context('seo')->sections()->overridesVersion();
     }
 }

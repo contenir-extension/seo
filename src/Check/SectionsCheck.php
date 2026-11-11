@@ -7,9 +7,11 @@ namespace Contenir\Extension\Seo\Check;
 use Contenir\Extension\Api\Context\ExtensionContextInterface;
 use Contenir\Extension\Api\Diagnostic\CheckInterface;
 use Contenir\Extension\Api\Diagnostic\CheckResult;
+use Contenir\Extension\Api\Exception\RowsRefusedException;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
+use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Seo\Sections\LinkedValue;
 use Override;
 
@@ -53,6 +55,26 @@ final readonly class SectionsCheck implements CheckInterface
         return $problems;
     }
 
+    /**
+     * What the site says when it won't lend the columns the block reads, so the section goes unreported.
+     *
+     * @return list<string>
+     */
+    private static function unread(ExtensionContextInterface $context, SectionBlock $block): array
+    {
+        try {
+            $context->sections()->rows($block->section, SeoSectionBlock::reported($block), limit: 0);
+        } catch (RowsRefusedException $refused) {
+            return [sprintf(
+                '%s can\'t be read, so its records are not reported: %s',
+                $block->section,
+                $refused->getMessage(),
+            )];
+        }
+
+        return [];
+    }
+
     #[Override]
     public function check(ExtensionContextInterface $context): CheckResult
     {
@@ -60,6 +82,7 @@ final readonly class SectionsCheck implements CheckInterface
         $problems = [];
         foreach ($blocks as $block) {
             $problems[] = self::problems($block);
+            $problems[] = self::unread($context, $block);
         }
 
         $problems = array_merge(...$problems);

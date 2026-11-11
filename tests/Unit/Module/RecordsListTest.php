@@ -29,6 +29,18 @@ use function array_map;
 #[Group('unit')]
 final class RecordsListTest extends TestCase
 {
+    private static function line(?string $edit, ?string $view): RecordLine
+    {
+        $section = new SectionIssues('library.projects.project', 'Projects', 1, [], 0);
+        $record  = new RecordIssues(
+            new RecordReference('library.projects.project', 7),
+            'House',
+            [new MetaIssue('title', 'title', 'Add a title.', missing: true)],
+        );
+
+        return new RecordLine(new ReportRow($section, $record), ['Add a title.'], [Tier::High], $edit, $view);
+    }
+
     private static function list(
         ?string $view,
         bool $bulk = false,
@@ -36,21 +48,19 @@ final class RecordsListTest extends TestCase
         int $page = 1,
         int $total = 1,
     ): RecordList {
-        $section = new SectionIssues('library.projects.project', 'Projects', 1, [], 0);
-        $record  = new RecordIssues(
-            new RecordReference('library.projects.project', 7),
-            'House',
-            [new MetaIssue('title', 'title', 'Add a title.', missing: true)],
-        );
-        $line = new RecordLine(
-            new ReportRow($section, $record),
-            ['Add a title.'],
-            [Tier::High],
-            '/admin/records/7',
-            $view,
-        );
+        $line = self::line('/admin/records/7', $view);
 
         return (new RecordsList($filter ?? RecordFilter::from([], []), [$line], $page, $total, $bulk))->of(
+            new InMemoryTemplates(new Handle('seo'), '/nowhere'),
+        );
+    }
+
+    /**
+     * The list of one record that has no edit screen.
+     */
+    private static function uneditable(?string $view): RecordList
+    {
+        return (new RecordsList(RecordFilter::from([], []), [self::line(null, $view)], 1, 1, false))->of(
             new InMemoryTemplates(new Handle('seo'), '/nowhere'),
         );
     }
@@ -96,6 +106,28 @@ final class RecordsListTest extends TestCase
 
         static::assertSame(
             ['Edit', 'Preview in search'],
+            array_map(static fn(RecordListLink $link): string => $link->label, $links),
+        );
+    }
+
+    #[Test]
+    public function leadsOnlyToThePreviewWhereTheRecordHasNoPageOrEditScreen(): void
+    {
+        $links = self::uneditable(view: null)->rows[0]->actions;
+
+        static::assertSame(
+            ['Preview in search'],
+            array_map(static fn(RecordListLink $link): string => $link->label, $links),
+        );
+    }
+
+    #[Test]
+    public function leadsToThePreviewAndThePageWhereTheRecordHasNoEditScreen(): void
+    {
+        $links = self::uneditable(view: 'https://www.example.com/house')->rows[0]->actions;
+
+        static::assertSame(
+            ['Preview in search', 'View the page'],
             array_map(static fn(RecordListLink $link): string => $link->label, $links),
         );
     }

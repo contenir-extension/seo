@@ -11,7 +11,6 @@ use Contenir\Extension\Api\Handler\HandlerResult;
 use Contenir\Extension\Seo\Report\SectionHeadings;
 use Contenir\Extension\Seo\Section\SeoBlocks;
 use Contenir\Extension\Seo\Strategy\SectionStrategy;
-use Contenir\Extension\Seo\Strategy\StrategyOverrides;
 use Override;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -38,7 +37,7 @@ final readonly class StrategyHandler implements HandlerInterface
     public function handle(ServerRequestInterface $request, ExtensionContextInterface $context): HandlerResult
     {
         $titles     = SectionHeadings::of($context);
-        $overrides  = StrategyOverrides::of($context);
+        $sections   = $context->sections();
         $strategies = [];
         foreach (SeoBlocks::of($context)->all() as $block) {
             $strategies[] = SectionStrategy::of($block, $titles[$block->section] ?? $block->section);
@@ -60,11 +59,10 @@ final readonly class StrategyHandler implements HandlerInterface
             [
                 'strategies' => $strategies,
                 'editing'    => $editing,
-                'saves'      => true,
-                'version'    => $overrides->version(),
+                'version'    => $sections->overridesVersion(),
                 'customised' => array_values(array_filter(
                     array_map(static fn(SectionStrategy $one): string => $one->section, $strategies),
-                    $overrides->customised(...),
+                    $sections->overridden(...),
                 )),
                 'roles'      => SectionStrategy::ROLES,
             ],
