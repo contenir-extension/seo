@@ -27,6 +27,7 @@ use Contenir\Extension\Seo\Field\RobotsRulesField;
 use Contenir\Extension\Seo\Field\WorkflowsField;
 use Contenir\Extension\Seo\Listener\CheckMeta;
 use Contenir\Extension\Seo\Module\DashboardMeter;
+use Contenir\Extension\Seo\Module\SeoMenu;
 use Contenir\Extension\Seo\Panel\SearchPanel;
 use Contenir\Extension\Seo\Section\SeoSectionBlock;
 use Contenir\Extension\Seo\SeoExtension;
@@ -104,6 +105,12 @@ final class SeoExtensionTest extends TestCase
             [[InspectRecords::NAME], 15],
             [array_keys($schedules), $schedules[InspectRecords::NAME]->frequency->minutes ?? null],
         );
+    }
+
+    #[Test]
+    public function declaresItsSectionMenu(): void
+    {
+        static::assertSame(SeoMenu::class, self::registration()->module->menu);
     }
 
     #[Test]

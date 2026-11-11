@@ -22,14 +22,15 @@ final class FieldLabelTest extends TestCase
     public static function names(): array
     {
         return [
-            'a column'           => ['meta_title', 'Meta title'],
-            'a plain name'       => ['title', 'Title'],
-            'a sized image'      => ['image_lg', 'Image lg'],
-            'a schema type'      => ['CreativeWork', 'Creative work'],
-            'a single word type' => ['WebPage', 'Web page'],
-            'a hyphenated name'  => ['share-image', 'Share image'],
-            'extra space'        => ['  meta   title ', 'Meta title'],
-            'nothing'            => ['', ''],
+            'a column'              => ['meta_title', 'Meta title'],
+            'a plain name'          => ['title', 'Title'],
+            'a sized image'         => ['image_lg', 'Image lg'],
+            'a schema type'         => ['CreativeWork', 'Creative work'],
+            'a single word type'    => ['WebPage', 'Web page'],
+            'a hyphenated name'     => ['share-image', 'Share image'],
+            'extra space'           => ['  meta   title ', 'Meta title'],
+            'capitals beyond ASCII' => ['meta_TÍTULO', 'Meta título'],
+            'nothing'               => ['', ''],
         ];
     }
 

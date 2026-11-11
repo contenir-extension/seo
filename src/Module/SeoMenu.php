@@ -12,7 +12,6 @@ use Override;
 use Psr\Http\Message\ServerRequestInterface;
 
 use function basename;
-use function rtrim;
 
 /**
  * The SEO area's section menu: its screens, the one being drawn marked current, and under Settings the four
@@ -20,6 +19,9 @@ use function rtrim;
  */
 final class SeoMenu implements MenuInterface
 {
+    /**
+     * @var array<string, string> Each screen's label, by its handler
+     */
     private const array SCREENS = [
         OverviewHandler::NAME => 'Overview',
         RecordsHandler::NAME  => 'Records',
@@ -39,10 +41,10 @@ final class SeoMenu implements MenuInterface
     #[Override]
     public function groups(ServerRequestInterface $request, ExtensionContextInterface $context): array
     {
-        $here  = basename(rtrim($request->getUri()->getPath(), characters: '/'));
+        $here  = basename($request->getUri()->getPath());
         $items = [];
         foreach (self::SCREENS as $handler => $label) {
-            $items[] = new MenuItem($label, (string) $handler, current: (string) $handler === $here);
+            $items[] = new MenuItem($label, $handler, current: $handler === $here);
         }
 
         $settings = [];

@@ -59,7 +59,6 @@ final readonly class StrategyHandler implements HandlerInterface
             [
                 'strategies' => $strategies,
                 'editing'    => $editing,
-                'saves'      => true,
                 'version'    => $sections->overridesVersion(),
                 'customised' => array_values(array_filter(
                     array_map(static fn(SectionStrategy $one): string => $one->section, $strategies),
