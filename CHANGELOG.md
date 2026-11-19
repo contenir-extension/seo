@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.2] - 2026-11-20
+
+### Fixed
+
+- A record whose description column holds rich text, such as Word—Form's contributors, whose essay stands in for a description they don't have, showed the whole of it, markup and all, in its Search panel and the Preview screen, and was flagged "Description length" on the Overview, while the site writes a short plain summary from it. The add-on now takes the summary it writes for "Write descriptions" from such a column: without its markup, and cut to fit after a sentence or a word. A plain-text description is the editor's own and is still kept whole, so a long one is still flagged.
+
 ## [0.7.1] - 2026-11-11
 
 ### Fixed

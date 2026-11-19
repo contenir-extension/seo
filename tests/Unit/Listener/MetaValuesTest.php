@@ -8,11 +8,14 @@ use Contenir\Extension\Api\Section\Element;
 use Contenir\Extension\Api\Section\SectionBlock;
 use Contenir\Extension\Seo\Listener\MetaValues;
 use Contenir\Seo\Sections\SeoBlock;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function json_encode;
+use function str_repeat;
+use function trim;
 
 #[Group('unit')]
 final class MetaValuesTest extends TestCase
@@ -22,6 +25,28 @@ final class MetaValuesTest extends TestCase
         'description' => ['description'],
         'image'       => ['image_lg'],
     ];
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function richTextDescriptionProvider(): array
+    {
+        $essay =
+            '<p>We’re all guilty aren’t we? Of something? No matter how big or how small.</p> '
+            . '<p>A white lie, a missed meeting, a forgotten call, an unseen message, an attempted try, '
+            . 'a “no I didn’t”, a ‘borrowed’ item.</p>';
+
+        return [
+            'a short paragraph, without its markup'    => [
+                '<p>A house by the sea, &amp; its garden.</p>',
+                'A house by the sea, & its garden.',
+            ],
+            'a long body, cut to fit after a sentence' => [
+                $essay,
+                'We’re all guilty aren’t we? Of something? No matter how big or how small.',
+            ],
+        ];
+    }
 
     private static function content(): string
     {
@@ -50,6 +75,30 @@ final class MetaValuesTest extends TestCase
             $values,
             new SeoBlock('project', roles: self::ROLES, advanced: $advanced, automatic: $automatic),
         );
+    }
+
+    #[Test]
+    public function aDescriptionColumnOfMarkupAloneHasNoText(): void
+    {
+        static::assertNull(self::values(['description'], ['description' => '<p> </p>'])->text('description'));
+    }
+
+    #[Test]
+    public function aDescriptionColumnOfPlainTextIsKeptWhole(): void
+    {
+        $long = str_repeat('A plain description the editor wrote, ', times: 6);
+
+        static::assertSame(
+            trim($long),
+            self::values(['description'], ['description' => $long])->text('description'),
+        );
+    }
+
+    #[Test]
+    #[DataProvider('richTextDescriptionProvider')]
+    public function aDescriptionColumnOfRichTextGivesTheSummaryWrittenFromIt(string $column, string $shown): void
+    {
+        static::assertSame($shown, self::values(['description'], ['description' => $column])->text('description'));
     }
 
     #[Test]
@@ -104,6 +153,15 @@ final class MetaValuesTest extends TestCase
     public function aSectionWithoutTheAdvancedFieldHasNotesOnItsColumns(): void
     {
         static::assertSame('title', self::values(['title'], [])->field('title'));
+    }
+
+    #[Test]
+    public function aTitleColumnIsNotSummarised(): void
+    {
+        static::assertSame(
+            '<em>Convoy</em>',
+            self::values(['title'], ['title' => '<em>Convoy</em>'], advanced: null)->text('title'),
+        );
     }
 
     #[Test]
