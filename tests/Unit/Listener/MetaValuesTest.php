@@ -37,13 +37,14 @@ final class MetaValuesTest extends TestCase
             . 'a “no I didn’t”, a ‘borrowed’ item.</p>';
 
         return [
-            'a short paragraph, without its markup'    => [
+            'a short paragraph, without its markup'           => [
                 '<p>A house by the sea, &amp; its garden.</p>',
                 'A house by the sea, & its garden.',
             ],
-            'a long body, cut to fit after a sentence' => [
+            'a long body, cut by words, not after a sentence' => [
                 $essay,
-                'We’re all guilty aren’t we? Of something? No matter how big or how small.',
+                'We’re all guilty aren’t we? Of something? No matter how big or how small. A white lie, a missed '
+                    . 'meeting, a forgotten call, an unseen message, an attempted…',
             ],
         ];
     }

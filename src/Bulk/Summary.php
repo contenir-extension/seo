@@ -30,38 +30,39 @@ final class Summary
     /** How short a summary can be before it is too little to describe a page, in characters. */
     public const int MINIMUM = 50;
 
+    /**
+     * The text as a site cuts a description it takes from a page's body: its markup taken out and, when it is too
+     * long, as many words as fit, ending where a word does, with no regard for where a sentence ends.
+     */
+    public static function cut(string $text, int $max = self::LENGTH): ?string
+    {
+        $plain = self::plain($text);
+        if ('' === $plain || mb_strlen($plain) <= $max) {
+            return '' === $plain ? null : $plain;
+        }
+
+        return self::words(self::head($plain, $max));
+    }
+
     public static function of(string $text, int $max = self::LENGTH): ?string
     {
         $plain = self::plain($text);
-        if ('' === $plain) {
-            return null;
+        if ('' === $plain || mb_strlen($plain) <= $max) {
+            return '' === $plain ? null : $plain;
         }
 
-        if (mb_strlen($plain) <= $max) {
-            return $plain;
-        }
+        $head = self::head($plain, $max);
 
-        $head = mb_substr(
+        return self::sentence($head) ?? self::words($head);
+    }
+
+    private static function head(string $plain, int $max): string
+    {
+        return mb_substr(
             string: $plain,
             start: 0,
             length: $max,
         );
-        $sentence = self::sentence($head);
-        if (null !== $sentence) {
-            return $sentence;
-        }
-
-        $space = mb_strrpos($head, needle: ' ');
-
-        $words = false === $space
-            ? $head
-            : mb_substr(
-                string: $head,
-                start: 0,
-                length: $space,
-            );
-
-        return rtrim($words, characters: ' ,;:-') . '…';
     }
 
     /**
@@ -83,5 +84,23 @@ final class Summary
         $found = [];
 
         return 1 === preg_match('/.{40,}[.!?](?=\s|$)/u', $head, matches: $found) ? array_shift($found) : null;
+    }
+
+    /**
+     * $head up to its last whole word, with an ellipsis.
+     */
+    private static function words(string $head): string
+    {
+        $space = mb_strrpos($head, needle: ' ');
+
+        $words = false === $space
+            ? $head
+            : mb_substr(
+                string: $head,
+                start: 0,
+                length: $space,
+            );
+
+        return rtrim($words, characters: ' ,;:-') . '…';
     }
 }
