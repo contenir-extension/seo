@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Contenir\Extension\Seo\Listener;
 
 use Contenir\Extension\Api\Section\SectionBlock;
+use Contenir\Extension\Seo\Bulk\Summary;
 use Contenir\Extension\Seo\Section\DerivedContent;
 use Contenir\Seo\Sections\Overrides;
 use Contenir\Seo\Sections\SeoBlock;
 
 use function in_array;
 use function is_scalar;
+use function strip_tags;
 use function trim;
 
 /**
  * A record's value for an SEO role: what its advanced column holds for a title
  * or description, or else the first of the role's columns that holds text. A
+ * description column holding rich text gives the summary written from it. A
  * note about the role belongs to the advanced field where the section has one
  * and the role can be kept there, or else the first of the role's columns the
  * section has, or none for the whole record.
@@ -35,6 +38,16 @@ final readonly class MetaValues
         private array $values,
         private SeoBlock $seo,
     ) {}
+
+    /**
+     * A description column's text as search shows it. Rich text, such as an article's body standing in for a
+     * description, is the summary the site writes from it, without its markup and cut to fit; plain text is the
+     * editor's own and kept whole, so a long one is still flagged.
+     */
+    private static function description(string $text): ?string
+    {
+        return strip_tags($text) === $text ? $text : Summary::of($text);
+    }
 
     /**
      * The description the record's Section field gives where its columns give none, or null when it has none
@@ -110,7 +123,8 @@ final readonly class MetaValues
             /** @var mixed $value */
             $value = $this->values[$column] ?? null;
             $text  = is_scalar($value) ? trim((string) $value) : '';
-            if ('' !== $text) {
+            $text  = 'description' === $role && '' !== $text ? self::description($text) : $text;
+            if (null !== $text && '' !== $text) {
                 return $text;
             }
         }
