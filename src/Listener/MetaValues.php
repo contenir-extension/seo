@@ -18,7 +18,7 @@ use function trim;
 /**
  * A record's value for an SEO role: what its advanced column holds for a title
  * or description, or else the first of the role's columns that holds text. A
- * description column holding rich text gives the summary written from it. A
+ * description column holding rich text gives it cut by words, as the site cuts it. A
  * note about the role belongs to the advanced field where the section has one
  * and the role can be kept there, or else the first of the role's columns the
  * section has, or none for the whole record.
@@ -41,12 +41,12 @@ final readonly class MetaValues
 
     /**
      * A description column's text as search shows it. Rich text, such as an article's body standing in for a
-     * description, is the summary the site writes from it, without its markup and cut to fit; plain text is the
+     * description, is cut as the site cuts it: without its markup, and as many words as fit. Plain text is the
      * editor's own and kept whole, so a long one is still flagged.
      */
     private static function description(string $text): ?string
     {
-        return strip_tags($text) === $text ? $text : Summary::of($text);
+        return strip_tags($text) === $text ? $text : Summary::cut($text);
     }
 
     /**

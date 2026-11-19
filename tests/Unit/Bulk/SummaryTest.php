@@ -19,6 +19,29 @@ final class SummaryTest extends TestCase
     /**
      * @return array<string, array{string, ?string}>
      */
+    public static function cutProvider(): array
+    {
+        $long =
+            '<p>We’re all guilty aren’t we? Of something? No matter how big or how small.</p> '
+            . '<p>A white lie, a missed meeting, a forgotten call, an unseen message, an attempted try.</p>';
+
+        return [
+            'nothing but markup'                  => ['<p> </p>', null],
+            'short enough, kept whole'            => ['<p>A house by the sea.</p>', 'A house by the sea.'],
+            'too long, cut by words'              => [
+                $long,
+                'We’re all guilty aren’t we? Of something? No matter how big or how small. A white lie, a missed '
+                    . 'meeting, a forgotten call, an unseen message, an attempted…',
+            ],
+            'one long word, cut inside'           => [str_repeat('a', times: 160), str_repeat('a', times: 155) . '…'],
+            'exactly the length'                  => [str_repeat('a', times: 155), str_repeat('a', times: 155)],
+            'the length in characters, not bytes' => [str_repeat('é', times: 155), str_repeat('é', times: 155)],
+        ];
+    }
+
+    /**
+     * @return array<string, array{string, ?string}>
+     */
     public static function summaryProvider(): array
     {
         $long = 'A weatherboard house in Northcote, opened up to its garden with a new kitchen. The deck runs the width of the house and looks over the old lemon tree and the vegetable beds beyond.';
@@ -110,6 +133,13 @@ final class SummaryTest extends TestCase
                 )) . '…',
             ],
         ];
+    }
+
+    #[Test]
+    #[DataProvider('cutProvider')]
+    public function cutsTheTextByWordsAsASiteDoes(string $text, ?string $expected): void
+    {
+        static::assertSame($expected, Summary::cut($text));
     }
 
     #[Test]

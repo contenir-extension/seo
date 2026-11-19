@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.3] - 2026-11-20
+
+### Fixed
+
+- A rich-text description column is now cut as the site cuts it: as many words as fit, with an ellipsis. 0.7.2 took the "Write descriptions" summary, which stops after a full sentence where it can, so a record whose text opens with a short sentence, such as ten of Word—Form's contributors, showed a shorter description than the site's and was flagged as too short. `Summary::cut()` gives the word cut; "Write descriptions" keeps the sentence, since there an editor is choosing text to keep.
+
 ## [0.7.2] - 2026-11-20
 
 ### Fixed
