@@ -15,8 +15,8 @@ import { BaseComponent } from '@parallelogram-js/core/core/BaseComponent.js'
  * Where the host gives the control what the page uses for each field when it
  * isn't overridden (`data-control`, from the add-on's ControlDefaults), each
  * field is drawn as the dashboard draws a setting it inherits: an Override
- * switch, the default shown read-only while it is off, with where it comes
- * from, and the field editable while it is on. The share image gets a field of
+ * switch beside its label, the default shown in the disabled control while it
+ * is off, with where it comes from, and the control editable while it is on. The share image gets a field of
  * its own. Switching off keeps what was typed while the form is open, so
  * switching back on restores it, but the save leaves it out. Without the data,
  * every field is a plain input, as before.
@@ -93,11 +93,6 @@ const DEFAULT_LABELS = {
     'index, follow': 'Show in search results and follow its links',
 }
 
-const LOCK =
-    '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-lock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/></svg>'
-
-const PENCIL =
-    '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg>'
 
 function parse(text) {
     try {
@@ -150,7 +145,11 @@ function columnLabel(form, column) {
     const field = [...(form?.querySelectorAll('[name]') ?? [])].find(
         (each) => each.name === column || each.name === `${column}[]`,
     )
-    const label = field?.closest('.form__field')?.querySelector('.form__label')?.textContent.trim()
+    const label = field
+        ?.closest('.form__field')
+        ?.querySelector('.form__label')
+        ?.textContent.replace(/\s*\*\s*$/, '')
+        .trim()
 
     return label || column.replace(/_/g, ' ')
 }
@@ -191,21 +190,23 @@ function imageControl(stored, data) {
     return select
 }
 
-/** The Override switch, in the dashboard's own markup for a setting it inherits. */
+/**
+ * The Override switch, as the dashboard draws one beside a setting's label, without the attributes its own
+ * inherit script and settings save act on.
+ */
 function overrideSwitch(field, on) {
     const toggle = document.createElement('label')
-    toggle.className = 'inherit__toggle'
+    toggle.className = 'switch switch--sm'
     const box = document.createElement('input')
     box.type = 'checkbox'
+    box.className = 'switch__input'
     box.checked = on
     box.setAttribute('data-seo-override', field.name)
     box.setAttribute('aria-label', `Override ${field.label}`)
-    toggle.append(box)
-    toggle.insertAdjacentHTML(
-        'beforeend',
-        `<span class="inherit__icon inherit__icon--inherited">${LOCK}</span>` +
-            `<span class="inherit__icon inherit__icon--overridden">${PENCIL}</span>`,
-    )
+    const text = document.createElement('span')
+    text.className = 'switch__label'
+    text.textContent = 'Override'
+    toggle.append(box, text)
 
     return [toggle, box]
 }
@@ -238,15 +239,16 @@ export default class AdvancedField extends BaseComponent {
             element.value = Object.keys(written).length === 0 ? '' : JSON.stringify(written)
         }
 
-        const inherited = (field, input, id) => {
+        const inherited = (field, input, id, label) => {
             const entry = data.defaults[field.name] ?? { value: null, from: 'none', column: null }
             const fallback = entry.value ?? ''
             let kept = stored(field.name)
             const [toggle, box] = overrideSwitch(field, kept !== '')
 
-            const shell = document.createElement('div')
+            const heading = document.createElement('div')
+            heading.className = 'cluster cluster--between cluster--sm'
+            heading.append(label, toggle)
             const area = document.createElement('div')
-            area.className = 'inherit__control'
             area.append(input)
             if (field.options && fallback !== '' && !field.options.some(([option]) => option === fallback)) {
                 input.add(new Option(DEFAULT_LABELS[fallback] ?? fallback, fallback))
@@ -278,7 +280,6 @@ export default class AdvancedField extends BaseComponent {
 
             const show = () => {
                 const on = box.checked
-                shell.className = on ? 'inherit inherit--overridden' : 'inherit'
                 input.disabled = !on
                 if (on) {
                     input.value = kept !== '' ? kept : field.image ? SITE_IMAGE : fallback
@@ -301,11 +302,10 @@ export default class AdvancedField extends BaseComponent {
             input.addEventListener('input', keep)
             input.addEventListener('change', keep)
 
-            shell.append(toggle, area)
             switches.set(field.name, box)
             show()
 
-            return [shell, note]
+            return [heading, area, note]
         }
 
         const column = (field) => {
@@ -321,7 +321,7 @@ export default class AdvancedField extends BaseComponent {
 
             const wrapper = document.createElement('div')
             wrapper.className = 'form__field'
-            wrapper.append(label, ...(data ? inherited(field, input, id) : [input]))
+            wrapper.append(...(data ? inherited(field, input, id, label) : [label, input]))
             if (field.hint) {
                 const hint = document.createElement('p')
                 hint.className = 'form__description'

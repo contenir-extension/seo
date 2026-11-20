@@ -86,18 +86,37 @@ describe('AdvancedField with the defaults the host gives it', () => {
         ])
     })
 
-    it('draws each switch in the dashboard’s inherit markup, without the attributes its own toggle acts on', () => {
+    it('draws each Override switch beside its label, as the dashboard draws a setting it inherits', () => {
         mount(draw())
-        const shell = toggle('title').closest('.inherit')
+        const heading = toggle('title').closest('.cluster')
 
         expect([
-            shell.querySelector('.inherit__toggle .inherit__icon--inherited svg') !== null,
-            shell.querySelector('.inherit__toggle .inherit__icon--overridden svg') !== null,
-            shell.querySelector('.inherit__control #seo-title') !== null,
-            shell.closest('.form__row').classList.contains('seo-advanced'),
-            shell.hasAttribute('data-inherit'),
+            heading.className,
+            heading.querySelector('.form__label').textContent,
+            toggle('title').className,
+            toggle('title').closest('label').className,
+            toggle('title').nextElementSibling.textContent,
+            heading.nextElementSibling.querySelector('#seo-title') !== null,
+            heading.closest('.form__row').classList.contains('seo-advanced'),
+        ]).toEqual([
+            'cluster cluster--between cluster--sm',
+            'Meta Title',
+            'switch__input',
+            'switch switch--sm',
+            'Override',
+            true,
+            true,
+        ])
+    })
+
+    it('leaves out the attributes the dashboard’s own inherit script and settings save act on', () => {
+        mount(draw())
+
+        expect([
             toggle('title').hasAttribute('name'),
-        ]).toEqual([true, true, true, true, false, false])
+            toggle('title').hasAttribute('data-inherit-toggle'),
+            document.querySelector('[data-inherit]'),
+        ]).toEqual([false, false, null])
     })
 
     it('shows the default, read-only, where nothing is overridden', () => {
@@ -120,6 +139,14 @@ describe('AdvancedField with the defaults the host gives it', () => {
         mount(draw())
 
         expect(note(name)).toBe(said)
+    })
+
+    it('names a required field without its asterisk', () => {
+        const element = draw()
+        document.querySelector('label[for="title"]').innerHTML = 'Name <span class="form__required">*</span>'
+        mount(element)
+
+        expect(note('title')).toBe('From the Name, as last saved.')
     })
 
     it('names a field the form gives no label by its column', () => {
@@ -160,8 +187,7 @@ describe('AdvancedField with the defaults the host gives it', () => {
             input('title').disabled,
             input('title').value,
             note('title'),
-            toggle('title').closest('.inherit').className,
-        ]).toEqual([true, false, 'Jo Roca on power', 'Your own. Switch off to go back to the default.', 'inherit inherit--overridden'])
+        ]).toEqual([true, false, 'Jo Roca on power', 'Your own. Switch off to go back to the default.'])
     })
 
     it('starts an override from the default and saves it', () => {
