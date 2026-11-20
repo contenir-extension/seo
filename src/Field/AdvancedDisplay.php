@@ -26,6 +26,7 @@ final readonly class AdvancedDisplay
     private const array LABELS = [
         'title'       => 'Title',
         'description' => 'Description',
+        'image'       => 'Share image',
         'image_alt'   => 'Share image description',
         'canonical'   => 'Canonical address',
         'robots'      => 'Robots',
@@ -51,7 +52,11 @@ final readonly class AdvancedDisplay
                 continue;
             }
 
-            $lines[] = new FieldDisplayLine($label, $text, $text === $derived ? $note : null);
+            $lines[] = new FieldDisplayLine(
+                $label,
+                'image' === $name && '@site' === $text ? "The site's share image" : $text,
+                $text === $derived ? $note : null,
+            );
         }
 
         return $lines;
