@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] - 2026-11-20
+
+### Fixed
+
+- The SEO tab's Override switches are the dashboard's own: a small "Override" switch beside each field's label, with the default shown in the disabled control below it, as the dashboard's settings screens draw a setting they inherit. 0.8.0 drew the older settings screens' padlock box around each control, which the dashboard doesn't use. `css/seo.css` now styles only the share image's preview.
+- A default taken from a required field named it with its asterisk ("From the Name *").
+
 ## [0.8.0] - 2026-11-20
 
 ### Added
