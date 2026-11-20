@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.7.4] - 2026-11-20
+
+### Fixed
+
+- A record with no description or share image of its own was flagged "Missing description" or "No share image" on the Overview, in its Search panel and on save, even with a site-wide default description and share image set in Search Appearance, which the site gives every such page. The site's defaults now stand in for a record's own, so it is not missing either. A record's own description is still checked for length.
+
 ## [0.7.3] - 2026-11-20
 
 ### Fixed

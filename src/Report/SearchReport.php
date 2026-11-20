@@ -64,6 +64,7 @@ final readonly class SearchReport
             InspectionStore::at($this->context->sitePath())->load(),
             RenderingState::of($this->context),
             $config->robots->value,
+            $config,
         );
         $blocks = array_filter(
             SeoBlocks::of($this->context)->all(),

@@ -10,6 +10,7 @@ use Contenir\Extension\Seo\Listener\MetaIssues;
 use Contenir\Extension\Seo\Listener\MetaValues;
 use Contenir\Extension\Seo\Report\InspectionIssues;
 use Contenir\Seo\Sections\SeoBlock;
+use Contenir\Seo\SeoConfig;
 use Contenir\Seo\Title\TitleTemplate;
 
 /**
@@ -36,15 +37,19 @@ final readonly class PanelFacts
         public array $derived = [],
     ) {}
 
-    public static function ofColumns(SeoBlock $seo, MetaValues $values, TitleTemplate $template): self
-    {
+    public static function ofColumns(
+        SeoBlock $seo,
+        MetaValues $values,
+        TitleTemplate $template,
+        ?SeoConfig $site = null,
+    ): self {
         $title   = $values->text('title');
         $derived = $values->derivedDescription();
 
         return new self(
             null === $title ? null : $template->format($title),
             $values->shownDescription(),
-            (new MetaIssues($seo, $template))->of($values),
+            (new MetaIssues($seo, $template, $site))->of($values),
             derived: [
                 ...(null === $derived ? [] : ['description']),
                 ...($values->hasDerivedImage() ? ['image'] : []),

@@ -83,7 +83,7 @@ final readonly class SearchPanel implements RecordPanelInterface
         $config = (new SeoSettings())->config($context);
         $site   = (new CurrentInspection($context))->of($record->reference(), $block);
         $facts  = null === $site
-            ? PanelFacts::ofColumns($seo, $values, $config->title)
+            ? PanelFacts::ofColumns($seo, $values, $config->title, $config)
             : PanelFacts::ofSite($site, $seo);
         $issues = $facts->issues;
         $hidden = Hidden::reason(
