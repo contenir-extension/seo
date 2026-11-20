@@ -6,23 +6,30 @@ namespace Contenir\Extension\Seo\Listener;
 
 use Contenir\Seo\Sections\LinkedValue;
 use Contenir\Seo\Sections\SeoBlock;
+use Contenir\Seo\SeoConfig;
 use Contenir\Seo\Title\TitleTemplate;
 
 use function array_filter;
 use function array_values;
+use function trim;
 
 /**
  * What search results and shared links will make of a record's own values:
  * a missing title, description or image, a title they would cut off once
  * the site's template adds the site name, and a description outside the
- * length they show. Whether another record has the title is the save
+ * length they show. A record without its own description or image is not
+ * missing one while the site gives every page a default. Whether another record has the title is the save
  * check's to ask, as it reads the section.
  */
 final readonly class MetaIssues
 {
+    /**
+     * @param ?SeoConfig $site The site's settings, whose default description and share image stand in for a record's
+     */
     public function __construct(
         private SeoBlock $seo,
         private TitleTemplate $template,
+        private ?SeoConfig $site = null,
     ) {}
 
     private static function issue(string $role, string $field, ?string $message): ?MetaIssue
@@ -69,7 +76,7 @@ final readonly class MetaIssues
                 $values->field('description'),
                 $columns,
                 'Add a description for search results and shared links.',
-                derived: null !== $values->derivedDescription(),
+                derived: null !== $values->derivedDescription() || '' !== trim($this->site->description ?? ''),
             )
             : self::issue('description', $values->field('description'), MetaLengths::description($description));
 
@@ -80,7 +87,7 @@ final readonly class MetaIssues
                 $values->field('image'),
                 $columns,
                 'Add an image for shared links.',
-                derived: $values->hasDerivedImage(),
+                derived: $values->hasDerivedImage() || null !== $this->site?->shareImage,
             )
             : null;
 

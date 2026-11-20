@@ -18,6 +18,7 @@ use Contenir\Extension\Seo\Section\Hidden;
 use Contenir\Extension\Seo\Section\Noindex;
 use Contenir\Extension\Seo\Section\SeoDeclaration;
 use Contenir\Seo\Sections\SeoBlock;
+use Contenir\Seo\SeoConfig;
 use Contenir\Seo\Title\TitleTemplate;
 
 use function array_filter;
@@ -42,6 +43,9 @@ final readonly class SectionScan
      * @param array<string, Inspection> $inspections What the site last rendered, by InspectionStore::key()
      * @param string                    $state       The rendering state those answers must have been given under
      * @param string                    $robots      The robots value the site gives every page
+     * @param ?SeoConfig                $site        The site's settings, whose defaults stand in for a record's own
+     *
+     * @mago-expect lint:excessive-parameter-list One for each thing a scan reads of the site; all but the first two are optional.
      */
     public function __construct(
         private SectionsInterface $sections,
@@ -49,6 +53,7 @@ final readonly class SectionScan
         private array $inspections = [],
         private string $state = '',
         private string $robots = '',
+        private ?SeoConfig $site = null,
     ) {}
 
     /**
@@ -58,7 +63,7 @@ final readonly class SectionScan
     {
         $seo     = SeoDeclaration::read($block->element);
         $rows    = (new SectionRows($this->sections))->of($block);
-        $issues  = new MetaIssues($seo, $this->template);
+        $issues  = new MetaIssues($seo, $this->template, $this->site);
         $switch  = $block->hasField(Hidden::column($seo)) ? Hidden::column($seo) : '';
         $reasons = array_map(fn(RecordRow $row): ?string => $this->hidden($seo, $row), $rows);
         $shared  = new SharedTitles(array_values(array_map(

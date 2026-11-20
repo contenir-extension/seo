@@ -84,7 +84,8 @@ final readonly class CheckMeta implements ListenerInterface
         $seo    = SeoDeclaration::read($block->element);
         $values = new MetaValues($block, $event->values(), $seo);
         $notes  = new Notes($event, $seo);
-        foreach ((new MetaIssues($seo, (new SeoSettings())->config($context)->title))->of($values) as $issue) {
+        $config = (new SeoSettings())->config($context);
+        foreach ((new MetaIssues($seo, $config->title, $config))->of($values) as $issue) {
             $issue->missing
                 ? $notes->missing($issue->role, $issue->field, $issue->message)
                 : $notes->warn($issue->field, $issue->message);
