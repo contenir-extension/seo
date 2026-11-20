@@ -17,6 +17,17 @@ use function json_encode;
 final class AdvancedDisplayTest extends TestCase
 {
     /**
+     * @return array<string, array{string, string}>
+     */
+    public static function imageProvider(): array
+    {
+        return [
+            'an image of its own'    => ['/a.jpg', '/a.jpg'],
+            "the site's share image" => ['@site', "The site's share image"],
+        ];
+    }
+
+    /**
      * @return array<string, array{mixed}>
      */
     public static function nothingStored(): array
@@ -107,12 +118,9 @@ final class AdvancedDisplayTest extends TestCase
     }
 
     #[Test]
-    public function showsNoLineForAnImageOverrideOrAnEmptyField(): void
+    public function showsNoLineForAnEmptyField(): void
     {
-        static::assertSame(
-            [],
-            (new AdvancedDisplay())->of((string) json_encode(['image' => '/a.jpg', 'title' => '  ']), []),
-        );
+        static::assertSame([], (new AdvancedDisplay())->of((string) json_encode(['title' => '  ']), []));
     }
 
     #[Test]
@@ -120,6 +128,16 @@ final class AdvancedDisplayTest extends TestCase
     public function showsNoLineWhereNothingIsStoredAndTheContentGivesNoDescription(mixed $value): void
     {
         static::assertSame([], (new AdvancedDisplay())->of($value, ['section' => self::content('')]));
+    }
+
+    #[Test]
+    #[DataProvider('imageProvider')]
+    public function showsTheShareImageOverride(string $image, string $shown): void
+    {
+        static::assertEquals(
+            [new FieldDisplayLine('Share image', $shown)],
+            (new AdvancedDisplay())->of((string) json_encode(['image' => $image]), []),
+        );
     }
 
     #[Test]

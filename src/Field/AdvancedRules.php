@@ -56,6 +56,7 @@ final class AdvancedRules
     {
         return array_values(array_filter([
             self::canonical($overrides['canonical'] ?? null),
+            ShareImageRule::problem($overrides['image'] ?? null),
             self::robots($overrides['robots'] ?? 'all'),
             self::schema($overrides['schema'] ?? null),
         ]));

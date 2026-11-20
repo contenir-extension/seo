@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] - 2026-11-20
+
+### Added
+
+- A record's SEO tab shows what the page uses for each field when the record doesn't override it, with an Override switch, as a setting the dashboard inherits is drawn: the default read-only while the switch is off, with where it comes from ("From the Name", "From its content", "The site's description", "This page's own address", "As the site sets it", "The section's type"), and the field editable while it is on. Switching off keeps what was typed while the form is open, so switching back on restores it, but the save leaves it out. `AdvancedField` gives the defaults through the extension API's `ControlDataInterface` (`ControlDefaults`); a CMS without it draws the tab as before.
+- A Share image field in the tab: the page's own image (with a preview) until it is overridden, and then "The site's share image" or an image the record already holds. Phase 1 of contenir/contenir-cms-legacy#898; another of the record's images, library images and standalone uploads come later.
+- `css/seo.css`, the tab's styles in the dashboard's tokens, which the CMS links on dashboard pages.
+
+### Changed
+
+- A record's share image override is kept on save: a path on the site, a full address, or `@site` for the site's share image in place of the page's own (which contenir-resource 2.0.0-RC12 honours). Anything else is refused. It was dropped before, as the section's image column was the only way to set one. The record's View page shows it.
+- Requires `contenir/contenir-extension-api` ^0.9.7.
+
 ## [0.7.4] - 2026-11-20
 
 ### Fixed
